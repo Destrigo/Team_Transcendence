@@ -1,0 +1,103 @@
+<style>
+#arch { min-height: 200px; }
+#arch svg { max-width: 100%; height: auto; }
+</style>
+<div id="arch"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  flowchart: { curve: 'basis', padding: 16, nodeSpacing: 20, rankSpacing: 50 },
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+  },
+});
+const { svg } = await mermaid.render('arch-svg', `flowchart LR
+    subgraph External
+        CoinGecko["CoinGecko API"]
+        OAuthProv["OAuth provider"]
+    end
+
+    subgraph Backend["NestJS backend"]
+        direction TB
+        Auth["Auth module\nJWT + OAuth + 2FA"]
+        MarketSvc["Market data service\nCron: fetch prices"]
+        TradeSvc["Trading engine\nOrders + portfolio"]
+        SocialSvc["Social service\nFriends + chat"]
+        NotifSvc["Notification service"]
+        AnalSvc["Analytics service\nSnapshots + export"]
+        WSGateway["WebSocket gateway\nPrices + chat + presence"]
+    end
+
+    subgraph Data["PostgreSQL"]
+        DB[("Database\nPrisma ORM")]
+    end
+
+    subgraph Clients["Connected clients"]
+        Browser1["Browser 1"]
+        Browser2["Browser 2"]
+        BrowserN["Browser N"]
+    end
+
+    CoinGecko -->|Prices every 30s| MarketSvc
+    OAuthProv -->|Token| Auth
+
+    Auth --> DB
+    MarketSvc --> DB
+    TradeSvc --> DB
+    SocialSvc --> DB
+    NotifSvc --> DB
+    AnalSvc --> DB
+
+    MarketSvc -->|Price changed| WSGateway
+    TradeSvc -->|Order filled| NotifSvc
+    SocialSvc -->|New message| WSGateway
+    NotifSvc -->|Push| WSGateway
+
+    WSGateway -->|Live prices| Browser1
+    WSGateway -->|Chat + notifications| Browser2
+    WSGateway -->|Presence updates| BrowserN
+
+    Browser1 -->|REST API + WS| Auth
+    Browser1 -->|Place order| TradeSvc
+
+    style CoinGecko fill:${dark?'#085041':'#E1F5EE'},stroke:${dark?'#5DCAA5':'#0F6E56'}
+    style OAuthProv fill:${dark?'#085041':'#E1F5EE'},stroke:${dark?'#5DCAA5':'#0F6E56'}
+    style Auth fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style MarketSvc fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style TradeSvc fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style SocialSvc fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style NotifSvc fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style AnalSvc fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style WSGateway fill:${dark?'#633806':'#FAEEDA'},stroke:${dark?'#EF9F27':'#854F0B'}
+    style DB fill:${dark?'#0C447C':'#E6F1FB'},stroke:${dark?'#85B7EB':'#185FA5'}
+    style Browser1 fill:${dark?'#444441':'#F1EFE8'},stroke:${dark?'#B4B2A9':'#5F5E5A'}
+    style Browser2 fill:${dark?'#444441':'#F1EFE8'},stroke:${dark?'#B4B2A9':'#5F5E5A'}
+    style BrowserN fill:${dark?'#444441':'#F1EFE8'},stroke:${dark?'#B4B2A9':'#5F5E5A'}
+`);
+document.getElementById('arch').innerHTML = svg;
+document.querySelectorAll('#arch .node path').forEach(p => {
+  const d = p.getAttribute('d');
+  if (!d) return;
+  const nums = d.match(/-?[\d.]+/g)?.map(Number);
+  if (!nums || nums.length < 8) return;
+  const xs = nums.filter((_,i) => i%2===0), ys = nums.filter((_,i) => i%2===1);
+  const x=Math.min(...xs), y=Math.min(...ys), w=Math.max(...xs)-x, h=Math.max(...ys)-y;
+  if (w < 10 || h < 10) return;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  rect.setAttribute('x',x); rect.setAttribute('y',y);
+  rect.setAttribute('width',w); rect.setAttribute('height',h);
+  rect.setAttribute('rx','8');
+  for (const a of ['fill','stroke','stroke-width','class','style'])
+    if (p.hasAttribute(a)) rect.setAttribute(a, p.getAttribute(a));
+  p.replaceWith(rect);
+});
+</script>

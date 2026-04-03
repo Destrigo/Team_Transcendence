@@ -1,0 +1,108 @@
+<style>
+#flow { min-height: 200px; }
+#flow svg { max-width: 100%; height: auto; }
+.node rect, .node polygon, .node circle { rx: 8 !important; }
+</style>
+<div id="flow"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  flowchart: { curve: 'basis', padding: 16, nodeSpacing: 30, rankSpacing: 50 },
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    primaryColor: dark ? '#3C3489' : '#EEEDFE',
+    primaryTextColor: dark ? '#CECBF6' : '#26215C',
+    primaryBorderColor: dark ? '#AFA9EC' : '#534AB7',
+    secondaryColor: dark ? '#085041' : '#E1F5EE',
+    secondaryTextColor: dark ? '#9FE1CB' : '#04342C',
+    secondaryBorderColor: dark ? '#5DCAA5' : '#0F6E56',
+    tertiaryColor: dark ? '#633806' : '#FAEEDA',
+    tertiaryTextColor: dark ? '#FAC775' : '#412402',
+    tertiaryBorderColor: dark ? '#EF9F27' : '#854F0B',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    nodeTextColor: dark ? '#c2c0b6' : '#3d3d3a',
+  },
+});
+const { svg } = await mermaid.render('flow-svg', `flowchart TD
+    Landing["Landing page"] --> Login["Login"]
+    Landing --> Register["Register"]
+    Login --> Has2FA{"2FA enabled?"}
+    Register --> Dashboard
+    Has2FA -->|No| Dashboard["Dashboard"]
+    Has2FA -->|Yes| TwoFA["Enter 2FA code"] --> Dashboard
+    Login -.->|OAuth| OAuthProvider["Google / 42"] -.-> Dashboard
+
+    Dashboard --> Markets["Markets\nBrowse assets"]
+    Dashboard --> Portfolio["Portfolio\nHoldings & P&L"]
+    Dashboard --> Social["Social\nFriends & chat"]
+    Dashboard --> Leaderboard["Leaderboard\nTop traders"]
+    Dashboard --> Analytics["Analytics\nCharts & export"]
+    Dashboard --> Settings["Settings"]
+
+    Markets --> AssetDetail["Asset detail\nPrice chart"]
+    AssetDetail --> PlaceOrder["Place order\nBuy / Sell"]
+    PlaceOrder --> Portfolio
+
+    Social --> Friends["Friends list"]
+    Social --> Chat["Real-time chat"]
+    Friends --> PublicProfile["User profile"]
+    PublicProfile --> Friends
+
+    Settings --> TwoFASetup["2FA setup"]
+    Settings --> OAuthLink["Link OAuth"]
+    Settings --> Language["Language\nEN / FR / NL"]
+    Settings --> GDPRExport["GDPR\nExport / Delete"]
+
+    Analytics --> Charts["Performance charts"]
+    Analytics --> ExportCSV["Export CSV"]
+    Analytics --> ExportPDF["Export PDF"]
+
+    Leaderboard --> PublicProfile
+
+    style Landing fill:${dark?'#444441':'#F1EFE8'},stroke:${dark?'#B4B2A9':'#5F5E5A'}
+    style Dashboard fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style Markets fill:${dark?'#085041':'#E1F5EE'},stroke:${dark?'#5DCAA5':'#0F6E56'}
+    style AssetDetail fill:${dark?'#085041':'#E1F5EE'},stroke:${dark?'#5DCAA5':'#0F6E56'}
+    style PlaceOrder fill:${dark?'#085041':'#E1F5EE'},stroke:${dark?'#5DCAA5':'#0F6E56'}
+    style Portfolio fill:${dark?'#085041':'#E1F5EE'},stroke:${dark?'#5DCAA5':'#0F6E56'}
+    style Social fill:${dark?'#72243E':'#FBEAF0'},stroke:${dark?'#ED93B1':'#993556'}
+    style Friends fill:${dark?'#72243E':'#FBEAF0'},stroke:${dark?'#ED93B1':'#993556'}
+    style Chat fill:${dark?'#72243E':'#FBEAF0'},stroke:${dark?'#ED93B1':'#993556'}
+    style PublicProfile fill:${dark?'#72243E':'#FBEAF0'},stroke:${dark?'#ED93B1':'#993556'}
+    style Leaderboard fill:${dark?'#633806':'#FAEEDA'},stroke:${dark?'#EF9F27':'#854F0B'}
+    style Analytics fill:${dark?'#633806':'#FAEEDA'},stroke:${dark?'#EF9F27':'#854F0B'}
+    style Charts fill:${dark?'#633806':'#FAEEDA'},stroke:${dark?'#EF9F27':'#854F0B'}
+    style ExportCSV fill:${dark?'#633806':'#FAEEDA'},stroke:${dark?'#EF9F27':'#854F0B'}
+    style ExportPDF fill:${dark?'#633806':'#FAEEDA'},stroke:${dark?'#EF9F27':'#854F0B'}
+    style Settings fill:${dark?'#444441':'#F1EFE8'},stroke:${dark?'#B4B2A9':'#5F5E5A'}
+    style TwoFASetup fill:${dark?'#444441':'#F1EFE8'},stroke:${dark?'#B4B2A9':'#5F5E5A'}
+    style OAuthLink fill:${dark?'#444441':'#F1EFE8'},stroke:${dark?'#B4B2A9':'#5F5E5A'}
+    style Language fill:${dark?'#444441':'#F1EFE8'},stroke:${dark?'#B4B2A9':'#5F5E5A'}
+    style GDPRExport fill:${dark?'#444441':'#F1EFE8'},stroke:${dark?'#B4B2A9':'#5F5E5A'}
+`);
+document.getElementById('flow').innerHTML = svg;
+document.querySelectorAll('#flow .node path').forEach(p => {
+  const d = p.getAttribute('d');
+  if (!d) return;
+  const nums = d.match(/-?[\d.]+/g)?.map(Number);
+  if (!nums || nums.length < 8) return;
+  const xs = nums.filter((_,i) => i%2===0), ys = nums.filter((_,i) => i%2===1);
+  const x=Math.min(...xs), y=Math.min(...ys), w=Math.max(...xs)-x, h=Math.max(...ys)-y;
+  if (w < 10 || h < 10) return;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  rect.setAttribute('x',x); rect.setAttribute('y',y);
+  rect.setAttribute('width',w); rect.setAttribute('height',h);
+  rect.setAttribute('rx','8');
+  for (const a of ['fill','stroke','stroke-width','class','style'])
+    if (p.hasAttribute(a)) rect.setAttribute(a, p.getAttribute(a));
+  p.replaceWith(rect);
+});
+</script>
