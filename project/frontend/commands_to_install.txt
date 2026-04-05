@@ -1,0 +1,6 @@
+npm create vite@latest frontend -- --template react-ts
+cd frontend
+npm install
+npm install axios react-router-dom zustand socket.io-client recharts lightweight-charts
+npm install -D tailwindcss @tailwindcss/vite
+cd ..

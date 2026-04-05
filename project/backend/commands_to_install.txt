@@ -1,0 +1,6 @@
+npx @nestjs/cli new backend --package-manager npm --skip-git
+cd backend
+npm install @nestjs/config @nestjs/jwt @nestjs/passport @nestjs/schedule @nestjs/swagger @nestjs/websockets @nestjs/platform-socket.io passport passport-jwt bcrypt class-validator class-transformer
+npm install -D @types/bcrypt @types/passport-jwt
+npx prisma init
+cd ..
