@@ -1,5 +1,5 @@
 version: '3.8'
- 
+
 services:
   db:
     image: postgres:16-alpine
@@ -17,7 +17,7 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
- 
+
   backend:
     build:
       context: ./backend
@@ -37,11 +37,11 @@ services:
       sh -c "
         npx prisma generate &&
         npx prisma migrate deploy &&
-        (npx prisma db seed || true) &&
+        npx prisma db seed || true &&
         npm run start:dev
       "
     restart: unless-stopped
- 
+
   frontend:
     build:
       context: ./frontend
@@ -58,6 +58,6 @@ services:
       VITE_API_URL: http://localhost:4000
       VITE_WS_URL: http://localhost:4000
     restart: unless-stopped
- 
+
 volumes:
   pgdata:
