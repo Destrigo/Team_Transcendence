@@ -11,3 +11,32 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Asset {
+  id             String    @id @default(uuid())
+  symbol         String    @unique
+  name           String
+  type           AssetType
+  currentPrice   Decimal   @default(0) @map("current_price") @db.Decimal(15, 6)
+  change24h      Decimal   @default(0) @map("change_24h") @db.Decimal(10, 4)
+  volume24h      Decimal   @default(0) @map("volume_24h") @db.Decimal(20, 2)
+  marketCap      Decimal   @default(0) @map("market_cap") @db.Decimal(20, 2)
+  logoUrl        String?   @map("logo_url")
+  coingeckoId    String?   @map("coingecko_id")
+  finnhubSymbol  String?   @map("finnhub_symbol")
+  isActive       Boolean   @default(true) @map("is_active")
+  priceUpdatedAt DateTime? @map("price_updated_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  orders      Order[]
+  holdings    Holding[]
+  priceAlerts PriceAlert[]
+
+  @@map("assets")
+}
+
+enum AssetType {
+  CRYPTO
+  STOCK
+}
+
