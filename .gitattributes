@@ -1,2 +1,14 @@
+# Text files -> store as LF in repo, native endings on local disk
+* text=auto
+
+# Shell scripts -> LF (crucial for Docker/Linux)
 /mvnw text eol=lf
+*.sh text eol=lf
+
+# Windows batch files -> CRLF 
 *.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binary files untouched
+*.jar binary
+*.war binary
