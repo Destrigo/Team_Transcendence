@@ -1,20 +1,12 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
+
+// TODO: replace with auth-aware redirect once AuthContext is ready
+// import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    } else {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
-
-  return null;
+  // const { isAuthenticated } = useAuth();
+  // return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />;
+  return <Navigate to="/login" replace />;
 };
 
 export default Index;

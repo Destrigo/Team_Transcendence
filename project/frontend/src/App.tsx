@@ -1,92 +1,35 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { NotificationProvider } from "@/contexts/NotificationContext";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+// TODO: uncomment when auth context is ready
+// import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+// import { NotificationProvider } from "@/contexts/NotificationContext";
+// import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import './App.css'
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Trading from "./pages/Trading";
+import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
+import NotFound from "./pages/NotFound";
 
-import Login from "./pages/Login"
-import Trading from "./pages/Trading"
-import Dashboard from "./pages/Dashboard"
-import Analytics from "./pages/Analytics"
-import Settings from "./pages/Settings"
-import NotFound from "./pages/NotFound"
-
-const queryClient = new QueryClient();
-
-// Protected Route wrapper
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-}
-
-// Public Route wrapper (redirects to dashboard if authenticated)
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  return <>{children}</>;
-}
-
-
-const AppRoutes = () => (
-  <Routes>
-    <Route path="/" element={<Index />} />
-    <Route path="/login" element={
-      <PublicRoute>
-        <Login />
-      </PublicRoute>
-    } />
-    <Route path="/dashboard" element={
-      <ProtectedRoute>
-        <Dashboard />
-      </ProtectedRoute>
-    } />
-    <Route path="/trading" element={
-      <ProtectedRoute>
-        <Trading />
-      </ProtectedRoute>
-    } />
-    <Route path="/analytics" element={
-      <ProtectedRoute>
-        <Analytics />
-      </ProtectedRoute>
-    } />
-    <Route path="/settings" element={
-      <ProtectedRoute>
-        <Settings />
-      </ProtectedRoute>
-    } />
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
+// TODO: replace with ProtectedRoute once AuthProvider is wired up
+// function ProtectedRoute({ children }: { children: React.ReactNode }) {
+//   const { isAuthenticated } = useAuth();
+//   if (!isAuthenticated) return <Navigate to="/login" replace />;
+//   return <>{children}</>;
+// }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <NotificationProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </NotificationProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/trading" element={<Trading />} />
+      <Route path="/analytics" element={<Analytics />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </BrowserRouter>
 );
 
 export default App;
