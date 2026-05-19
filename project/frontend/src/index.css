@@ -109,7 +109,7 @@
     --sidebar-ring: 215 85% 55%;
   }
 }
-
+/*  
 @layer base {
   * {
     @apply border-border;
@@ -120,8 +120,9 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
   
-  /* Large touch targets for factory floor */
+  // Large touch targets for factory floor
   button, [role="button"] {
     @apply min-h-[44px];
   }
 }
+*/
