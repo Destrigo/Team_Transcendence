@@ -4,12 +4,12 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Asset {
@@ -28,9 +28,10 @@ model Asset {
   priceUpdatedAt DateTime? @map("price_updated_at")
   createdAt      DateTime  @default(now()) @map("created_at")
 
-  orders      Order[]
-  holdings    Holding[]
-  priceAlerts PriceAlert[]
+  // Relations added when trading module is built:
+  // orders      Order[]
+  // holdings    Holding[]
+  // priceAlerts PriceAlert[]
 
   @@map("assets")
 }
