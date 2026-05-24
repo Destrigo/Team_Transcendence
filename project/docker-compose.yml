@@ -26,16 +26,21 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${DB_USER:-papertrade}:${DB_PASSWORD:-papertrade_secret}@db:5432/${DB_NAME:-papertrade}?schema=public
+      COINGECKO_API_URL: ${COINGECKO_API_URL:-https://api.coingecko.com/api/v3}
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY:-}
+      FINNHUB_API_URL: ${FINNHUB_API_URL:-https://finnhub.io/api/v1}
+      PORT: 4000
     ports:
       - "4000:4000"
     volumes:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
+      - /app/node_modules
     command: >
       sh -c "
         npx prisma generate &&
         npx prisma migrate deploy &&
-        npx prisma db seed || true &&
+        (npx prisma db seed || true) &&
         npm run start:dev
       "
     restart: unless-stopped
@@ -52,6 +57,7 @@ services:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
       - ./frontend/index.html:/app/index.html
+      - /app/node_modules
     environment:
       VITE_API_URL: http://localhost:4000
       VITE_WS_URL: http://localhost:4000
