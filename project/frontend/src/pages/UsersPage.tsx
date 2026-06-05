@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+
 import { Link } from "react-router-dom";
+import { api } from "../api/api";
 
 const UsersPage = () => {
   const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:4000/users")
-      .then((res) => setUsers(res.data))
-      .catch((err) => console.error(err));
+    const fetchUsers = async () => {
+      try {
+        const res = await api.get("/users");
+        setUsers(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchUsers();
   }, []);
 
   return (

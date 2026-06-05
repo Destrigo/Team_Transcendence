@@ -95,6 +95,8 @@ import RegisterPage from "./pages/RegisterPage";
 import Login from "./pages/Login";
 import ProtectedRoute from "./ProtectedRoute";
 import Profile from "./pages/Profile";
+import TermsPage from "./pages/Terms";
+import PrivacyPage from "./pages/Privacy";
 
 const App = () => {
   return (
@@ -102,6 +104,8 @@ const App = () => {
       <Route path="/" element={<UsersPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/profile" element={ <ProtectedRoute> <Profile /> </ProtectedRoute> } />
     </Routes>
   );

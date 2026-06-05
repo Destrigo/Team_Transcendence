@@ -24,4 +24,19 @@ export class UsersService {
       where: { email },
     });
   }
+
+  async getMe(authUser: any) {
+  return this.prisma.user.findUnique({
+    where: {
+      id: authUser.userId,
+    },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      avatar_url: true,
+      created_at: true,
+    },
+  });
+}
 }
