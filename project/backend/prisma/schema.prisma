@@ -4,10 +4,8 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "./backend/generated"
-  previewFeatures = ["relatedJoins"]
-
+  provider = "prisma-client"
+  output   = "../../prisma/backend/generated"
 }
 
 datasource db {
@@ -31,6 +29,8 @@ model User {
   lastSeen          DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+
+  @@index([createdAt])
 
   // Relations
   orders            Order[]
@@ -60,6 +60,8 @@ model Asset {
   orders            Order[]
   holdings          Holdings[]
   priceAlerts       PriceAlerts[]
+
+  @@index([type])
 }
 
 model Order {
@@ -78,6 +80,8 @@ model Order {
   user              User @relation(fields: [userId], references: [id])
   asset             Asset @relation(fields: [assetId], references: [id])
 
+  @@index([userId, createdAt])
+  @@index([status, orderType])
 }
 
 model Holdings {
@@ -86,12 +90,13 @@ model Holdings {
   assetId           String      
   quantity          Decimal     // total held
   avgBuyPrice       Decimal     // Weighted average purchase price
-  updatedAt         DateTime
+  updatedAt         DateTime    @updatedAt
 
   user              User        @relation(fields: [userId], references: [id])
-  asset             Asset      @relation(fields: [assetId], references: [id])
-  
+  asset             Asset       @relation(fields: [assetId], references: [id])
+
   @@unique([userId, assetId])
+  @@index([userId])
 }
 
 model PortfolioSnapshots {
@@ -100,9 +105,13 @@ model PortfolioSnapshots {
   totalValue        Decimal     // balance + holdings = value at snapshot time
   balance           Decimal     // Cash balance at snapshot time
   holdingsValue     Decimal     // sum of holdings * current price
-  snapshotDate      DateTime    // One user per day?
+  snapshotDate      DateTime    @db.Date
+  createdAt         DateTime    @default(now())
 
   user              User        @relation(fields: [userId], references: [id])
+
+  @@unique([userId, snapshotDate])
+  @@index([userId, snapshotDate])
 }
 
 model Friendships { 
@@ -114,7 +123,10 @@ model Friendships {
 
   requester         User @relation("friendship_requester", fields: [requesterId], references: [id])
   addressee         User @relation("friendship_addressee", fields: [addresseeId], references: [id])
+
   @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
 }
 
 
@@ -128,6 +140,8 @@ model Messages {
 
   sender   User @relation("message_sender", fields: [senderId], references: [id])
   receiver User @relation("message_receiver", fields: [receiverId], references: [id])
+
+  @@index([senderId, receiverId, createdAt])
 }
 
 model Notifications {
@@ -141,6 +155,8 @@ model Notifications {
   createdAt         DateTime  @default(now())
 
   user              User        @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead, createdAt])
 }
 
 model PriceAlerts {
