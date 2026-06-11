@@ -12,22 +12,26 @@ datasource db {
 }
 
 model User {
-  id                   String   @id @default(uuid())
-  email                String   @unique
-  password_hash        String?
-  username             String   @unique
-  display_name         String?
-  avatar_url           String?
-  balance              Decimal  @default(0)
-  oauth_provider       String?
-  oauth_id             String?
-  two_factor_secret    String?
-  two_factor_enabled   Boolean  @default(false)
-  language             String   @default("en")
-  is_online            Boolean  @default(false)
-  last_seen            DateTime?
-  created_at           DateTime @default(now())
-  updated_at           DateTime @updatedAt
+  id                 String    @id @default(uuid()) @db.Uuid
+  email              String    @unique
+  password_hash      String?
+  username           String    @unique
+  display_name       String?
+  avatar_url         String?
+  balance            Decimal   @default(0)
+  oauth_provider     String?
+  oauth_id           String?
+  two_factor_secret  String?
+  two_factor_enabled Boolean   @default(false)
+  language           String    @default("en")
+  is_online          Boolean   @default(false)
+  last_seen          DateTime?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+
+  orders             Order[]
+  holdings           Holding[]
+  portfolioSnapshots PortfolioSnapshot[]
 
   @@map("users")
 }
@@ -40,7 +44,7 @@ enum AssetType {
 }
 
 model Asset {
-  id             String    @id @default(uuid())
+  id             String    @id @default(uuid()) @db.Uuid
   symbol         String    @unique
   name           String
   type           AssetType
@@ -56,9 +60,90 @@ model Asset {
   createdAt      DateTime  @default(now()) @map("created_at")
 
   // Relations added when trading module is built:
-  // orders      Order[]
-  // holdings    Holding[]
+  orders   Order[]
+  holdings Holding[]
   // priceAlerts PriceAlert[]
 
   @@map("assets")
+}
+
+enum OrderType {
+  BUY
+  SELL
+}
+
+enum OrderExecutionType {
+  MARKET
+  LIMIT
+}
+
+enum OrderStatus {
+  PENDING
+  FILLED
+  CANCELLED
+}
+
+model Order {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId  String @map("user_id") @db.Uuid
+  assetId String @map("asset_id") @db.Uuid
+
+  type      OrderType
+  orderType OrderExecutionType @map("order_type")
+
+  quantity Decimal @db.Decimal(15, 8)
+  price    Decimal @db.Decimal(15, 6)
+  total    Decimal @db.Decimal(15, 2)
+
+  status OrderStatus @default(PENDING)
+
+  filledAt  DateTime? @map("filled_at") @db.Timestamp(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user  User  @relation(fields: [userId], references: [id])
+  asset Asset @relation(fields: [assetId], references: [id])
+
+  @@map("orders")
+}
+
+model Holding {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId  String @map("user_id") @db.Uuid
+  assetId String @map("asset_id") @db.Uuid
+
+  quantity Decimal @db.Decimal(15, 8)
+
+  avgBuyPrice Decimal @map("avg_buy_price") @db.Decimal(15, 6)
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  asset Asset @relation(fields: [assetId], references: [id])
+
+  @@unique([userId, assetId])
+  @@map("holdings")
+}
+
+model PortfolioSnapshot {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @map("user_id") @db.Uuid
+
+  totalValue Decimal @map("total_value") @db.Decimal(15, 2)
+
+  balance Decimal @db.Decimal(15, 2)
+
+  holdingsValue Decimal @map("holdings_value") @db.Decimal(15, 2)
+
+  snapshotDate DateTime @map("snapshot_date") @db.Date
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, snapshotDate])
+  @@map("portfolio_snapshots")
 }
