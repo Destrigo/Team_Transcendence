@@ -11,6 +11,38 @@ datasource db {
   provider = "postgresql"
 }
 
+enum AssetType {
+  crypto
+  stock
+}
+
+enum OrderSide {
+  buy
+  sell
+}
+
+enum OrderKind {
+  market
+  limit
+}
+
+enum OrderStatus {
+  pending
+  filled
+  cancelled
+}
+
+enum FriendshipStatus {
+  pending
+  accepted
+  declined
+}
+
+enum AlertDirection {
+  above
+  below
+}
+
 model User {
   id                String    @id @default(cuid())
   email             String    @unique
@@ -32,22 +64,22 @@ model User {
   @@index([createdAt])
 
   // Relations
-  orders            Order[]
-  holdings          Holdings[]
-  portfolioSnapshots PortfolioSnapshots[]
-  sentMessages      Messages[] @relation("message_sender")
-  receivedMessages  Messages[] @relation("message_receiver")
-  sentFriendRequests Friendships[] @relation("friendship_requester")
+  orders                Order[]
+  holdings              Holdings[]
+  portfolioSnapshots    PortfolioSnapshots[]
+  sentMessages          Messages[] @relation("message_sender")
+  receivedMessages      Messages[] @relation("message_receiver")
+  sentFriendRequests    Friendships[] @relation("friendship_requester")
   receivedFriendRequests Friendships[] @relation("friendship_addressee")
-  notifications     Notifications[]
-  priceAlerts       PriceAlerts[]
+  notifications         Notifications[]
+  priceAlerts           PriceAlerts[]
 }
 
 model Asset {
   id                String    @id @default(cuid())
   symbol            String    @unique  //BTC, ETH, APPL (the ticker)
   name              String 
-  type              String    // <-- Convert to enum later.
+  type              AssetType
   currentPrice      Decimal   // Last cached price from API
   priceUpdatedAt    DateTime  // Last updated timestamp
   logoUrl           String?
@@ -67,12 +99,12 @@ model Order {
   id                String      @id @default(cuid())
   userId            String      
   assetId           String      
-  type              String      // <-- Conver to enum later (buy or sell)
-  orderType         String      // <-- Conver to enum later (market or limit)
-  quantity          Decimal     // Amount of Assets
-  price             Decimal     // execution price (market) or target price (limit)
-  total             Decimal     // quantity * price
-  status            String      // <-- Conver to enumn ('pending', 'filled', 'cancelled')
+  type              OrderSide
+  orderType         OrderKind
+  quantity          Decimal
+  price             Decimal
+  total             Decimal
+  status            OrderStatus
   filledAt          DateTime?
   createdAt         DateTime    @default(now())
 
@@ -117,7 +149,7 @@ model Friendships {
   id                String     @id @default(cuid())
   requesterId       String     
   addresseeId       String     
-  status            String      // <-- Concert to enum later (Pending, accepted, declined)
+  status            FriendshipStatus
   createdAt         DateTime   @default(now())
 
   requester         User @relation("friendship_requester", fields: [requesterId], references: [id])
@@ -163,7 +195,7 @@ model PriceAlerts {
   userId            String    
   assetId           String    
   targetPrice       Decimal
-  direction         String
+  direction         AlertDirection
   isTriggered       Boolean   @default(false)
   createdAt         DateTime  @default(now())
 
