@@ -5,8 +5,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AssetsModule } from './assets/assets.module';
+import { WebsocketModule } from './websocket/websocket.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
-// AuthModule and UsersModule will be added after merging the pavel branch
+// TODO: uncomment after merging pavel branch
+// import { AuthModule } from './auth/auth.module';
+// import { UsersModule } from './users/users.module';
+// import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -14,6 +19,11 @@ import { AssetsModule } from './assets/assets.module';
     ScheduleModule.forRoot(),
     PrismaModule,
     AssetsModule,
+    WebsocketModule,
+    AnalyticsModule,
+    // AuthModule,
+    // UsersModule,
+    // OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
