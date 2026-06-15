@@ -8,7 +8,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
 	private static createDriverAdapter() {
 		const pool = new pkg.Pool({
-			connectionString: 'postgresql://papertrade:papertrade_secret@localhost:5432/papertrade'
+			connectionString: 'postgresql://papertrade:papertrade_secret@localhost:5432/papertrade',
+			ssl: false
 		});
 
 		return new PrismaPg(pool);
