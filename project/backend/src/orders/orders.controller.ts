@@ -11,11 +11,14 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard)
   @Get()
   getOrders(@Req() req, @Query() query: GetOrdersQueryDto) {
-    return this.ordersService.getUserOrders(req.user.id, query);
+    console.log('REQ USER:', req.user);
+    return this.ordersService.getUserOrders(req.user.userId, query);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   createOrder(@Req() req, @Body() dto: CreateOrderDto) {
-    return this.ordersService.createOrder(req.user.id, dto);
+    console.log('REQ USER:', req.user);
+    return this.ordersService.createOrder(req.user.userId, dto);
   }
 }

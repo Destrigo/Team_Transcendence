@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsUUID, Min } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
 import { OrderType, OrderExecutionType } from '@prisma/client';
 
 export class CreateOrderDto {
@@ -15,6 +15,7 @@ export class CreateOrderDto {
   @Min(0.00000001)
   quantity: number;
 
-  // только для LIMIT ордеров
+  @IsOptional()
+  @IsNumber()
   price?: number;
 }

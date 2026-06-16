@@ -1,17 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { GetOrdersQueryDto } from './dto/get-orders.query.dto';
+import { Prisma } from '@prisma/client';
+import { TradingService } from '../trading/trading.service';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private tradingService: TradingService,
+  ) {}
 
-  async getUserOrders(userId: string, filters: any) {
+  async getUserOrders(userId: string, query: GetOrdersQueryDto) {
+    const filters: Prisma.OrderWhereInput = {
+      userId,
+    };
+
+    if (query.status) {
+      filters.status = query.status;
+    }
+
+    if (query.type) {
+      filters.type = query.type;
+    }
+
+    if (query.assetId) {
+      filters.assetId = query.assetId;
+    }
+
     return this.prisma.order.findMany({
-      where: {
-        userId,
-        ...filters,
-      },
+      where: filters,
       include: {
         asset: true,
       },
@@ -21,36 +39,8 @@ export class OrdersService {
     });
   }
 
-  async createOrder(userId: string, dto: CreateOrderDto) {
-    const asset = await this.prisma.asset.findUnique({
-      where: { id: dto.assetId },
-    });
-
-    if (!asset) {
-      throw new Error('Asset not found');
-    }
-
-    const price =
-      dto.orderType === 'MARKET' ? asset.currentPrice : dto.price;
-
-    if (!price) {
-      throw new Error('Price is required for LIMIT order');
-    }
-
-    const total = Number(price) * Number(dto.quantity);
-
-    const order = await this.prisma.order.create({
-      data: {
-        userId,
-        assetId: dto.assetId,
-        type: dto.type,
-        orderType: dto.orderType,
-        quantity: dto.quantity,
-        price,
-        total,
-      },
-    });
-
-    return order;
+  createOrder(userId: string, dto: any) {
+    console.log('ORDERS SERVICE HIT');
+    return this.tradingService.executeOrder(userId, dto);
   }
 }
