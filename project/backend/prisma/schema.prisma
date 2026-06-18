@@ -4,10 +4,203 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  
 }
 
 datasource db {
   provider = "postgresql"
 }
+
+enum AssetType {
+  crypto
+  stock
+}
+
+enum OrderSide {
+  buy
+  sell
+}
+
+enum OrderKind {
+  market
+  limit
+}
+
+enum OrderStatus {
+  pending
+  filled
+  cancelled
+}
+
+enum FriendshipStatus {
+  pending
+  accepted
+  declined
+}
+
+enum AlertDirection {
+  above
+  below
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  username          String    @unique
+  displayName       String?
+  passwordHash      String    //never store a plain password
+  avatarUrl         String?
+  balance           Decimal   @default(10000) //10k starting balance
+  oauthProvider     String?
+  oauthId           String?   //Provider's user id
+  twoFactorSecret   String?
+  twoFactorEnabled  Boolean   @default(false)
+  language          String    @default("en")
+  isOnline          Boolean   @default(false)
+  lastSeen          DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([createdAt])
+
+  // Relations
+  orders                Order[]
+  holdings              Holdings[]
+  portfolioSnapshots    PortfolioSnapshots[]
+  sentMessages          Messages[] @relation("message_sender")
+  receivedMessages      Messages[] @relation("message_receiver")
+  sentFriendRequests    Friendships[] @relation("friendship_requester")
+  receivedFriendRequests Friendships[] @relation("friendship_addressee")
+  notifications         Notifications[]
+  priceAlerts           PriceAlerts[]
+}
+
+model Asset {
+  id                String    @id @default(cuid())
+  symbol            String    @unique  //BTC, ETH, APPL (the ticker)
+  name              String 
+  type              AssetType
+  currentPrice      Decimal   // Last cached price from API
+  priceUpdatedAt    DateTime  // Last updated timestamp
+  logoUrl           String?
+  isActive          Boolean   @default(true) // Can users trade this stock
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  orders            Order[]
+  holdings          Holdings[]
+  priceAlerts       PriceAlerts[]
+
+  @@index([type])
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  userId            String      
+  assetId           String      
+  type              OrderSide
+  orderType         OrderKind
+  quantity          Decimal
+  price             Decimal
+  total             Decimal
+  status            OrderStatus
+  filledAt          DateTime?
+  createdAt         DateTime    @default(now())
+
+  user              User @relation(fields: [userId], references: [id])
+  asset             Asset @relation(fields: [assetId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([status, orderType])
+}
+
+model Holdings {
+  id                String      @id @default(cuid())
+  userId            String          
+  assetId           String      
+  quantity          Decimal     // total held
+  avgBuyPrice       Decimal     // Weighted average purchase price
+  updatedAt         DateTime    @updatedAt
+
+  user              User        @relation(fields: [userId], references: [id])
+  asset             Asset       @relation(fields: [assetId], references: [id])
+
+  @@unique([userId, assetId])
+  @@index([userId])
+}
+
+model PortfolioSnapshots {
+  id                String      @id @default(cuid())
+  userId            String      
+  totalValue        Decimal     // balance + holdings = value at snapshot time
+  balance           Decimal     // Cash balance at snapshot time
+  holdingsValue     Decimal     // sum of holdings * current price
+  snapshotDate      DateTime    @db.Date
+  createdAt         DateTime    @default(now())
+
+  user              User        @relation(fields: [userId], references: [id])
+
+  @@unique([userId, snapshotDate])
+  @@index([userId, snapshotDate])
+}
+
+model Friendships { 
+  id                String     @id @default(cuid())
+  requesterId       String     
+  addresseeId       String     
+  status            FriendshipStatus
+  createdAt         DateTime   @default(now())
+
+  requester         User @relation("friendship_requester", fields: [requesterId], references: [id])
+  addressee         User @relation("friendship_addressee", fields: [addresseeId], references: [id])
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
+}
+
+
+model Messages {
+  id                String    @id @default(cuid())
+  senderId          String    
+  receiverId        String    
+  content           String
+  isRead            Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+
+  sender   User @relation("message_sender", fields: [senderId], references: [id])
+  receiver User @relation("message_receiver", fields: [receiverId], references: [id])
+
+  @@index([senderId, receiverId, createdAt])
+}
+
+model Notifications {
+  id                String    @id @default(cuid())
+  userId            String   
+  type              String    
+  title             String
+  body              String
+  data              Json
+  isRead            Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+
+  user              User        @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead, createdAt])
+}
+
+model PriceAlerts {
+  id                String    @id @default(cuid())
+  userId            String    
+  assetId           String    
+  targetPrice       Decimal
+  direction         AlertDirection
+  isTriggered       Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+
+  asset             Asset      @relation(fields: [assetId], references: [id])
+  user              User        @relation(fields: [userId], references: [id])
+}
+

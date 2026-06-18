@@ -1,6 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable, BadRequestException, NotFoundException} from "@nestjs/common";
+import { FriendshipStatus } from '@prisma/client';
 import { PrismaService } from "src/prisma/prisma.service";
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+
 
 @Injectable()
 export class FriendsService {
@@ -22,13 +23,13 @@ export class FriendsService {
         const existingFriendship = await this.prisma.friendships.findFirst({
             where: {
                 OR: [
-                    { requesterId: requesterId, addresseeId: addresseeId },
-                    { requesterId: addresseeId, addresseeId: requesterId },
+                    { requesterId: requesterId, addresseeId: addresseeId, status: { in: [FriendshipStatus.pending, FriendshipStatus.accepted] } },
+                    { requesterId: addresseeId, addresseeId: requesterId, status: { in: [FriendshipStatus.pending, FriendshipStatus.accepted] } },
                 ]
             }
         });
         if (existingFriendship) {
-            console.log("Friend erquest invalid: Already friends. ");
+            console.log("Friend request invalid: Already friends. ");
             throw new BadRequestException('Friendship already exists')
         }
         console.log("Friend request valid");
@@ -36,7 +37,7 @@ export class FriendsService {
             data: {
                 requesterId,
                 addresseeId,
-                status: 'pending',
+                status: FriendshipStatus.pending,
             }
         });
 
@@ -44,7 +45,8 @@ export class FriendsService {
 
     async getFriends(userId: string) {
         const friendships = await this.prisma.friendships.findMany({
-            where: {
+            where: { 
+                status: FriendshipStatus.accepted,
                 OR: [
                     { requesterId: userId },
                     { addresseeId: userId },
@@ -55,13 +57,68 @@ export class FriendsService {
     }
 
     async getPendingRequests(userId: string) {
-        
+        const pendingRequests = await this.prisma.friendships.findMany({
+            where: {
+                status: FriendshipStatus.pending,
+                addresseeId: userId,
+            }
+        });
+        return pendingRequests;
     }
 
-    async acceptRequest(friendshipId: string, userId: string) {}
+    async acceptRequest(friendshipId: string, userId: string) {
+        const friendshipRequest = await this.prisma.friendships.findUnique({
+            where: { id: friendshipId }
+        });
+        if (!friendshipRequest) throw new NotFoundException('Friendship not found. ');
 
-    async declineRequest(friendshipId: string, userId: string) {}
+        if (friendshipRequest.addresseeId !== userId) {
+            console.log("Trying to accept a request not adressed to the user. ")
+            throw new ForbiddenException('Not authorised')
+        }
+        const updateStatus = await this.prisma.friendships.update({
+             where:{ id: friendshipId },
+            data: { status: FriendshipStatus.accepted },
+        });
 
-    async removeFriend(friendshipId: string, userId: string) {}
+        return updateStatus;
+    }
+
+    async declineRequest(friendshipId: string, userId: string) {
+        const friendshipRequest = await this.prisma.friendships.findUnique({
+            where: { id: friendshipId },
+        });
+        if (!friendshipRequest) { throw new NotFoundException('Friendship Not Found'); }
+
+        if (friendshipRequest.addresseeId !== userId) {
+            console.log("Trying to decline a request not addressed to the user. ")
+            throw new ForbiddenException('Not authorised');
+        }
+
+        const updateStatus = await this.prisma.friendships.update({
+            where: {id: friendshipId },
+            data: { status: FriendshipStatus.declined },
+        });
+
+        return updateStatus;
+    }
+
+    async removeFriend(friendshipId: string, userId: string) {
+        const existingFriendship = await this.prisma.friendships.findUnique({
+            where: { id: friendshipId },
+        });
+
+        if (!existingFriendship) { throw new NotFoundException('Friendship not found'); }
+
+        if (existingFriendship.requesterId !== userId && existingFriendship.addresseeId !== userId) {
+            throw new ForbiddenException('Request not authorised');
+        }
+
+        await this.prisma.friendships.delete({
+            where: { id: friendshipId },
+        });
+        
+        return { message: 'Friend removed' };
+    }
 
 }
