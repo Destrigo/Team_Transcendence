@@ -1,32 +1,36 @@
-import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
-export default function Dashboard() {
+// TODO: import real data hooks once backend is ready
+// import { usePortfolio } from '@/hooks/usePortfolio';
+
+const Dashboard = () => {
+  const { t } = useTranslation();
+
   return (
-    <div style={{ maxWidth: 900, margin: '40px auto', fontFamily: 'sans-serif' }}>
-      <h1>Dashboard</h1>
-      <nav style={{ display: 'flex', gap: 16, marginBottom: 32 }}>
-        <Link to="/trading">Trading</Link>
-        <Link to="/analytics">Analytics</Link>
-        <Link to="/settings">Settings</Link>
-      </nav>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-        <div style={{ border: '1px solid #ccc', padding: 16, borderRadius: 8 }}>
-          <h3>Portfolio Value</h3>
-          <p style={{ fontSize: 24, fontWeight: 'bold' }}>$10,000.00</p>
-          <small>Starting balance</small>
+    <div className="p-6">
+      <h1 className="mb-6 text-2xl font-bold">{t('dashboard.title')}</h1>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="text-sm text-muted-foreground">{t('dashboard.portfolioValue')}</p>
+          <p className="mt-1 text-2xl font-bold">—</p>
         </div>
-        <div style={{ border: '1px solid #ccc', padding: 16, borderRadius: 8 }}>
-          <h3>P&L</h3>
-          <p style={{ fontSize: 24, fontWeight: 'bold', color: 'green' }}>+$0.00</p>
-          <small>All time</small>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="text-sm text-muted-foreground">{t('dashboard.balance')}</p>
+          <p className="mt-1 text-2xl font-bold">—</p>
         </div>
-        <div style={{ border: '1px solid #ccc', padding: 16, borderRadius: 8 }}>
-          <h3>Open Positions</h3>
-          <p style={{ fontSize: 24, fontWeight: 'bold' }}>0</p>
-          <small>Active holdings</small>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="text-sm text-muted-foreground">{t('dashboard.totalPnl')}</p>
+          <p className="mt-1 text-2xl font-bold">—</p>
         </div>
       </div>
-      <p style={{ marginTop: 32, color: '#888' }}>Portfolio data will update after the trading API is connected.</p>
+
+      <div className="mt-6">
+        <h2 className="mb-3 text-lg font-semibold">{t('dashboard.recentTrades')}</h2>
+        <p className="text-sm text-muted-foreground">{t('common.noData')}</p>
+      </div>
     </div>
   );
-}
+};
+
+export default Dashboard;
