@@ -26,7 +26,7 @@ export default function Dashboard() {
           <small>Active holdings</small>
         </div>
       </div>
-      <p style={{ marginTop: 32, color: '#888' }}>TODO: connect to real portfolio API</p>
+      <p style={{ marginTop: 32, color: '#888' }}>Portfolio data will update after the trading API is connected.</p>
     </div>
   );
 }

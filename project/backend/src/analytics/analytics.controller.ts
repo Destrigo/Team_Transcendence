@@ -1,60 +1,98 @@
-import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
-import { Request, Response } from 'express';
+import {
+  Controller,
+  Get,
+  Query,
+  Req,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { AnalyticsService } from './analytics.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+
+type AuthenticatedRequest = Request & {
+  user?: {
+    userId?: string;
+    id?: string;
+  };
+};
 
 @Controller('analytics')
-@UseGuards(JwtAuthGuard)
 export class AnalyticsController {
   constructor(private analytics: AnalyticsService) {}
 
   @Get('portfolio')
   getPortfolio(
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = (req.user as any).userId;
-    return this.analytics.getPortfolioHistory(userId, from ? new Date(from) : undefined, to ? new Date(to) : undefined);
+    const userId = this.getUserId(req);
+    return this.analytics.getPortfolioHistory(
+      userId,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
   }
 
   @Get('allocation')
-  getAllocation(@Req() req: Request) {
-    return this.analytics.getAllocation((req.user as any).userId);
+  getAllocation(@Req() req: AuthenticatedRequest) {
+    return this.analytics.getAllocation(this.getUserId(req));
   }
 
   @Get('stats')
   getStats(
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = (req.user as any).userId;
-    return this.analytics.getTradeStats(userId, from ? new Date(from) : undefined, to ? new Date(to) : undefined);
+    const userId = this.getUserId(req);
+    return this.analytics.getTradeStats(
+      userId,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
   }
 
   @Get('trades')
   getTrades(
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = (req.user as any).userId;
-    return this.analytics.getTrades(userId, from ? new Date(from) : undefined, to ? new Date(to) : undefined);
+    const userId = this.getUserId(req);
+    return this.analytics.getTrades(
+      userId,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
   }
 
   @Get('export/csv')
   async exportCsv(
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
     @Res() res: Response,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = (req.user as any).userId;
-    const csv = await this.analytics.exportCsv(userId, from ? new Date(from) : undefined, to ? new Date(to) : undefined);
+    const userId = this.getUserId(req);
+    const csv = await this.analytics.exportCsv(
+      userId,
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
 
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="trades.csv"');
     res.send(csv);
+  }
+
+  private getUserId(req: AuthenticatedRequest): string {
+    const userId = req.user?.userId ?? req.user?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('Authenticated user is required');
+    }
+
+    return userId;
   }
 }

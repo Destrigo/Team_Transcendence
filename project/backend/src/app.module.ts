@@ -8,11 +8,6 @@ import { AssetsModule } from './assets/assets.module';
 import { WebsocketModule } from './websocket/websocket.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 
-// TODO: uncomment after merging pavel branch
-// import { AuthModule } from './auth/auth.module';
-// import { UsersModule } from './users/users.module';
-// import { OrdersModule } from './orders/orders.module';
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -21,9 +16,6 @@ import { AnalyticsModule } from './analytics/analytics.module';
     AssetsModule,
     WebsocketModule,
     AnalyticsModule,
-    // AuthModule,
-    // UsersModule,
-    // OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

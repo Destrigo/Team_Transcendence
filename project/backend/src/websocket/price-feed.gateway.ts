@@ -15,7 +15,9 @@ import { Logger } from '@nestjs/common';
   },
   namespace: '/prices',
 })
-export class PriceFeedGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class PriceFeedGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -29,7 +31,9 @@ export class PriceFeedGateway implements OnGatewayConnection, OnGatewayDisconnec
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
-  broadcastPrices(updates: Array<{ symbol: string; price: number; change24h: number }>) {
+  broadcastPrices(
+    updates: Array<{ symbol: string; price: number; change24h: number }>,
+  ) {
     this.server.emit('price:update', updates);
   }
 

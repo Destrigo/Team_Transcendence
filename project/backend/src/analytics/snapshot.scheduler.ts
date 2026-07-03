@@ -36,9 +36,17 @@ export class SnapshotScheduler {
         const totalValue = balance + holdingsValue;
 
         await this.prisma.portfolioSnapshot.upsert({
-          where: { userId_snapshotDate: { userId: user.id, snapshotDate: today } },
+          where: {
+            userId_snapshotDate: { userId: user.id, snapshotDate: today },
+          },
           update: { totalValue, balance, holdingsValue },
-          create: { userId: user.id, totalValue, balance, holdingsValue, snapshotDate: today },
+          create: {
+            userId: user.id,
+            totalValue,
+            balance,
+            holdingsValue,
+            snapshotDate: today,
+          },
         });
 
         count++;

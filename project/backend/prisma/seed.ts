@@ -3,8 +3,6 @@ import { PrismaClient, AssetType } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const assets = [
-  // ── CRYPTO (10) ────────────────────────────────────────────────
-  // coingeckoId matches the CoinGecko /simple/price?ids= parameter
   {
     symbol: 'BTC',
     name: 'Bitcoin',
@@ -76,8 +74,6 @@ const assets = [
     logoUrl: 'https://assets.coingecko.com/coins/images/5/thumb/dogecoin.png',
   },
 
-  // ── STOCKS (10) ────────────────────────────────────────────────
-  // finnhubSymbol is the ticker used in Finnhub /quote?symbol=
   {
     symbol: 'AAPL',
     name: 'Apple Inc.',
@@ -151,17 +147,17 @@ const assets = [
 ];
 
 async function main() {
-  console.log('🌱 Seeding assets...');
+  console.log('Seeding assets...');
 
   for (const asset of assets) {
     await prisma.asset.upsert({
       where: { symbol: asset.symbol },
-      update: {},  // don't overwrite prices if already seeded
+      update: {},
       create: asset,
     });
   }
 
-  console.log(`✅ Seeded ${assets.length} assets (10 crypto + 10 stocks)`);
+  console.log(`Seeded ${assets.length} assets`);
 }
 
 main()

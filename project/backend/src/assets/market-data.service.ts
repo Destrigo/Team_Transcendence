@@ -7,7 +7,6 @@ import { PriceFeedGateway } from '../websocket/price-feed.gateway';
 @Injectable()
 export class MarketDataService {
   private readonly logger = new Logger(MarketDataService.name);
-  private lastCryptoPrices: Record<string, any> = {};
 
   constructor(
     private prisma: PrismaService,
@@ -29,13 +28,16 @@ export class MarketDataService {
         .filter(Boolean)
         .join(',');
 
-      const baseUrl = this.config.get('COINGECKO_API_URL', 'https://api.coingecko.com/api/v3');
+      const baseUrl = this.config.get(
+        'COINGECKO_API_URL',
+        'https://api.coingecko.com/api/v3',
+      );
       const url = `${baseUrl}/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`;
 
       const response = await fetch(url);
 
       if (!response.ok) {
-        this.logger.warn(`CoinGecko returned ${response.status} — serving cached prices`);
+        this.logger.warn(`CoinGecko returned ${response.status}`);
         return;
       }
 
@@ -61,7 +63,6 @@ export class MarketDataService {
         updatedCount++;
       }
 
-      this.lastCryptoPrices = data;
       this.logger.log(`Updated ${updatedCount} crypto prices`);
 
       if (this.priceFeed) {
@@ -73,9 +74,15 @@ export class MarketDataService {
     }
   }
 
-  async getCryptoHistory(coingeckoId: string, days: number = 30): Promise<Array<[number, number]>> {
+  async getCryptoHistory(
+    coingeckoId: string,
+    days: number = 30,
+  ): Promise<Array<[number, number]>> {
     try {
-      const baseUrl = this.config.get('COINGECKO_API_URL', 'https://api.coingecko.com/api/v3');
+      const baseUrl = this.config.get(
+        'COINGECKO_API_URL',
+        'https://api.coingecko.com/api/v3',
+      );
       const url = `${baseUrl}/coins/${coingeckoId}/market_chart?vs_currency=usd&days=${days}`;
       const response = await fetch(url);
 
@@ -106,7 +113,10 @@ export class MarketDataService {
 
       if (stockAssets.length === 0) return;
 
-      const baseUrl = this.config.get('FINNHUB_API_URL', 'https://finnhub.io/api/v1');
+      const baseUrl = this.config.get(
+        'FINNHUB_API_URL',
+        'https://finnhub.io/api/v1',
+      );
       let updatedCount = 0;
 
       for (const asset of stockAssets) {
@@ -117,7 +127,9 @@ export class MarketDataService {
           const response = await fetch(url);
 
           if (!response.ok) {
-            this.logger.warn(`Finnhub returned ${response.status} for ${asset.symbol}`);
+            this.logger.warn(
+              `Finnhub returned ${response.status} for ${asset.symbol}`,
+            );
             continue;
           }
 
@@ -155,7 +167,9 @@ export class MarketDataService {
     return asset ? Number(asset.currentPrice) : 0;
   }
 
-  async getAllPrices(): Promise<Array<{ symbol: string; price: number; change24h: number }>> {
+  async getAllPrices(): Promise<
+    Array<{ symbol: string; price: number; change24h: number }>
+  > {
     const assets = await this.prisma.asset.findMany({
       where: { isActive: true },
       select: { symbol: true, currentPrice: true, change24h: true },

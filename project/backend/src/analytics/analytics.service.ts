@@ -27,12 +27,21 @@ export interface AllocationItem {
 export class AnalyticsService {
   constructor(private prisma: PrismaService) {}
 
-  async getPortfolioHistory(userId: string, from?: Date, to?: Date): Promise<PortfolioDataPoint[]> {
+  async getPortfolioHistory(
+    userId: string,
+    from?: Date,
+    to?: Date,
+  ): Promise<PortfolioDataPoint[]> {
     const snapshots = await this.prisma.portfolioSnapshot.findMany({
       where: {
         userId,
         ...(from || to
-          ? { snapshotDate: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } }
+          ? {
+              snapshotDate: {
+                ...(from ? { gte: from } : {}),
+                ...(to ? { lte: to } : {}),
+              },
+            }
           : {}),
       },
       orderBy: { snapshotDate: 'asc' },
@@ -50,9 +59,14 @@ export class AnalyticsService {
     const [holdings, user] = await Promise.all([
       this.prisma.holding.findMany({
         where: { userId },
-        include: { asset: { select: { symbol: true, name: true, currentPrice: true } } },
+        include: {
+          asset: { select: { symbol: true, name: true, currentPrice: true } },
+        },
       }),
-      this.prisma.user.findUnique({ where: { id: userId }, select: { balance: true } }),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { balance: true },
+      }),
     ]);
 
     const holdingsValue = holdings.reduce(
@@ -77,18 +91,34 @@ export class AnalyticsService {
       });
 
     if (cash > 0) {
-      items.push({ symbol: 'USD', name: 'Cash', value: cash, percentage: (cash / totalValue) * 100 });
+      items.push({
+        symbol: 'USD',
+        name: 'Cash',
+        value: cash,
+        percentage: (cash / totalValue) * 100,
+      });
     }
 
     return items;
   }
 
-  async getTradeStats(userId: string, from?: Date, to?: Date): Promise<TradeStats> {
+  async getTradeStats(
+    userId: string,
+    from?: Date,
+    to?: Date,
+  ): Promise<TradeStats> {
     const orders = await this.prisma.order.findMany({
       where: {
         userId,
         status: OrderStatus.FILLED,
-        ...(from || to ? { filledAt: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } } : {}),
+        ...(from || to
+          ? {
+              filledAt: {
+                ...(from ? { gte: from } : {}),
+                ...(to ? { lte: to } : {}),
+              },
+            }
+          : {}),
       },
       include: { asset: { select: { symbol: true, currentPrice: true } } },
     });
@@ -106,7 +136,10 @@ export class AnalyticsService {
       const fillPrice = Number(o.price);
       const qty = Number(o.quantity);
       const currentPrice = Number(o.asset.currentPrice);
-      const pnl = o.type === 'BUY' ? (currentPrice - fillPrice) * qty : (fillPrice - currentPrice) * qty;
+      const pnl =
+        o.type === 'BUY'
+          ? (currentPrice - fillPrice) * qty
+          : (fillPrice - currentPrice) * qty;
       bySymbol[symbol].pnl += pnl;
     }
 
@@ -127,7 +160,14 @@ export class AnalyticsService {
       where: {
         userId,
         status: OrderStatus.FILLED,
-        ...(from || to ? { filledAt: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } } : {}),
+        ...(from || to
+          ? {
+              filledAt: {
+                ...(from ? { gte: from } : {}),
+                ...(to ? { lte: to } : {}),
+              },
+            }
+          : {}),
       },
       include: { asset: { select: { symbol: true, name: true } } },
       orderBy: { filledAt: 'desc' },
@@ -142,7 +182,15 @@ export class AnalyticsService {
 
     const rows = trades
       .map((t) =>
-        [t.filledAt?.toISOString() ?? '', t.asset.symbol, t.asset.name, t.type, t.quantity, t.price, t.total].join(','),
+        [
+          t.filledAt?.toISOString() ?? '',
+          t.asset.symbol,
+          t.asset.name,
+          t.type,
+          t.quantity,
+          t.price,
+          t.total,
+        ].join(','),
       )
       .join('\n');
 

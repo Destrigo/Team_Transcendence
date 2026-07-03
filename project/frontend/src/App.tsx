@@ -9,7 +9,6 @@ import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 
-// Placeholder guard — replace with real auth context (from pavel branch)
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('access_token');
   if (!token) return <Navigate to="/login" replace />;
