@@ -7,11 +7,12 @@ import { MessageService } from "./messages/messages.service";
 import { LeaderboardController } from "./leaderboard/leaderboard.controller";
 import { LeaderboardService } from "./leaderboard/leaderboard.service";
 import { PresenceGateway } from "./presence/presence.gateway";
+import { MessageGateway } from "./messages/chat.gateway";
 
 @Module({
     imports: [PrismaModule],
     controllers: [FriendsController, MessageController, LeaderboardController],
-    providers: [FriendsService, MessageService, LeaderboardService, PresenceGateway],
+    providers: [FriendsService, MessageService, LeaderboardService, PresenceGateway, MessageGateway],
     exports: [],
 })
 export class SocialModule {}
