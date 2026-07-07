@@ -1,7 +1,8 @@
-import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, UseGuards, Req, Post, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { Request } from 'express';
+import { DepositDto } from './dto/deposit.dto';
 
 @Controller('users')
 export class UsersController {
@@ -16,5 +17,14 @@ export class UsersController {
   @Get()
   getUsers() {
     return this.usersService.getAllUsers();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('deposit')
+  addBalance(
+    @Req() req,
+    @Body() dto: DepositDto
+  ) {
+    return this.usersService.addBalance(req.user.userId, dto.amount);
   }
 }

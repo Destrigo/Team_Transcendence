@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -38,5 +39,24 @@ export class UsersService {
       created_at: true,
     },
   });
-}
+  }
+
+  async addBalance(userId: string, amount: number) {
+    if (amount <= 0) {
+      throw new BadRequestException('Amount must be > 0');
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        balance: {
+          increment: amount,
+        },
+      },
+    });
+
+    const { password_hash, two_factor_secret, ...safeUser } = user;
+
+    return safeUser;
+  }
 }
