@@ -10,6 +10,10 @@ import Trading from "./pages/Trading";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import Leaderboard from "./pages/leaderboard";
+import Friends from "./pages/Friends";
+import Messages from "./pages/Messages"
+import usePresence from "./hooks/usePresence";
 
 // TODO: replace with ProtectedRoute once AuthProvider is wired up
 // function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -18,18 +22,24 @@ import NotFound from "./pages/NotFound";
 //   return <>{children}</>;
 // }
 
-const App = () => (
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/trading" element={<Trading />} />
-      <Route path="/analytics" element={<Analytics />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  </BrowserRouter>
-);
+const App = () => {
+  usePresence();
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/trading" element={<Trading />} />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/friends" element={<Friends />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
 export default App;
