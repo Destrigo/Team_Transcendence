@@ -54,7 +54,8 @@ export class SnapshotScheduler {
 
       this.logger.log(`Snapshots written for ${count} users`);
     } catch (error) {
-      this.logger.error(`Snapshot job failed: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Snapshot job failed: ${message}`);
     }
   }
 }

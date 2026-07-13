@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Query,
@@ -23,47 +24,53 @@ export class AnalyticsController {
   @Get('portfolio')
   getPortfolio(
     @Req() req: AuthenticatedRequest,
+    @Query('userId') userIdOverride?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = this.getUserId(req);
+    const userId = this.getUserId(req, userIdOverride);
     return this.analytics.getPortfolioHistory(
       userId,
-      from ? new Date(from) : undefined,
-      to ? new Date(to) : undefined,
+      this.parseDate(from, 'from'),
+      this.parseDate(to, 'to'),
     );
   }
 
   @Get('allocation')
-  getAllocation(@Req() req: AuthenticatedRequest) {
-    return this.analytics.getAllocation(this.getUserId(req));
+  getAllocation(
+    @Req() req: AuthenticatedRequest,
+    @Query('userId') userIdOverride?: string,
+  ) {
+    return this.analytics.getAllocation(this.getUserId(req, userIdOverride));
   }
 
   @Get('stats')
   getStats(
     @Req() req: AuthenticatedRequest,
+    @Query('userId') userIdOverride?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = this.getUserId(req);
+    const userId = this.getUserId(req, userIdOverride);
     return this.analytics.getTradeStats(
       userId,
-      from ? new Date(from) : undefined,
-      to ? new Date(to) : undefined,
+      this.parseDate(from, 'from'),
+      this.parseDate(to, 'to'),
     );
   }
 
   @Get('trades')
   getTrades(
     @Req() req: AuthenticatedRequest,
+    @Query('userId') userIdOverride?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = this.getUserId(req);
+    const userId = this.getUserId(req, userIdOverride);
     return this.analytics.getTrades(
       userId,
-      from ? new Date(from) : undefined,
-      to ? new Date(to) : undefined,
+      this.parseDate(from, 'from'),
+      this.parseDate(to, 'to'),
     );
   }
 
@@ -71,14 +78,15 @@ export class AnalyticsController {
   async exportCsv(
     @Req() req: AuthenticatedRequest,
     @Res() res: Response,
+    @Query('userId') userIdOverride?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = this.getUserId(req);
+    const userId = this.getUserId(req, userIdOverride);
     const csv = await this.analytics.exportCsv(
       userId,
-      from ? new Date(from) : undefined,
-      to ? new Date(to) : undefined,
+      this.parseDate(from, 'from'),
+      this.parseDate(to, 'to'),
     );
 
     res.setHeader('Content-Type', 'text/csv');
@@ -86,13 +94,28 @@ export class AnalyticsController {
     res.send(csv);
   }
 
-  private getUserId(req: AuthenticatedRequest): string {
-    const userId = req.user?.userId ?? req.user?.id;
+  private getUserId(
+    req: AuthenticatedRequest,
+    userIdOverride?: string,
+  ): string {
+    const userId = req.user?.userId ?? req.user?.id ?? userIdOverride;
 
     if (!userId) {
       throw new UnauthorizedException('Authenticated user is required');
     }
 
     return userId;
+  }
+
+  private parseDate(
+    value: string | undefined,
+    field: string,
+  ): Date | undefined {
+    if (!value) return undefined;
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) {
+      throw new BadRequestException(`Invalid date for ${field}`);
+    }
+    return d;
   }
 }

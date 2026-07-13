@@ -1,6 +1,7 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { AssetsService } from './assets.service';
 import { Public } from '../common/decorators/public.decorator';
+import { AssetsQueryDto } from './dto/assets-query.dto';
 
 @Controller('assets')
 export class AssetsController {
@@ -8,21 +9,11 @@ export class AssetsController {
 
   @Public()
   @Get()
-  async findAll(
-    @Query('q') q?: string,
-    @Query('type') type?: 'CRYPTO' | 'STOCK',
-    @Query('sort') sort?: 'price' | 'change' | 'name' | 'volume' | 'marketCap',
-    @Query('order') order?: 'asc' | 'desc',
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
+  async findAll(@Query() query: AssetsQueryDto) {
     return this.assetsService.findAll({
-      q,
-      type,
-      sort,
-      order,
-      page: page ? parseInt(page, 10) : 1,
-      limit: limit ? parseInt(limit, 10) : 20,
+      ...query,
+      page: query.page ?? 1,
+      limit: query.limit ?? 20,
     });
   }
 

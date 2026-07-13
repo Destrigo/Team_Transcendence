@@ -4,6 +4,17 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { PriceFeedGateway } from '../websocket/price-feed.gateway';
 
+type CoinGeckoPrice = {
+  usd?: number;
+  usd_24h_change?: number;
+  usd_24h_vol?: number;
+  usd_market_cap?: number;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 @Injectable()
 export class MarketDataService {
   private readonly logger = new Logger(MarketDataService.name);
@@ -28,10 +39,9 @@ export class MarketDataService {
         .filter(Boolean)
         .join(',');
 
-      const baseUrl = this.config.get(
-        'COINGECKO_API_URL',
-        'https://api.coingecko.com/api/v3',
-      );
+      const baseUrl =
+        this.config.get<string>('COINGECKO_API_URL') ??
+        'https://api.coingecko.com/api/v3';
       const url = `${baseUrl}/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`;
 
       const response = await fetch(url);
@@ -41,7 +51,10 @@ export class MarketDataService {
         return;
       }
 
-      const data = await response.json();
+      const raw: unknown = await response.json();
+      const data: Record<string, CoinGeckoPrice> = isRecord(raw)
+        ? (raw as Record<string, CoinGeckoPrice>)
+        : {};
       let updatedCount = 0;
 
       for (const asset of cryptoAssets) {
@@ -70,7 +83,8 @@ export class MarketDataService {
         this.priceFeed.broadcastPrices(prices);
       }
     } catch (error) {
-      this.logger.error(`Failed to fetch crypto prices: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch crypto prices: ${message}`);
     }
   }
 
@@ -79,10 +93,9 @@ export class MarketDataService {
     days: number = 30,
   ): Promise<Array<[number, number]>> {
     try {
-      const baseUrl = this.config.get(
-        'COINGECKO_API_URL',
-        'https://api.coingecko.com/api/v3',
-      );
+      const baseUrl =
+        this.config.get<string>('COINGECKO_API_URL') ??
+        'https://api.coingecko.com/api/v3';
       const url = `${baseUrl}/coins/${coingeckoId}/market_chart?vs_currency=usd&days=${days}`;
       const response = await fetch(url);
 
@@ -91,10 +104,13 @@ export class MarketDataService {
         return [];
       }
 
-      const data = await response.json();
-      return data.prices || [];
+      const raw: unknown = await response.json();
+      if (!isRecord(raw)) return [];
+      const prices = (raw as { prices?: unknown }).prices;
+      return Array.isArray(prices) ? (prices as Array<[number, number]>) : [];
     } catch (error) {
-      this.logger.error(`Failed to fetch crypto history: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch crypto history: ${message}`);
       return [];
     }
   }
@@ -102,7 +118,7 @@ export class MarketDataService {
   // Finnhub: one call per symbol, 60 calls/min free tier
   @Cron('*/60 * * * * *')
   async fetchStockPrices(): Promise<void> {
-    const apiKey = this.config.get('FINNHUB_API_KEY');
+    const apiKey = this.config.get<string>('FINNHUB_API_KEY');
 
     if (!apiKey || apiKey === 'your_finnhub_key_here') return;
 
@@ -113,10 +129,9 @@ export class MarketDataService {
 
       if (stockAssets.length === 0) return;
 
-      const baseUrl = this.config.get(
-        'FINNHUB_API_URL',
-        'https://finnhub.io/api/v1',
-      );
+      const baseUrl =
+        this.config.get<string>('FINNHUB_API_URL') ??
+        'https://finnhub.io/api/v1';
       let updatedCount = 0;
 
       for (const asset of stockAssets) {
@@ -133,21 +148,27 @@ export class MarketDataService {
             continue;
           }
 
-          const data = await response.json();
+          const raw: unknown = await response.json();
+          const data = isRecord(raw)
+            ? (raw as { c?: unknown; dp?: unknown })
+            : {};
+          const c = typeof data.c === 'number' ? data.c : undefined;
+          const dp = typeof data.dp === 'number' ? data.dp : undefined;
 
-          if (data.c && data.c > 0) {
+          if (typeof c === 'number' && c > 0) {
             await this.prisma.asset.update({
               where: { id: asset.id },
               data: {
-                currentPrice: data.c,
-                change24h: data.dp ?? 0,
+                currentPrice: c,
+                change24h: dp ?? 0,
                 priceUpdatedAt: new Date(),
               },
             });
             updatedCount++;
           }
         } catch (err) {
-          this.logger.warn(`Failed to fetch ${asset.symbol}: ${err.message}`);
+          const message = err instanceof Error ? err.message : String(err);
+          this.logger.warn(`Failed to fetch ${asset.symbol}: ${message}`);
         }
 
         await this.delay(200);
@@ -155,7 +176,8 @@ export class MarketDataService {
 
       this.logger.log(`Updated ${updatedCount} stock prices`);
     } catch (error) {
-      this.logger.error(`Failed to fetch stock prices: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to fetch stock prices: ${message}`);
     }
   }
 
