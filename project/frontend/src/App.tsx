@@ -1,32 +1,35 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-// TODO: uncomment when auth context is ready
-// import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-// import { NotificationProvider } from "@/contexts/NotificationContext";
-// import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import './App.css';
 
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Trading from "./pages/Trading";
-import Analytics from "./pages/Analytics";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
+import Index from './pages/Index';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Trading from './pages/Trading';
+import Analytics from './pages/Analytics';
+import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
 
-// TODO: replace with ProtectedRoute once AuthProvider is wired up
-// function ProtectedRoute({ children }: { children: React.ReactNode }) {
-//   const { isAuthenticated } = useAuth();
-//   if (!isAuthenticated) return <Navigate to="/login" replace />;
-//   return <>{children}</>;
-// }
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const token = localStorage.getItem('access_token');
+  if (!token) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const token = localStorage.getItem('access_token');
+  if (token) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
 
 const App = () => (
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/trading" element={<Trading />} />
-      <Route path="/analytics" element={<Analytics />} />
-      <Route path="/settings" element={<Settings />} />
+      <Route path="/" element={<Index />} />
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/trading" element={<ProtectedRoute><Trading /></ProtectedRoute>} />
+      <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>
