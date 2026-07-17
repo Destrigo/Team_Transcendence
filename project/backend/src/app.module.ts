@@ -7,6 +7,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AssetsModule } from './assets/assets.module';
 import { WebsocketModule } from './websocket/websocket.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -16,8 +18,10 @@ import { AnalyticsModule } from './analytics/analytics.module';
     AssetsModule,
     WebsocketModule,
     AnalyticsModule,
+    AuthModule,
+    UsersModule
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
