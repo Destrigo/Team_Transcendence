@@ -7,26 +7,25 @@ datasource db {
 }
 
 model User {
-  id                 String    @id @default(uuid()) @db.Uuid
-	email              String    @unique @db.VarChar(255)
-	passwordHash       String?   @map("password_hash") @db.VarChar(255)
-	hashedRefreshToken String?   @map("hashed_refresh_token") @db.VarChar(255)
-	username           String    @unique @db.VarChar(50)
+  id                 String              @id @default(uuid()) @db.Uuid
+  email              String              @unique @db.VarChar(255)
+  passwordHash       String?             @map("password_hash") @db.VarChar(255)
+  hashedRefreshToken String?             @map("hashed_refresh_token") @db.VarChar(255)
+  username           String              @unique @db.VarChar(50)
   display_name       String?
   avatar_url         String?
-  balance            Decimal   @default(10000)
-	oauthProvider      String?   @map("oauth_provider") @db.VarChar(50)
-	oauthId            String?   @map("oauth_id") @db.VarChar(255)
-	twoFactorSecret    String?   @map("two_factor_secret") @db.VarChar(255)
-	twoFactorEnabled   Boolean   @default(false) @map("two_factor_enabled")
-	language           String    @default("en") @db.VarChar(5)
-  is_online          Boolean   @default(false)
+  balance            Decimal             @default(10000)
+  oauthProvider      String?             @map("oauth_provider") @db.VarChar(50)
+  oauthId            String?             @map("oauth_id") @db.VarChar(255)
+  twoFactorSecret    String?             @map("two_factor_secret") @db.VarChar(255)
+  twoFactorEnabled   Boolean             @default(false) @map("two_factor_enabled")
+  language           String              @default("en") @db.VarChar(5)
+  is_online          Boolean             @default(false)
   last_seen          DateTime?
-  created_at         DateTime  @default(now())
-  updated_at         DateTime  @updatedAt
-
-  orders             Order[]
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
   holdings           Holding[]
+  orders             Order[]
   portfolioSnapshots PortfolioSnapshot[]
 
   @@map("users")
@@ -47,9 +46,8 @@ model Asset {
   isActive       Boolean   @default(true) @map("is_active")
   priceUpdatedAt DateTime? @map("price_updated_at")
   createdAt      DateTime  @default(now()) @map("created_at")
-
-  orders   Order[]
-  holdings Holding[]
+  holdings       Holding[]
+  orders         Order[]
 
   @@map("assets")
 }
@@ -66,9 +64,8 @@ model Order {
   status    OrderStatus        @default(PENDING)
   filledAt  DateTime?          @map("filled_at") @db.Timestamp(6)
   createdAt DateTime           @default(now()) @map("created_at") @db.Timestamp(6)
-
-  user  User  @relation(fields: [userId], references: [id])
-  asset Asset @relation(fields: [assetId], references: [id])
+  asset     Asset              @relation(fields: [assetId], references: [id])
+  user      User               @relation(fields: [userId], references: [id])
 
   @@index([userId, createdAt])
   @@index([status, orderType])
@@ -82,9 +79,8 @@ model Holding {
   quantity    Decimal  @db.Decimal(15, 8)
   avgBuyPrice Decimal  @map("avg_buy_price") @db.Decimal(15, 6)
   updatedAt   DateTime @updatedAt @map("updated_at")
-
-  user  User  @relation(fields: [userId], references: [id])
-  asset Asset @relation(fields: [assetId], references: [id])
+  asset       Asset    @relation(fields: [assetId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, assetId])
   @@index([userId])
@@ -99,8 +95,7 @@ model PortfolioSnapshot {
   holdingsValue Decimal  @map("holdings_value") @db.Decimal(15, 2)
   snapshotDate  DateTime @map("snapshot_date") @db.Date
   createdAt     DateTime @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, snapshotDate])
   @@index([userId, snapshotDate])

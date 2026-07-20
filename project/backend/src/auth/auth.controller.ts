@@ -1,6 +1,7 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Param } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Param, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, RefreshDto, OAuthDto, TwoFactorCodeDto } from './dto/auth.dto';
+import type { Response, Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -18,10 +19,32 @@ export class AuthController {
 	// POST /auth/login
 	@Post('login')
 	@HttpCode(HttpStatus.OK)
-	async login(@Body() dto: LoginDto) {
-		return this.authService.login(dto);
+	async login(
+	@Body() dto: LoginDto,
+	@Res({ passthrough: true }) res: Response,
+	) {
+	const result = await this.authService.login(dto);
+
+	if ('requires2FA' in result) {
+		return result;
 	}
 
+	res.cookie(
+		'access_token',
+		result.accessToken,
+		{
+		httpOnly: true,
+		secure: false,
+		sameSite: 'lax',
+		maxAge: 15 * 60 * 1000,
+		},
+	);
+
+	return {
+		language: result.language,
+	};
+	}
+	
 	// refresh JWT
 	@Post('refresh')
 	@HttpCode(HttpStatus.OK)

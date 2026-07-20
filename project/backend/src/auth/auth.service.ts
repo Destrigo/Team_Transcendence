@@ -161,10 +161,13 @@ export class AuthService {
 	}
 
 	private async generateTokens(userId: string, email: string, is2faActive: boolean) {
+
+		console.log("userId ", userId, "email ", email);
+
 		const payload = { sub: userId, email, is2faActive };
 		const [accessToken, refreshToken] = await Promise.all([
-				this.jwtService.signAsync(payload, { expiresIn: '15m', secret: 'ACCESS_SECRET' }),
-				this.jwtService.signAsync(payload, { expiresIn: '7d', secret: 'REFRESH_SECRET' })
+				this.jwtService.signAsync(payload, { expiresIn: '15m' , secret : process.env.JWT_SECRET }),
+				this.jwtService.signAsync(payload, { expiresIn: '7d' , secret : process.env.JWT_SECRET })
 		]);
 
 		return { accessToken, refreshToken };
