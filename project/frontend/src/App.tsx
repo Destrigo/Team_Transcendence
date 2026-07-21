@@ -10,18 +10,9 @@ import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import RegisterPage from "./pages/RegisterPage";
 import Profile from "./pages/Profile";
+import { ProtectedRoute } from './routes/ProtectedRoute';
+import { PublicRoute } from './routes/PublicRoute';
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('access_token');
-  if (!token) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-}
-
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('access_token');
-  if (token) return <Navigate to="/dashboard" replace />;
-  return <>{children}</>;
-}
 
 const App = () => (
   <BrowserRouter>

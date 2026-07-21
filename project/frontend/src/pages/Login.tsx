@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { useAuth } from '../auth/useAuth';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
@@ -12,6 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -29,16 +31,8 @@ export default function Login() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.message ?? t('auth.invalidCredentials'));
       }
-      const data = await res.json(); 
-      localStorage.setItem(
-        'access_token',
-        data.accessToken
-      );
 
-      localStorage.setItem(
-        'refresh_token',
-        data.refreshToken
-      );
+      await refreshUser();
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth.invalidCredentials'));
