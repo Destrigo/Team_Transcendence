@@ -7,6 +7,7 @@ import {
   Param,
   Res,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
@@ -16,6 +17,8 @@ import {
   TwoFactorCodeDto,
 } from './dto/auth.dto';
 import type { Response, Request } from 'express';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -101,35 +104,39 @@ export class AuthController {
   }
 
   // generate TOTP secret + QR
+  @UseGuards(JwtAuthGuard)
   @Post('2fa/setup')
-  async setup2FA(@Body('userId') userId: string) {
+  async setup2FA(@CurrentUser('userId') userId: string,) {
     return this.authService.generate2FASecret(userId);
   }
 
   // verify TOTP code
+  @UseGuards(JwtAuthGuard)
   @Post('2fa/verify')
   @HttpCode(HttpStatus.OK)
   async verify2FA(
-    @Body('userId') userId: string,
+    @CurrentUser('userId') userId: string,
     @Body() dto: TwoFactorCodeDto,
   ) {
     return this.authService.enable2FA(userId, dto.code);
   }
 
   // disable 2FA
+  @UseGuards(JwtAuthGuard)
   @Post('2fa/disable')
   @HttpCode(HttpStatus.OK)
   async disable2FA(
-    @Body('userId') userId: string,
+    @CurrentUser('userId') userId: string,
     @Body() dto: TwoFactorCodeDto,
   ) {
     return this.authService.disable2FA(userId, dto.code);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(
-    @Body('userId') userId: string,
+    @CurrentUser('userId') userId: string,
     @Res({ passthrough: true }) res: Response,
   ) {
     await this.authService.logout(userId);

@@ -7,7 +7,6 @@ import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
-    JwtModule.register({}),
     UsersModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
