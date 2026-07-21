@@ -9,14 +9,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const secret = process.env.JWT_SECRET;
 
     if (!secret) {
-        throw new Error('JWT_SECRET is not defined');
+      throw new Error('JWT_SECRET is not defined');
     }
 
     super({
-    jwtFromRequest: ExtractJwt.fromExtractors([
+      jwtFromRequest: ExtractJwt.fromExtractors([
         (req) => req?.cookies?.access_token,
-    ]),
-    secretOrKey: secret,
+      ]),
+      secretOrKey: secret,
     });
   }
 
