@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -24,7 +24,10 @@ export default function Profile() {
   const [depositAmount, setDepositAmount] = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
   const [error, setError] = useState('');
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchMe = async () => {
@@ -71,6 +74,54 @@ export default function Profile() {
     }
   };
 
+  const handleAvatarClick = () => {
+    if (avatarUploading) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // reset the input so selecting the same file again still fires onChange
+    e.target.value = '';
+    if (!file) return;
+
+    setAvatarError('');
+
+    // basic client-side guard rails (backend still validates via avatarUploadOptions)
+    if (!file.type.startsWith('image/')) {
+      setAvatarError(t('profile.avatarInvalidType'));
+      return;
+    }
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB, adjust to match avatarUploadOptions limits
+    if (file.size > MAX_SIZE) {
+      setAvatarError(t('profile.avatarTooLarge'));
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      setAvatarUploading(true);
+      const res = await fetch(`${API}/api/users/me/avatar`, {
+        method: 'PUT',
+        credentials: 'include',
+        body: formData, // don't set Content-Type manually, browser sets the multipart boundary
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message ?? t('profile.avatarUploadFailed'));
+      }
+      setUser(await res.json());
+    } catch (err) {
+      setAvatarError(
+        err instanceof Error ? err.message : t('profile.avatarUploadFailed'),
+      );
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted">
@@ -81,7 +132,7 @@ export default function Profile() {
 
   if (!user) return null;
 
-  const avatar = user.avatar_url || DEFAULT_AVATAR;
+  const avatar = user.avatar_url ? `${API}${user.avatar_url}` : DEFAULT_AVATAR;
   const balance = Number(user.balance ?? 0);
 
   return (
@@ -93,11 +144,29 @@ export default function Profile() {
         </div>
 
         <div className="mb-6 flex items-center gap-4">
-          <img
-            src={avatar}
-            alt="avatar"
-            className="h-20 w-20 rounded-full object-cover"
-          />
+          <button
+            type="button"
+            onClick={handleAvatarClick}
+            disabled={avatarUploading}
+            className="group relative h-20 w-20 shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed"
+            aria-label={t('profile.changeAvatar')}
+          >
+            <img
+              src={avatar}
+              alt="avatar"
+              className="h-20 w-20 rounded-full object-cover"
+            />
+            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 text-[10px] font-medium text-transparent transition-colors group-hover:bg-black/40 group-hover:text-white">
+              {avatarUploading ? t('profile.uploading') : t('profile.changeAvatar')}
+            </span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="hidden"
+            />
+          </button>
           <div>
             <h2 className="text-lg font-semibold">
               {user.display_name || user.username}
@@ -112,6 +181,10 @@ export default function Profile() {
             </div>
           </div>
         </div>
+
+        {avatarError && (
+          <p className="-mt-4 mb-4 text-sm text-destructive">{avatarError}</p>
+        )}
 
         <div className="space-y-2 border-t border-input pt-4 text-sm">
           <p>
