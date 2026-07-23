@@ -12,22 +12,21 @@ model User {
   passwordHash       String?             @map("password_hash") @db.VarChar(255)
   hashedRefreshToken String?             @map("hashed_refresh_token") @db.VarChar(255)
   username           String              @unique @db.VarChar(50)
-  display_name       String?
-  avatar_url         String?
+  displayName        String?             @map("display_name")
+  avatarUrl          String?             @map("avatar_url")
   balance            Decimal             @default(10000)
   oauthProvider      String?             @map("oauth_provider") @db.VarChar(50)
   oauthId            String?             @map("oauth_id") @db.VarChar(255)
   twoFactorSecret    String?             @map("two_factor_secret") @db.VarChar(255)
   twoFactorEnabled   Boolean             @default(false) @map("two_factor_enabled")
   language           String              @default("en") @db.VarChar(5)
-  is_online          Boolean             @default(false)
-  last_seen          DateTime?
-  created_at         DateTime            @default(now())
-  updated_at         DateTime            @updatedAt
+  isOnline           Boolean             @default(false) @map("is_online")
+  lastSeen           DateTime?           @map("last_seen")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
   holdings           Holding[]
   orders             Order[]
   portfolioSnapshots PortfolioSnapshot[]
-
   @@map("users")
 }
 

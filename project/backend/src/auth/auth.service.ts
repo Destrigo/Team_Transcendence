@@ -77,6 +77,14 @@ export class AuthService {
     const tokens = await this.generateTokens(user.id, user.email, false);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isOnline: true,
+        lastSeen: new Date(),
+      },
+    });
+
     return { ...tokens, language: user.language };
   }
 
@@ -247,6 +255,8 @@ export class AuthService {
       where: { id: userId },
       data: {
         hashedRefreshToken: null,
+        isOnline: false,
+        lastSeen: new Date(),
       },
     });
   }

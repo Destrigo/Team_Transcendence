@@ -33,7 +33,7 @@ export default function Login() {
       }
 
       await refreshUser();
-      navigate('/dashboard');
+      navigate('/profile');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth.invalidCredentials'));
     }

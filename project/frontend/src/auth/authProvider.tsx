@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { AuthContext } from './authContext';
+import { AuthContext, type User } from './authContext';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
+
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
 
 

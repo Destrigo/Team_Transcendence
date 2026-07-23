@@ -14,11 +14,11 @@ import * as path from 'path';
 const PUBLIC_PROFILE_SELECT = {
   id: true,
   username: true,
-  display_name: true,
-  avatar_url: true,
-  is_online: true,
-  last_seen: true,
-  created_at: true,
+  displayName: true,
+  avatarUrl: true,
+  isOnline: true,
+  lastSeen: true,
+  createdAt: true,
 } satisfies Prisma.UserSelect;
 
 const OWN_PROFILE_SELECT = {
@@ -86,22 +86,22 @@ export class UsersService {
 
     const current = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { avatar_url: true },
+      select: { avatarUrl: true },
     });
 
-    const avatar_url = `/uploads/avatars/${file.filename}`;
+    const avatarUrl = `/uploads/avatars/${file.filename}`;
 
     const updated = await this.prisma.user.update({
       where: { id: userId },
-      data: { avatar_url },
+      data: { avatarUrl },
       select: OWN_PROFILE_SELECT,
     });
 
 
-    if (current?.avatar_url) {
+    if (current?.avatarUrl) {
       const oldPath = path.join(
         process.cwd(),
-        current.avatar_url.replace(/^\//, ''),
+        current.avatarUrl.replace(/^\//, ''),
       );
       fs.unlink(oldPath, () => {
       });
@@ -126,7 +126,7 @@ export class UsersService {
       ? {
           OR: [
             { username: { contains: q, mode: 'insensitive' } },
-            { display_name: { contains: q, mode: 'insensitive' } },
+            { displayName: { contains: q, mode: 'insensitive' } },
           ],
         }
       : {};

@@ -10,7 +10,7 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   @Length(1, 100)
-  display_name?: string;
+  displayName?: string;
 
   @IsOptional()
   @IsIn(['en', 'fr', 'nl'])
