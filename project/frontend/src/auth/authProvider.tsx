@@ -6,7 +6,7 @@ const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
 

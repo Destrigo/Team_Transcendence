@@ -13,7 +13,7 @@ export type User = {
 };
 
 type AuthContextType = {
-  user: User;
+  user: User | null;
   loading: boolean;
   refreshUser: () => Promise<void>;
 };

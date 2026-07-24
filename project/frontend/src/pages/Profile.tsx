@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useAuth } from '../auth/useAuth';
-import type { User } from '@/auth/authContext';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 const DEFAULT_AVATAR = 'https://www.gravatar.com/avatar/?d=mp';
@@ -11,9 +10,8 @@ const DEFAULT_AVATAR = 'https://www.gravatar.com/avatar/?d=mp';
 export default function Profile() {
   const { t } = useTranslation();
 
-  const { user, refreshUser } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
 
-  const [loading, setLoading] = useState(true);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,21 +28,18 @@ export default function Profile() {
 
   const [logoutLoading, setLogoutLoading] = useState(false);
 
+  // useEffect(() => {
+  //   if (!loading && !user) {
+  //     navigate('/login');
+  //   }
+  // }, [loading, user, navigate]);
+
   useEffect(() => {
-    const fetchMe = async () => {
-      console.log("fetchMe");
-      try {
-        await refreshUser();
-        setUsername(user.username);
-        setDisplayName(user.displayName ?? '');
-      } catch {
-        navigate('/login');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMe();
-  }, [navigate]);
+    if (user) {
+      setUsername(user.username);
+      setDisplayName(user.displayName ?? '');
+    }
+  }, [user]);
 
   const handleDeposit = async () => {
     setError('');
