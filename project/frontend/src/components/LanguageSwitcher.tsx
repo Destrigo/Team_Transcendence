@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+import { api } from '../api/api';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', flag: '🇬🇧' },
@@ -16,14 +16,9 @@ export default function LanguageSwitcher({ className = '' }: LanguageSwitcherPro
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
-    // TODO: persist to user profile via PUT /users/me { language: e.target.value }
-    fetch(`${API}/api/users/me`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ language: e.target.value }),
-    }).catch(() => {
-    });
+    api.put('/users/me', { language: e.target.value })
+      .catch(() => {
+      });
   };
 
   return (

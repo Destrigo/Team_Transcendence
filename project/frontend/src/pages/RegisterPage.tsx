@@ -3,8 +3,8 @@ import type { FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+import axios from 'axios';
+import { api } from '../api/api';
 
 export default function Register() {
   const { t } = useTranslation();
@@ -25,19 +25,21 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch(`${API}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, username, password }),
+      await api.post('/auth/register', {
+        email,
+        username,
+        password,
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message ?? t('auth.registerFailed'));
-      }
+
       navigate('/login');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.registerFailed'));
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(
+          err.response?.data?.message ?? t('auth.registerFailed')
+        );
+      } else {
+        setError(t('auth.registerFailed'));
+      }
     }
   };
 

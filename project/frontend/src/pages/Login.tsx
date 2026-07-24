@@ -4,8 +4,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useAuth } from '../auth/useAuth';
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+import axios from 'axios';
+import { api } from '../api/api';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -20,22 +20,21 @@ export default function Login() {
     setError('');
 
     try {
-      const res = await fetch(`${API}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
+      await api.post('/auth/login', {
+        email,
+        password,
       });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message ?? t('auth.invalidCredentials'));
-      }
 
       await refreshUser();
       navigate('/profile');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.invalidCredentials'));
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(
+          err.response?.data?.message ?? t('auth.invalidCredentials')
+        );
+      } else {
+        setError(t('auth.invalidCredentials'));
+      }
     }
   };
 

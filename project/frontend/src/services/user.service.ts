@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+import { api } from '../api/api';
 
 export interface PublicProfile {
   id: string;
@@ -23,34 +23,13 @@ export async function searchUsers(
   page = 1,
   limit = 20,
 ): Promise<SearchUsersResult> {
-  const params = new URLSearchParams({
-    page: String(page),
-    limit: String(limit),
+  const { data } = await api.get<SearchUsersResult>('/users/search', {
+    params: { q: q || undefined, page, limit },
   });
-
-  if (q) {
-    params.set('q', q);
-  }
-
-  const res = await fetch(`${API}/api/users/search?${params.toString()}`, {
-    credentials: 'include',
-  });
-
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
-  }
-
-  return await res.json();
+  return data;
 }
 
 export async function getPublicProfile(id: string): Promise<PublicProfile> {
-  const res = await fetch(`${API}/api/users/${id}`, {
-    credentials: 'include',
-  });
-
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
-  }
-
-  return await res.json();
+  const { data } = await api.get<PublicProfile>(`/users/${id}`);
+  return data;
 }

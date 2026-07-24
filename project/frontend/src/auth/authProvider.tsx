@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AuthContext, type User } from './authContext';
-
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
-
-
+import { api } from '../api/api';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -12,18 +9,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      const res = await fetch(`${API}/api/users/me`, {
-        credentials: 'include',
-      });
-
-      if (!res.ok) {
-        setUser(null);
-        return;
-      }
-
-      const data = await res.json();
+      const { data } = await api.get<User>('/users/me');
       setUser(data);
-
     } catch {
       setUser(null);
     }
