@@ -9,6 +9,7 @@ import { WebsocketModule } from './websocket/websocket.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { GdprModule } from './gdpr/gdpr.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { UsersModule } from './users/users.module';
     WebsocketModule,
     AnalyticsModule,
     AuthModule,
-    UsersModule
+    UsersModule,
+    GdprModule,
   ],
   controllers: [AppController],
   providers: [AppService],

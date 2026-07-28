@@ -30,7 +30,13 @@ export default function Login() {
         throw new Error(body.message ?? t('auth.invalidCredentials'));
       }
 
-      localStorage.setItem('access_token', 'logged_in');
+      const body = await res.json().catch(() => ({}));
+      if (typeof body.accessToken === 'string') {
+        localStorage.setItem('access_token', body.accessToken);
+      } else {
+        // Fallback until cookie-based auth is fully wired
+        localStorage.setItem('access_token', 'logged_in');
+      }
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth.invalidCredentials'));
