@@ -13,5 +13,11 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    // HMR through Caddy HTTPS reverse proxy (https://localhost)
+    hmr: {
+      host: 'localhost',
+      protocol: 'wss',
+      clientPort: 443,
+    },
   },
 })

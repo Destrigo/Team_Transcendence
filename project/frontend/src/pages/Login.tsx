@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+const API = import.meta.env.VITE_API_URL ?? 'https://localhost';
 
 export default function Login() {
   const { t } = useTranslation();
