@@ -1,59 +1,157 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Res,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto, RefreshDto, OAuthDto, TwoFactorCodeDto } from './dto/auth.dto';
+import {
+  RegisterDto,
+  LoginDto,
+  OAuthDto,
+  TwoFactorCodeDto,
+} from './dto/auth.dto';
+import type { Response, Request } from 'express';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
+  constructor(private readonly authService: AuthService) {}
 
-	constructor(private readonly authService: AuthService) { }
+  // create account
+  // POST /auth/register
+  @Post('register')
+  async register(
+    @Body() dto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.register(dto);
 
-	// create account
-	// POST /auth/register
-	@Post('register')
-	async register(@Body() dto: RegisterDto) {
-		return this.authService.register(dto);
-	}
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
 
-	// email + password login
-	// POST /auth/login
-	@Post('login')
-	@HttpCode(HttpStatus.OK)
-	async login(@Body() dto: LoginDto) {
-		return this.authService.login(dto);
-	}
+    return {
+      language: result.language,
+    };
+  }
 
-	// refresh JWT
-	@Post('refresh')
-	@HttpCode(HttpStatus.OK)
-	async refresh(@Body() dto: RefreshDto) {
-		return this.authService.refreshTokens(dto);
-	}
+  // email + password login
+  // POST /auth/login
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.login(dto);
 
-	// OAuth callback
-	@Post('oauth/:provider')
-	@HttpCode(HttpStatus.OK)
-	async oauthCallback(@Param('provider') provider: string, @Body() dto: OAuthDto) {
-		return this.authService.validateOAuth(provider, dto.token);
-	}
+    if ('requires2FA' in result) {
+      return result;
+    }
 
-	// generate TOTP secret + QR
-	@Post('2fa/setup')
-	async setup2FA(@Body('userId') userId: string) {
-		return this.authService.generate2FASecret(userId);
-	}
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
 
-	// verify TOTP code
-	@Post('2fa/verify')
-	@HttpCode(HttpStatus.OK)
-	async verify2FA(@Body('userId') userId: string, @Body() dto: TwoFactorCodeDto) {
-		return this.authService.enable2FA(userId, dto.code);
-	}
+    return {
+      language: result.language,
+    };
+  }
 
-	// disable 2FA
-	@Post('2fa/disable')
-	@HttpCode(HttpStatus.OK)
-	async disable2FA(@Body('userId') userId: string, @Body() dto: TwoFactorCodeDto) {
-		return this.authService.disable2FA(userId, dto.code);
-	}
+  // refresh JWT
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies.refresh_token;
 
+    const tokens = await this.authService.refreshTokens(refreshToken);
+
+   this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+
+    return {
+      message: 'Tokens refreshed',
+    };
+  }
+
+  // OAuth callback
+  @Post('oauth/:provider')
+  @HttpCode(HttpStatus.OK)
+  async oauthCallback(
+    @Param('provider') provider: string,
+    @Body() dto: OAuthDto,
+  ) {
+    return this.authService.validateOAuth(provider, dto.token);
+  }
+
+  // generate TOTP secret + QR
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/setup')
+  async setup2FA(@CurrentUser('userId') userId: string,) {
+    return this.authService.generate2FASecret(userId);
+  }
+
+  // verify TOTP code
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/verify')
+  @HttpCode(HttpStatus.OK)
+  async verify2FA(
+    @CurrentUser('userId') userId: string,
+    @Body() dto: TwoFactorCodeDto,
+  ) {
+    return this.authService.enable2FA(userId, dto.code);
+  }
+
+  // disable 2FA
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/disable')
+  @HttpCode(HttpStatus.OK)
+  async disable2FA(
+    @CurrentUser('userId') userId: string,
+    @Body() dto: TwoFactorCodeDto,
+  ) {
+    return this.authService.disable2FA(userId, dto.code);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(
+    @CurrentUser('userId') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.logout(userId);
+
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+
+    return {
+      message: 'Logged out',
+    };
+  }
+  
+  private setAuthCookies(
+  res: Response,
+  accessToken: string,
+  refreshToken: string,
+) {
+  res.cookie('access_token', accessToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',
+    maxAge: 15 * 60 * 1000,
+  });
+
+  res.cookie('refresh_token', refreshToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
 }

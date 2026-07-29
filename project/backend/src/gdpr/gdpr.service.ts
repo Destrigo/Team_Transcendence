@@ -11,17 +11,17 @@ const EXPORT_USER_SELECT = {
   id: true,
   email: true,
   username: true,
-  display_name: true,
-  avatar_url: true,
+  displayName: true,
+  avatarUrl: true,
   balance: true,
   oauthProvider: true,
   oauthId: true,
   twoFactorEnabled: true,
   language: true,
-  is_online: true,
-  last_seen: true,
-  created_at: true,
-  updated_at: true,
+  isOnline: true,
+  lastSeen: true,
+  createdAt: true,
+  updatedAt: true,
 } satisfies Prisma.UserSelect;
 
 @Injectable()

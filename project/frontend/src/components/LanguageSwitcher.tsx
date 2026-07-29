@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { api } from '../api/api';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', flag: '🇬🇧' },
@@ -15,7 +16,9 @@ export default function LanguageSwitcher({ className = '' }: LanguageSwitcherPro
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(e.target.value);
-    // TODO: persist to user profile via PUT /users/me { language: e.target.value }
+    api.put('/users/me', { language: e.target.value })
+      .catch(() => {
+      });
   };
 
   return (

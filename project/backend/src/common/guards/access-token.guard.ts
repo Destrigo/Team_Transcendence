@@ -35,7 +35,7 @@ export class AccessTokenGuard implements CanActivate {
       // Must match AuthService.generateTokens until JWT secrets are centralized.
       const payload = await this.jwtService.verifyAsync<AccessTokenPayload>(
         token,
-        { secret: process.env.JWT_ACCESS_SECRET ?? 'ACCESS_SECRET' },
+        { secret: process.env.JWT_SECRET ?? 'ACCESS_SECRET' },
       );
 
       if (!payload?.sub) {
