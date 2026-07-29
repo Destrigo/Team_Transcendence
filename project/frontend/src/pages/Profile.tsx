@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useAuth } from '../auth/useAuth';
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+const API = import.meta.env.VITE_API_URL ?? 'https://localhost';
 const DEFAULT_AVATAR = 'https://www.gravatar.com/avatar/?d=mp';
 
 export default function Profile() {
