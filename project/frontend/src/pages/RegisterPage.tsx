@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import axios from 'axios';
 import { api } from '../api/api';
+import { useAuth } from '../auth/useAuth';
 
 export default function Register() {
   const { t } = useTranslation();
@@ -14,7 +15,8 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
+  const { refreshUser } = useAuth();
+  
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
@@ -31,7 +33,8 @@ export default function Register() {
         password,
       });
 
-      navigate('/login');
+      await refreshUser();
+      navigate('/profile');
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(

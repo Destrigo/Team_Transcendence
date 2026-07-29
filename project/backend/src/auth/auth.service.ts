@@ -55,7 +55,7 @@ export class AuthService {
     );
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-    return tokens;
+    return { ...tokens, language: user.language };
   }
 
   // POST /auth/login
