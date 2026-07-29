@@ -38,6 +38,7 @@ services:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
       - /app/node_modules
+      - avatar_uploads:/app/uploads
     command: >
       sh -c "
         npx prisma generate &&
@@ -67,3 +68,4 @@ services:
 
 volumes:
   pgdata:
+  avatar_uploads:
