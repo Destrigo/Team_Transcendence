@@ -3,57 +3,46 @@ import {
   Controller,
   Get,
   Query,
-  Req,
   Res,
-  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/jwt-payload.interface';
 import { AnalyticsService } from './analytics.service';
 
-type AuthenticatedRequest = Request & {
-  user?: {
-    userId?: string;
-    id?: string;
-  };
-};
-
 @Controller('analytics')
+@UseGuards(JwtAuthGuard)
 export class AnalyticsController {
   constructor(private analytics: AnalyticsService) {}
 
   @Get('portfolio')
   getPortfolio(
-    @Req() req: AuthenticatedRequest,
-    @Query('userId') userIdOverride?: string,
+    @CurrentUser() user: AuthenticatedUser,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = this.getUserId(req, userIdOverride);
     return this.analytics.getPortfolioHistory(
-      userId,
+      user.userId,
       this.parseDate(from, 'from'),
       this.parseDate(to, 'to'),
     );
   }
 
   @Get('allocation')
-  getAllocation(
-    @Req() req: AuthenticatedRequest,
-    @Query('userId') userIdOverride?: string,
-  ) {
-    return this.analytics.getAllocation(this.getUserId(req, userIdOverride));
+  getAllocation(@CurrentUser() user: AuthenticatedUser) {
+    return this.analytics.getAllocation(user.userId);
   }
 
   @Get('stats')
   getStats(
-    @Req() req: AuthenticatedRequest,
-    @Query('userId') userIdOverride?: string,
+    @CurrentUser() user: AuthenticatedUser,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = this.getUserId(req, userIdOverride);
     return this.analytics.getTradeStats(
-      userId,
+      user.userId,
       this.parseDate(from, 'from'),
       this.parseDate(to, 'to'),
     );
@@ -61,14 +50,12 @@ export class AnalyticsController {
 
   @Get('trades')
   getTrades(
-    @Req() req: AuthenticatedRequest,
-    @Query('userId') userIdOverride?: string,
+    @CurrentUser() user: AuthenticatedUser,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = this.getUserId(req, userIdOverride);
     return this.analytics.getTrades(
-      userId,
+      user.userId,
       this.parseDate(from, 'from'),
       this.parseDate(to, 'to'),
     );
@@ -76,15 +63,13 @@ export class AnalyticsController {
 
   @Get('export/csv')
   async exportCsv(
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthenticatedUser,
     @Res() res: Response,
-    @Query('userId') userIdOverride?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const userId = this.getUserId(req, userIdOverride);
     const csv = await this.analytics.exportCsv(
-      userId,
+      user.userId,
       this.parseDate(from, 'from'),
       this.parseDate(to, 'to'),
     );
@@ -94,17 +79,25 @@ export class AnalyticsController {
     res.send(csv);
   }
 
-  private getUserId(
-    req: AuthenticatedRequest,
-    userIdOverride?: string,
-  ): string {
-    const userId = req.user?.userId ?? req.user?.id ?? userIdOverride;
+  @Get('export/pdf')
+  async exportPdf(
+    @CurrentUser() user: AuthenticatedUser,
+    @Res() res: Response,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const pdf = await this.analytics.exportPdf(
+      user.userId,
+      this.parseDate(from, 'from'),
+      this.parseDate(to, 'to'),
+    );
 
-    if (!userId) {
-      throw new UnauthorizedException('Authenticated user is required');
-    }
-
-    return userId;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="analytics-report.pdf"',
+    );
+    res.send(pdf);
   }
 
   private parseDate(
