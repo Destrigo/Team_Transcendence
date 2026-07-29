@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
+import { buildTextPdf } from './pdf-report';
 
 export interface PortfolioDataPoint {
   date: string;
@@ -195,5 +196,50 @@ export class AnalyticsService {
       .join('\n');
 
     return header + rows;
+  }
+
+  async exportPdf(userId: string, from?: Date, to?: Date): Promise<Buffer> {
+    const [stats, allocation, trades, portfolio] = await Promise.all([
+      this.getTradeStats(userId, from, to),
+      this.getAllocation(userId),
+      this.getTrades(userId, from, to),
+      this.getPortfolioHistory(userId, from, to),
+    ]);
+
+    const range =
+      from || to
+        ? `Range: ${from?.toISOString().slice(0, 10) ?? '...'} -> ${to?.toISOString().slice(0, 10) ?? '...'}`
+        : 'Range: all time';
+
+    const latest = portfolio[portfolio.length - 1];
+    const lines: string[] = [
+      `Generated: ${new Date().toISOString()}`,
+      range,
+      '',
+      '--- Summary ---',
+      `Portfolio value: ${latest ? Number(latest.totalValue).toFixed(2) : 'n/a'}`,
+      `Total trades: ${stats.totalTrades}`,
+      `Total P&L (by symbol mark): ${stats.totalPnl.toFixed(2)}`,
+      `Best trade: ${stats.bestTrade ? `${stats.bestTrade.symbol} ${stats.bestTrade.pnl.toFixed(2)}` : '-'}`,
+      `Worst trade: ${stats.worstTrade ? `${stats.worstTrade.symbol} ${stats.worstTrade.pnl.toFixed(2)}` : '-'}`,
+      '',
+      '--- Allocation ---',
+      ...(allocation.length === 0
+        ? ['No holdings']
+        : allocation.map(
+            (a) =>
+              `${a.symbol} (${a.name}): ${a.value.toFixed(2)} (${a.percentage.toFixed(1)}%)`,
+          )),
+      '',
+      '--- Recent trades (max 25) ---',
+      ...(trades.length === 0
+        ? ['No filled trades']
+        : trades.slice(0, 25).map((t) => {
+            const date = t.filledAt?.toISOString().slice(0, 10) ?? '';
+            return `${date} ${t.type} ${t.asset.symbol} qty=${t.quantity} @ ${t.price} total=${t.total}`;
+          })),
+    ];
+
+    return buildTextPdf('Trading Analytics Report', lines);
   }
 }
