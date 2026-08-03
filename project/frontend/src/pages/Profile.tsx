@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useAuth } from '../auth/useAuth';
+import { api } from '../api/api';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 const DEFAULT_AVATAR = 'https://www.gravatar.com/avatar/?d=mp';
@@ -28,12 +28,6 @@ export default function Profile() {
 
   const [logoutLoading, setLogoutLoading] = useState(false);
 
-  // useEffect(() => {
-  //   if (!loading && !user) {
-  //     navigate('/login');
-  //   }
-  // }, [loading, user, navigate]);
-
   useEffect(() => {
     if (user) {
       setUsername(user.username);
@@ -50,20 +44,11 @@ export default function Profile() {
     }
     try {
       setDepositLoading(true);
-      const res = await fetch(`${API}/api/users/deposit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ amount }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message ?? t('profile.depositFailed'));
-      }
+      await api.post('/users/deposit', { amount });
       await refreshUser();
       setDepositAmount('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('profile.depositFailed'));
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? t('profile.depositFailed'));
     } finally {
       setDepositLoading(false);
     }
@@ -96,20 +81,12 @@ export default function Profile() {
 
     try {
       setAvatarUploading(true);
-      const res = await fetch(`${API}/api/users/me/avatar`, {
-        method: 'PUT',
-        credentials: 'include',
-        body: formData,
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message ?? t('profile.avatarUploadFailed'));
-      }
+      // Let axios set the multipart boundary itself — do not set
+      // Content-Type manually here, or the boundary will be missing.
+      await api.put('/users/me/avatar', formData);
       await refreshUser();
-    } catch (err) {
-      setAvatarError(
-        err instanceof Error ? err.message : t('profile.avatarUploadFailed'),
-      );
+    } catch (err: any) {
+      setAvatarError(err?.response?.data?.message ?? t('profile.avatarUploadFailed'));
     } finally {
       setAvatarUploading(false);
     }
@@ -124,25 +101,15 @@ export default function Profile() {
     }
     try {
       setSaveLoading(true);
-      const res = await fetch(`${API}/api/users/me`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          username: username.trim(),
-          displayName: displayName.trim() || null,
-        }),
+      await api.put('/users/me', {
+        username: username.trim(),
+        displayName: displayName.trim() || null,
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message ?? t('profile.saveFailed'));
-      }
-
       await refreshUser();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2500);
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : t('profile.saveFailed'));
+    } catch (err: any) {
+      setSaveError(err?.response?.data?.message ?? t('profile.saveFailed'));
     } finally {
       setSaveLoading(false);
     }
@@ -151,11 +118,9 @@ export default function Profile() {
   const handleLogout = async () => {
     try {
       setLogoutLoading(true);
-      await fetch(`${API}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await api.post('/auth/logout');
     } catch {
+      // logout is best-effort client-side; fall through to redirect either way
     } finally {
       await refreshUser();
       setLogoutLoading(false);
@@ -180,11 +145,12 @@ export default function Profile() {
     (displayName.trim() || null) !== (user.displayName ?? null);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted p-8">
-      <div className="w-full max-w-3xl rounded-lg bg-card p-8 shadow-md">
+    <div className="mx-auto max-w-2xl p-6">
+      <h1 className="mb-6 text-2xl font-bold">{t('settings.title')}</h1>
+
+      <section className="mb-6 rounded-lg border border-border bg-card p-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t('profile.title')}</h1>
-          <LanguageSwitcher />
         </div>
 
         <div className="grid gap-8 md:grid-cols-2">
@@ -327,7 +293,54 @@ export default function Profile() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+            {/* Security section */}
+      <section className="mb-6 rounded-lg border border-border bg-card p-4">
+        <h2 className="mb-4 text-lg font-semibold">{t('settings.security')}</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium">{t('settings.currentPassword')}</label>
+            <input
+              type="password"
+              className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">{t('settings.newPassword')}</label>
+            <input
+              type="password"
+              className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <button className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+            {t('settings.changePassword')}
+          </button>
+        </div>
+      </section>
+
+      {/* GDPR section */}
+      <section className="rounded-lg border border-border bg-card p-4">
+        <h2 className="mb-4 text-lg font-semibold">{t('settings.privacy')}</h2>
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-medium">{t('gdpr.downloadData')}</p>
+            <p className="mb-2 text-xs text-muted-foreground">{t('gdpr.downloadDataDesc')}</p>
+            <button className="rounded border border-border px-4 py-2 text-sm hover:bg-accent">
+              {t('gdpr.downloadButton')}
+            </button>
+          </div>
+          <hr className="border-border" />
+          <div>
+            <p className="text-sm font-medium text-destructive">{t('gdpr.deleteAccount')}</p>
+            <p className="mb-2 text-xs text-muted-foreground">{t('gdpr.deleteAccountDesc')}</p>
+            <button className="rounded border border-destructive px-4 py-2 text-sm text-destructive hover:bg-destructive hover:text-destructive-foreground">
+              {t('gdpr.deleteButton')}
+            </button>
+          </div>
+        </div>
+      </section>
+      
     </div>
   );
 }

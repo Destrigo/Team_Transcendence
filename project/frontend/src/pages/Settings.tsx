@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '../components/LanguageSwitcher';
 
 // TODO: hook up PUT /users/me for profile and PUT /users/me/language for language persistence
 
@@ -27,15 +26,6 @@ const Settings = () => {
               {t('settings.changeAvatar')}
             </button>
           </div>
-        </div>
-      </section>
-
-      {/* Preferences section */}
-      <section className="mb-6 rounded-lg border border-border bg-card p-4">
-        <h2 className="mb-4 text-lg font-semibold">{t('settings.preferences')}</h2>
-        <div>
-          <label className="mb-1 block text-sm font-medium">{t('settings.languageLabel')}</label>
-          <LanguageSwitcher className="mt-1" />
         </div>
       </section>
 
