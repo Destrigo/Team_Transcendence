@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, UserPlus, MessageCircle, Loader2 } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchUsers, type PublicProfile } from '../services/user.service';
-import { resolveAvatarUrl } from '../components/Avatar';
+import { resolveAvatarUrl } from '../api/avatar';
 
 const LIMIT = 20;
 

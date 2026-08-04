@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, UserPlus, MessageCircle, Loader2 } from 'lucide-react';
 import { getPublicProfile, type PublicProfile as PublicProfileType } from '../services/user.service';
 import { useAuth } from '../auth/useAuth';
-import { resolveAvatarUrl } from '../components/Avatar';
+import { resolveAvatarUrl } from '../api/avatar';
 
 export default function PublicProfile() {
   const { id } = useParams<{ id: string }>();
