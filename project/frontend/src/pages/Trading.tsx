@@ -1,90 +1,111 @@
-import { useTranslation } from 'react-i18next';
+import { useCallback, useEffect, useState } from 'react';
+import type { Asset, Holding, Order, Portfolio } from '../types/types';
+import { fetchOrders, fetchPortfolio } from '../services/trading.service';
+import AssetTable from '../components/AssetsTable';
+import OrderPanel from '../components/OrdersPanel';
+import HoldingsTable from '../components/HoldingsTable';
+import OpenOrdersTable from '../components/OpenOrdersTable';
 
-// TODO: import order form and asset list once trading engine is ready
+function formatCurrency(value: number) {
+  return value.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 2,
+  });
+}
 
-const Trading = () => {
-  const { t } = useTranslation();
+export default function TradingPage() {
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
+  const [openOrders, setOpenOrders] = useState<Order[]>([]);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+
+  const loadPortfolio = useCallback(() => {
+    fetchPortfolio()
+      .then(setPortfolio)
+      .catch(() => setPortfolio(null));
+  }, []);
+
+  const loadOpenOrders = useCallback(() => {
+    fetchOrders({ status: 'PENDING' })
+      .then(setOpenOrders)
+      .catch(() => setOpenOrders([]));
+  }, []);
+
+  // A placed order can be a limit order (shows up in "open orders" and
+  // doesn't move the portfolio yet) or a filled market order (moves the
+  // portfolio immediately) — refresh both since we can't tell which from here.
+  const refreshAfterOrderChange = useCallback(() => {
+    loadPortfolio();
+    loadOpenOrders();
+  }, [loadPortfolio, loadOpenOrders]);
+
+  useEffect(() => {
+    refreshAfterOrderChange();
+  }, [refreshAfterOrderChange]);
+
+  const holdingForSelected: Holding | null =
+    (selectedAsset && portfolio?.holdings.find((h) => h.assetId === selectedAsset.id)) || null;
+
+  const handleSelectHolding = (holding: Holding) => {
+    // Build a minimal Asset shape from the holding so the order panel
+    // can pre-select it; AssetTable will replace it with full data
+    // once the user re-searches, but current price is already accurate.
+    setSelectedAsset({
+      id: holding.assetId,
+      symbol: holding.symbol,
+      name: holding.name,
+      type: holding.type,
+      currentPrice: holding.currentPrice,
+      change24h: 0,
+      volume24h: 0,
+      marketCap: 0,
+      logoUrl: holding.logoUrl,
+      isActive: true,
+    });
+  };
 
   return (
     <div className="p-6">
-      <h1 className="mb-6 text-2xl font-bold">{t('trading.title')}</h1>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <h2 className="mb-3 text-lg font-semibold">{t('markets.title')}</h2>
-          <div className="overflow-x-auto rounded-lg border border-border bg-card">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-muted-foreground">
-                  <th className="px-4 py-3">{t('markets.name')}</th>
-                  <th className="px-4 py-3">{t('markets.price')}</th>
-                  <th className="px-4 py-3">{t('markets.change24h')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">
-                    {t('common.loading')}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+      <header className="mb-6">
+        <h1 className="mb-4 text-2xl font-bold">Trade</h1>
+        <div className="grid grid-cols-3 divide-x divide-border rounded-lg bg-card font-mono text-sm shadow-sm">
+          <div className="px-4 py-3">
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Cash</div>
+            <div className="text-lg">{portfolio ? formatCurrency(portfolio.balance) : '—'}</div>
           </div>
-        </div>
-
-        <div className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-4 flex gap-2">
-            <button className="flex-1 rounded bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
-              {t('trading.buy')}
-            </button>
-            <button className="flex-1 rounded border border-border px-3 py-2 text-sm font-medium">
-              {t('trading.sell')}
-            </button>
+          <div className="px-4 py-3">
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Holdings value</div>
+            <div className="text-lg">{portfolio ? formatCurrency(portfolio.holdingsValue) : '—'}</div>
           </div>
-          <div className="space-y-3">
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">{t('trading.quantity')}</label>
-              <input
-                type="number"
-                className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+          <div className="px-4 py-3">
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total P&amp;L</div>
+            <div className={`text-lg ${portfolio && portfolio.totalPnl >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+              {portfolio
+                ? `${portfolio.totalPnl >= 0 ? '+' : ''}${formatCurrency(portfolio.totalPnl)} (${
+                    portfolio.totalPnl >= 0 ? '+' : ''
+                  }${portfolio.totalPnlPercent.toFixed(2)}%)`
+                : '—'}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {t('trading.availableBalance')}: —
-            </p>
-            <button className="w-full rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
-              {t('trading.placeOrder')}
-            </button>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="mt-6">
-        <h2 className="mb-3 text-lg font-semibold">{t('trading.orderHistory')}</h2>
-        <div className="overflow-x-auto rounded-lg border border-border bg-card">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-muted-foreground">
-                <th className="px-4 py-3">{t('trading.date')}</th>
-                <th className="px-4 py-3">{t('trading.side')}</th>
-                <th className="px-4 py-3">{t('trading.type')}</th>
-                <th className="px-4 py-3">{t('trading.quantity')}</th>
-                <th className="px-4 py-3">{t('trading.price')}</th>
-                <th className="px-4 py-3">{t('trading.status')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
-                  {t('common.noData')}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
+        <div className="min-h-screen">
+          <AssetTable selectedAssetId={selectedAsset?.id ?? null} onSelectAsset={setSelectedAsset} />
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <OrderPanel
+            asset={selectedAsset}
+            holding={holdingForSelected}
+            balance={portfolio?.balance ?? 0}
+            onOrderPlaced={refreshAfterOrderChange}
+          />
+          <OpenOrdersTable orders={openOrders} onCancelled={refreshAfterOrderChange} />
+          <HoldingsTable holdings={portfolio?.holdings ?? []} onSelectHolding={handleSelectHolding} />
         </div>
       </div>
     </div>
   );
-};
-
-export default Trading;
+}

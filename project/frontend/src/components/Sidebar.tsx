@@ -5,9 +5,7 @@ import {
   LineChart,
   BarChart3,
   Settings as SettingsIcon,
-  User,
 } from 'lucide-react';
-import { useAuth } from '../auth/useAuth';
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -15,7 +13,6 @@ const NAV_ITEMS = [
   { to: '/trade', label: 'Trade', icon: LineChart },
   { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: SettingsIcon },
-  { to: '/profile', label: 'Settings Profile', icon: SettingsIcon },
 ];
 
 const linkClasses = ({ isActive }: { isActive: boolean }) =>
@@ -26,7 +23,6 @@ const linkClasses = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export default function Sidebar() {
-  const { user } = useAuth();
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-card">
@@ -42,13 +38,6 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
-
-      <div className="border-t border-border p-3">
-        <NavLink to="/profile" className={linkClasses}>
-          <User className="h-4 w-4" />
-          <span className="truncate">{user?.displayName || user?.username || 'Profile'}</span>
-        </NavLink>
-      </div>
     </aside>
   );
 }

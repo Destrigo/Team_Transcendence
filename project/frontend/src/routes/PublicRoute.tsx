@@ -9,7 +9,7 @@ export function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (user) {
-    return <Navigate to="/profile" replace />;
+    return <Navigate to="/settings" replace />;
   }
 
   return <>{children}</>;

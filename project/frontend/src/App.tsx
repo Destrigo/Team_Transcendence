@@ -7,13 +7,13 @@ import Trading from './pages/Trading';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
-import RegisterPage from './pages/RegisterPage';
-import Profile from './pages/Profile';
-import SearchPage from './pages/SearchPage';
+import RegisterPage from './pages/Register';
+import SearchPage from './pages/Search';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { PublicRoute } from './routes/PublicRoute';
-import TradingPage from './pages/TradingPage';
+import TradingPage from './pages/Trading';
 import PageShell from './components/PageShell';
+import PublicProfile from './pages/PublicProfile';
 
 const App = () => (
   <BrowserRouter>
@@ -22,9 +22,8 @@ const App = () => (
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
 
-      {/* All routes under here share the sidebar + top bar layout via <Outlet/> */}
       <Route element={<ProtectedRoute><PageShell /></ProtectedRoute>}>
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:id" element={<PublicProfile  />} />
         <Route path="/trade" element={<TradingPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
