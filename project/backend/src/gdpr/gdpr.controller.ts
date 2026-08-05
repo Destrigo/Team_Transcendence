@@ -5,30 +5,27 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
-import { AccessTokenGuard } from '../common/guards/access-token.guard';
+import type { Response } from 'express';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/jwt-payload.interface';
 import { DeleteAccountDto } from './dto/delete-account.dto';
 import { GdprService } from './gdpr.service';
 
-type AuthenticatedRequest = Request & {
-  user: { userId: string };
-};
-
 @Controller('gdpr')
-@UseGuards(AccessTokenGuard)
+@UseGuards(JwtAuthGuard)
 export class GdprController {
   constructor(private readonly gdprService: GdprService) {}
 
   @Get('export')
   async export(
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthenticatedUser,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const data = await this.gdprService.exportUserData(req.user.userId);
+    const data = await this.gdprService.exportUserData(user.userId);
 
     res.setHeader('Content-Type', 'application/json');
     res.setHeader(
@@ -42,12 +39,12 @@ export class GdprController {
   @Delete('delete-account')
   @HttpCode(HttpStatus.OK)
   async deleteAccount(
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthenticatedUser,
     @Body() dto: DeleteAccountDto,
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.gdprService.deleteAccount(
-      req.user.userId,
+      user.userId,
       dto.password,
     );
 
