@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Asset, CreateOrderPayload, Holding, OrderExecutionType, OrderSide } from '../types/types';
 import { placeOrder } from '../services/trading.service';
 
@@ -18,6 +19,7 @@ interface OrderPanelProps {
 }
 
 export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: OrderPanelProps) {
+  const { t } = useTranslation();
   const [side, setSide] = useState<OrderSide>('BUY');
   const [execType, setExecType] = useState<OrderExecutionType>('MARKET');
   const [quantity, setQuantity] = useState('');
@@ -26,7 +28,6 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Reset the form whenever a different asset is selected
   useEffect(() => {
     setQuantity('');
     setLimitPrice('');
@@ -39,7 +40,7 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
   if (!asset) {
     return (
       <div className="flex min-h-[220px] items-center justify-center rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground shadow-sm">
-        Select an asset from the market list to place an order.
+        {t('trading.orderPanel.selectAssetPrompt')}
       </div>
     );
   }
@@ -78,16 +79,19 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
         ...(execType === 'LIMIT' ? { price: Number(limitPrice) } : {}),
       };
       await placeOrder(payload);
-      setSuccess(
-        execType === 'MARKET'
-          ? `${side === 'BUY' ? 'Bought' : 'Sold'} ${qtyNum} ${asset.symbol}`
-          : `Limit order placed for ${qtyNum} ${asset.symbol}`,
-      );
+
+      if (execType === 'MARKET') {
+        const actionKey = side === 'BUY' ? 'successBought' : 'successSold';
+        setSuccess(t(`trading.orderPanel.${actionKey}`, { quantity: qtyNum, symbol: asset.symbol }));
+      } else {
+        setSuccess(t('trading.orderPanel.successLimitPlaced', { quantity: qtyNum, symbol: asset.symbol }));
+      }
+
       setQuantity('');
       setLimitPrice('');
       onOrderPlaced();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Order failed. Try again.');
+      setError(err?.response?.data?.message ?? t('trading.orderPanel.errorFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -111,8 +115,11 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
 
         {holding && (
           <div className="mt-1 font-mono text-xs text-muted-foreground">
-            You hold {holding.quantity} {asset.symbol} · avg{' '}
-            {formatCurrency(holding.avgBuyPrice)}
+            {t('trading.orderPanel.holdingInfo', {
+              quantity: holding.quantity,
+              symbol: asset.symbol,
+              avgPrice: formatCurrency(holding.avgBuyPrice)
+            })}
           </div>
         )}
       </div>
@@ -128,27 +135,27 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            {s === 'BUY' ? 'Buy' : 'Sell'}
+            {s === 'BUY' ? t('trading.buy') : t('trading.sell')}
           </button>
         ))}
       </div>
 
       <div className="flex gap-4 text-sm">
-        {(['MARKET', 'LIMIT'] as const).map((t) => (
+        {(['MARKET', 'LIMIT'] as const).map((tType) => (
           <label
-            key={t}
+            key={tType}
             className="flex items-center gap-1.5 text-muted-foreground"
           >
             <input
               type="radio"
               name="execType"
-              checked={execType === t}
-              onChange={() => setExecType(t)}
+              checked={execType === tType}
+              onChange={() => setExecType(tType)}
               className="accent-primary"
             />
 
-            <span className={execType === t ? 'text-foreground' : ''}>
-              {t === 'MARKET' ? 'Market' : 'Limit'}
+            <span className={execType === tType ? 'text-foreground' : ''}>
+              {tType === 'MARKET' ? t('trading.marketOrder') : t('trading.limitOrder')}
             </span>
           </label>
         ))}
@@ -157,7 +164,7 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
       {execType === 'LIMIT' && (
         <div>
           <label className="mb-1 block text-xs uppercase tracking-wide text-muted-foreground">
-            Target price
+            {t('trading.limitPrice')}
           </label>
 
           <input
@@ -175,14 +182,14 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
       <div>
         <div className="mb-1 flex items-center justify-between">
           <label className="text-xs uppercase tracking-wide text-muted-foreground">
-            Quantity
+            {t('trading.quantity')}
           </label>
 
           <button
             onClick={setMax}
             className="text-xs text-primary hover:underline"
           >
-            Max
+            {t('trading.orderPanel.max')}
           </button>
         </div>
 
@@ -198,7 +205,7 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
       </div>
 
       <div className="flex items-center justify-between font-mono text-sm text-muted-foreground">
-        <span>Est. total</span>
+        <span>{t('trading.estimatedTotal')}</span>
         <span className="text-foreground">
           {formatCurrency(estimatedTotal)}
         </span>
@@ -206,13 +213,13 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
 
       {insufficientFunds && (
         <p className="text-xs text-destructive">
-          Not enough balance for this order.
+          {t('trading.insufficientBalance')}
         </p>
       )}
 
       {insufficientHoldings && (
         <p className="text-xs text-destructive">
-          You only hold {maxSellQty} {asset.symbol}.
+          {t('trading.orderPanel.insufficientHoldingsError', { max: maxSellQty, symbol: asset.symbol })}
         </p>
       )}
 
@@ -230,9 +237,9 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
         className="mt-auto rounded-md bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {submitting
-          ? 'Placing order…'
-          : `${side === 'BUY' ? 'Buy' : 'Sell'} ${asset.symbol}${
-              execType === 'LIMIT' ? ' (limit)' : ''
+          ? t('trading.orderPanel.placingOrder')
+          : `${side === 'BUY' ? t('trading.buy') : t('trading.sell')} ${asset.symbol}${
+              execType === 'LIMIT' ? ` (${t('trading.limitOrder').toLowerCase()})` : ''
             }`}
       </button>
     </div>

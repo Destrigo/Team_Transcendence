@@ -1,4 +1,11 @@
 {
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "search": "Recherche",
+    "trade": "Transaction",
+    "analytics": "Analyses",
+    "settings": "Paramètres"
+  },
   "common": {
     "save": "Enregistrer",
     "cancel": "Annuler",
@@ -152,6 +159,9 @@
   },
   "trading": {
     "title": "Trader",
+    "cash": "Espèces",
+    "holdingsValue": "Valeur des portefeuilles",
+    "totalPnl": "P&L total",
     "buy": "Acheter",
     "sell": "Vendre",
     "marketOrder": "Ordre au marché",
@@ -179,7 +189,44 @@
     "cancelled": "Annulé",
     "insufficientBalance": "Solde insuffisant",
     "insufficientHoldings": "Position insuffisante",
-    "minQuantity": "La quantité minimale est 0,0001"
+    "minQuantity": "La quantité minimale est 0,0001",
+    "assetTable": {
+      "searchPlaceholder": "Rechercher un nom ou un symbole",
+      "allTypes": "Tous les types",
+      "crypto": "Crypto",
+      "stock": "Action",
+      "colAsset": "Actif",
+      "colChange": "24h",
+      "colMktCap": "Cap. boursière",
+      "loading": "Chargement des actifs…",
+      "noResults": "Aucun actif ne correspond à cette recherche.",
+      "errorLoad": "Impossible de charger les actifs. Réessayez.",
+      "prev": "Précédent",
+      "next": "Suivant",
+      "pageInfo": "Page {{current}} / {{total}}"
+    },
+    "holdingsTable": {
+      "title": "Vos actifs détenus",
+      "noHoldings": "Aucun actif pour le moment. Achetez un actif pour le voir ici.",
+      "avg": "moyen"
+    },
+    "orderPanel": {
+      "selectAssetPrompt": "Sélectionnez un actif dans la liste du marché pour passer une commande.",
+      "holdingInfo": "Vous détenez {{quantity}} {{symbol}} · moy. {{avgPrice}}",
+      "max": "Max",
+      "insufficientHoldingsError": "Vous ne détenez que {{max}} {{symbol}}.",
+      "successBought": "Achat de {{quantity}} {{symbol}} réussi",
+      "successSold": "Vente de {{quantity}} {{symbol}} réussie",
+      "successLimitPlaced": "Ordre limite passé pour {{quantity}} {{symbol}}",
+      "errorFailed": "L'ordre a échoué. Réessayez.",
+      "placingOrder": "Placement de l'ordre…"
+    },
+    "openOrdersTable": {
+      "noOrders": "Aucun ordre limite ouvert.",
+      "errorCancel": "Impossible d'annuler l'ordre.",
+      "cancelling": "Annulation…",
+      "targetInfo": "cible {{price}} · placé le {{date}}"
+    }
   },
   "portfolio": {
     "title": "Portefeuille",

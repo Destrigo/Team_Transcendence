@@ -1,4 +1,11 @@
 {
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "search": "Search",
+    "trade": "Trade",
+    "analytics": "Analytics",
+    "settings": "Settings"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -152,6 +159,9 @@
   },
   "trading": {
     "title": "Trade",
+    "cash": "Cash",
+    "holdingsValue": "Holdings value",
+    "totalPnl": "Total P&L",
     "buy": "Buy",
     "sell": "Sell",
     "marketOrder": "Market order",
@@ -179,7 +189,44 @@
     "cancelled": "Cancelled",
     "insufficientBalance": "Insufficient balance",
     "insufficientHoldings": "Insufficient holdings",
-    "minQuantity": "Minimum quantity is 0.0001"
+    "minQuantity": "Minimum quantity is 0.0001",
+    "assetTable": {
+      "searchPlaceholder": "Search name or symbol",
+      "allTypes": "All types",
+      "crypto": "Crypto",
+      "stock": "Stock",
+      "colAsset": "Asset",
+      "colChange": "24h",
+      "colMktCap": "Mkt cap",
+      "loading": "Loading assets…",
+      "noResults": "No assets match this search.",
+      "errorLoad": "Could not load assets. Try again.",
+      "prev": "Prev",
+      "next": "Next",
+      "pageInfo": "Page {{current}} / {{total}}"
+    },
+    "holdingsTable": {
+      "title": "Your holdings",
+      "noHoldings": "No holdings yet. Buy an asset to see it here.",
+      "avg": "avg"
+    },
+    "orderPanel": {
+      "selectAssetPrompt": "Select an asset from the market list to place an order.",
+      "holdingInfo": "You hold {{quantity}} {{symbol}} · avg {{avgPrice}}",
+      "max": "Max",
+      "insufficientHoldingsError": "You only hold {{max}} {{symbol}}.",
+      "successBought": "Bought {{quantity}} {{symbol}}",
+      "successSold": "Sold {{quantity}} {{symbol}}",
+      "successLimitPlaced": "Limit order placed for {{quantity}} {{symbol}}",
+      "errorFailed": "Order failed. Try again.",
+      "placingOrder": "Placing order…"
+    },
+    "openOrdersTable": {
+      "noOrders": "No open limit orders.",
+      "errorCancel": "Could not cancel order.",
+      "cancelling": "Cancelling…",
+      "targetInfo": "target {{price}} · placed {{date}}"
+    }
   },
   "portfolio": {
     "title": "Portfolio",

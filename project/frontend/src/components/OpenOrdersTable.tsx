@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Order } from '../types/types';
 import { cancelOrder } from '../services/trading.service';
 
@@ -16,6 +17,7 @@ interface OpenOrdersTableProps {
 }
 
 export default function OpenOrdersTable({ orders, onCancelled }: OpenOrdersTableProps) {
+  const { t } = useTranslation();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +28,7 @@ export default function OpenOrdersTable({ orders, onCancelled }: OpenOrdersTable
       await cancelOrder(orderId);
       onCancelled();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Could not cancel order.');
+      setError(err?.response?.data?.message ?? t('trading.openOrdersTable.errorCancel'));
     } finally {
       setCancellingId(null);
     }
@@ -35,7 +37,7 @@ export default function OpenOrdersTable({ orders, onCancelled }: OpenOrdersTable
   if (orders.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground shadow-sm">
-        No open limit orders.
+        {t('trading.openOrdersTable.noOrders')}
       </div>
     );
   }
@@ -43,7 +45,7 @@ export default function OpenOrdersTable({ orders, onCancelled }: OpenOrdersTable
   return (
     <div className="rounded-lg border border-border bg-card shadow-sm">
       <div className="border-b border-border bg-muted px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Open orders
+        {t('trading.openOrders')}
       </div>
       {error && <p className="px-3 py-2 text-sm text-destructive">{error}</p>}
       <div className="divide-y divide-border">
@@ -56,13 +58,16 @@ export default function OpenOrdersTable({ orders, onCancelled }: OpenOrdersTable
                     order.type === 'BUY' ? 'text-primary' : 'text-destructive'
                   }`}
                 >
-                  {order.type}
+                  {order.type === 'BUY' ? t('trading.buy') : t('trading.sell')}
                 </span>
                 <span className="font-mono text-sm font-semibold">{order.asset.symbol}</span>
                 <span className="font-mono text-xs text-muted-foreground">{order.quantity}</span>
               </div>
               <div className="text-xs text-muted-foreground">
-                target {formatCurrency(order.price)} · placed {new Date(order.createdAt).toLocaleDateString()}
+                {t('trading.openOrdersTable.targetInfo', {
+                  price: formatCurrency(order.price),
+                  date: new Date(order.createdAt).toLocaleDateString()
+                })}
               </div>
             </div>
             <button
@@ -70,7 +75,7 @@ export default function OpenOrdersTable({ orders, onCancelled }: OpenOrdersTable
               disabled={cancellingId === order.id}
               className="rounded border border-input px-3 py-2 text-xs font-medium hover:bg-accent disabled:opacity-40"
             >
-              {cancellingId === order.id ? 'Cancelling…' : 'Cancel'}
+              {cancellingId === order.id ? t('trading.openOrdersTable.cancelling') : t('trading.cancelOrder')}
             </button>
           </div>
         ))}

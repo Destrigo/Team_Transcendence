@@ -55,14 +55,26 @@ export class TradingService {
   }
 
   async fillPendingOrder(orderId: string) {
-    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
-    if (!order || order.status !== OrderStatus.PENDING) {
+    const claimed = await this.prisma.order.updateMany({
+      where: {
+        id: orderId,
+        status: OrderStatus.PENDING,
+      },
+      data: {
+        status: OrderStatus.PROCESSING,
+      },
+    });
+
+    if (claimed.count === 0) {
       return null;
     }
 
-    const asset = await this.prisma.asset.findUnique({ where: { id: order.assetId } });
-    if (!asset) {
-      throw new NotFoundException('Asset not found');
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      return null;
     }
 
     const fillDto: CreateOrderDto = {
@@ -78,18 +90,40 @@ export class TradingService {
           ? await this.executeBuy(order.userId, fillDto, order.id)
           : await this.executeSell(order.userId, fillDto, order.id);
 
-      this.eventEmitter.emit('order.filled', { orderId: filled.id, userId: order.userId });
       return filled;
     } catch (err) {
       if (err instanceof BadRequestException) {
-        await this.cancelOrder(order.id, order.userId);
-        this.eventEmitter.emit('order.cancelled', {
-          orderId: order.id,
-          userId: order.userId,
-          reason: err.message,
+          const cancelled = await this.prisma.order.updateMany({
+          where: {
+            id: order.id,
+            status: OrderStatus.PROCESSING,
+          },
+          data: {
+            status: OrderStatus.CANCELLED,
+          },
         });
+
+        if (cancelled.count > 0) {
+          this.eventEmitter.emit('order.cancelled', {
+            orderId: order.id,
+            userId: order.userId,
+            reason: err.message,
+          });
+        }
+
         return null;
       }
+
+      await this.prisma.order.updateMany({
+        where: {
+          id: order.id,
+          status: OrderStatus.PROCESSING,
+        },
+        data: {
+          status: OrderStatus.PENDING,
+        },
+      });
+
       throw err;
     }
   }
@@ -105,20 +139,29 @@ export class TradingService {
     return { cancelled: true };
   }
 
-  private async executeBuy(userId: string, dto: CreateOrderDto, existingOrderId?: string) {
-    const asset = await this.prisma.asset.findUnique({ where: { id: dto.assetId } });
-    if (!asset) {
+  private async getAssetPriceForUpdate(tx: Prisma.TransactionClient, assetId: string): Promise<Prisma.Decimal> {
+
+    const assets = await tx.$queryRaw<Array<{ current_price: string | number | Prisma.Decimal }>>`
+      SELECT current_price FROM "Asset" WHERE id = ${assetId}::uuid FOR UPDATE
+    `;
+
+    if (!assets || assets.length === 0) {
       throw new NotFoundException('Asset not found');
     }
 
-    const price = new Prisma.Decimal(asset.currentPrice);
-    const total = price.mul(dto.quantity);
+    return new Prisma.Decimal(assets[0].current_price);
+  }
 
+  private async executeBuy(userId: string, dto: CreateOrderDto, existingOrderId?: string) {
     const filledOrder = await this.prisma.$transaction(async (tx) => {
+      const price = await this.getAssetPriceForUpdate(tx, dto.assetId);
+      const total = price.mul(dto.quantity);
+
       const debited = await tx.user.updateMany({
         where: { id: userId, balance: { gte: total } },
         data: { balance: { decrement: total } },
       });
+      
       if (debited.count === 0) {
         throw new BadRequestException('Insufficient balance');
       }
@@ -133,24 +176,20 @@ export class TradingService {
   }
 
   private async executeSell(userId: string, dto: CreateOrderDto, existingOrderId?: string) {
-    const asset = await this.prisma.asset.findUnique({ where: { id: dto.assetId } });
-    if (!asset) {
-      throw new NotFoundException('Asset not found');
-    }
-
-    const price = new Prisma.Decimal(asset.currentPrice);
-    const total = price.mul(dto.quantity);
-
     const filledOrder = await this.prisma.$transaction(async (tx) => {
+      const price = await this.getAssetPriceForUpdate(tx, dto.assetId);
+      const total = price.mul(dto.quantity);
+
       const debited = await tx.holding.updateMany({
         where: { userId, assetId: dto.assetId, quantity: { gte: dto.quantity } },
         data: { quantity: { decrement: dto.quantity } },
       });
+      
       if (debited.count === 0) {
         throw new BadRequestException('Not enough quantity');
       }
 
-      await this.cleanupZeroHolding(tx, userId, dto.assetId);
+    await this.cleanupZeroHolding(tx, userId, dto.assetId);
 
       await tx.user.update({
         where: { id: userId },
@@ -171,30 +210,37 @@ export class TradingService {
     quantity: number,
     buyPrice: Prisma.Decimal,
   ) {
-    const holding = await tx.holding.findUnique({
-      where: { userId_assetId: { userId, assetId } },
-    });
-
-    if (!holding) {
-      return tx.holding.create({
-        data: { userId, assetId, quantity, avgBuyPrice: buyPrice },
-      });
-    }
-
-    const oldQty = new Prisma.Decimal(holding.quantity);
-    const oldAvgPrice = new Prisma.Decimal(holding.avgBuyPrice);
-    const addedQty = new Prisma.Decimal(quantity);
-    const newQty = oldQty.add(addedQty);
-
-    const newAvgPrice = oldQty
-      .mul(oldAvgPrice)
-      .add(addedQty.mul(buyPrice))
-      .div(newQty);
-
-    return tx.holding.update({
-      where: { userId_assetId: { userId, assetId } },
-      data: { quantity: newQty, avgBuyPrice: newAvgPrice },
-    });
+    return tx.$executeRaw`
+      INSERT INTO holdings AS h
+      (
+          id,
+          user_id,
+          asset_id,
+          quantity,
+          avg_buy_price,
+          updated_at
+      )
+      VALUES
+      (
+          gen_random_uuid(),
+          ${userId}::uuid,
+          ${assetId}::uuid,
+          ${quantity},
+          ${buyPrice},
+          now()
+      )
+      ON CONFLICT (user_id, asset_id)
+      DO UPDATE SET
+          quantity = h.quantity + EXCLUDED.quantity,
+          avg_buy_price =
+              (
+                  h.quantity * h.avg_buy_price
+                  + EXCLUDED.quantity * EXCLUDED.avg_buy_price
+              )
+              /
+              (h.quantity + EXCLUDED.quantity),
+          updated_at = now();
+      `;
   }
 
   private async cleanupZeroHolding(
@@ -202,14 +248,13 @@ export class TradingService {
     userId: string,
     assetId: string,
   ) {
-    const holding = await tx.holding.findUnique({
-      where: { userId_assetId: { userId, assetId } },
+   await tx.holding.deleteMany({
+      where: {
+        userId,
+        assetId,
+        quantity: 0,
+      },
     });
-    if (holding && new Prisma.Decimal(holding.quantity).isZero()) {
-      await tx.holding.delete({
-        where: { userId_assetId: { userId, assetId } },
-      });
-    }
   }
 
   private finalizeOrder(

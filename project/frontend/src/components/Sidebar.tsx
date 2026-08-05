@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next'; // Подключили i18n
 import {
   LayoutDashboard,
   Search,
@@ -7,12 +8,13 @@ import {
   Settings as SettingsIcon,
 } from 'lucide-react';
 
+// Заменили label на labelKey с путями к ключам перевода
 const NAV_ITEMS = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/search', label: 'Search', icon: Search },
-  { to: '/trade', label: 'Trade', icon: LineChart },
-  { to: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { to: '/settings', label: 'Settings', icon: SettingsIcon },
+  { to: '/dashboard', labelKey: 'sidebar.dashboard', icon: LayoutDashboard },
+  { to: '/search', labelKey: 'sidebar.search', icon: Search },
+  { to: '/trade', labelKey: 'sidebar.trade', icon: LineChart },
+  { to: '/analytics', labelKey: 'sidebar.analytics', icon: BarChart3 },
+  { to: '/settings', labelKey: 'sidebar.settings', icon: SettingsIcon },
 ];
 
 const linkClasses = ({ isActive }: { isActive: boolean }) =>
@@ -23,6 +25,7 @@ const linkClasses = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export default function Sidebar() {
+  const { t } = useTranslation(); // Инициализация хука
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-card">
@@ -31,10 +34,10 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+        {NAV_ITEMS.map(({ to, labelKey, icon: Icon }) => (
           <NavLink key={to} to={to} className={linkClasses}>
             <Icon className="h-4 w-4" />
-            {label}
+            {t(labelKey)} {/* Рендерим перевод по ключу */}
           </NavLink>
         ))}
       </nav>

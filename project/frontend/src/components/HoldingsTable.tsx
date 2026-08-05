@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { Holding } from '../types/types';
 
 function formatCurrency(value: number) {
@@ -17,10 +18,12 @@ export default function HoldingsTable({
   holdings,
   onSelectHolding,
 }: HoldingsTableProps) {
+  const { t } = useTranslation();
+
   if (holdings.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
-        No holdings yet. Buy an asset to see it here.
+        {t('trading.holdingsTable.noHoldings')}
       </div>
     );
   }
@@ -28,7 +31,7 @@ export default function HoldingsTable({
   return (
     <div className="rounded-lg border border-border bg-card shadow-sm">
       <div className="border-b border-border px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Your holdings
+        {t('trading.holdingsTable.title')}
       </div>
 
       <div>
@@ -52,7 +55,7 @@ export default function HoldingsTable({
                 </span>
 
                 <span className="text-xs text-muted-foreground">
-                  avg {formatCurrency(h.avgBuyPrice)}
+                  {t('trading.holdingsTable.avg')} {formatCurrency(h.avgBuyPrice)}
                 </span>
               </span>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Asset, AssetListResponse, AssetType } from '../types/types';
 import { fetchAssets, type AssetQueryParams } from '../services/trading.service';
 
@@ -20,6 +21,7 @@ interface AssetTableProps {
 }
 
 export default function AssetTable({ selectedAssetId, onSelectAsset }: AssetTableProps) {
+  const { t } = useTranslation();
   const [response, setResponse] = useState<AssetListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export default function AssetTable({ selectedAssetId, onSelectAsset }: AssetTabl
         if (!cancelled) setResponse(data);
       })
       .catch(() => {
-        if (!cancelled) setError('Could not load assets. Try again.');
+        if (!cancelled) setError(t('trading.assetTable.errorLoad'));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -56,7 +58,7 @@ export default function AssetTable({ selectedAssetId, onSelectAsset }: AssetTabl
     return () => {
       cancelled = true;
     };
-  }, [q, type, sort, order, page]);
+  }, [q, type, sort, order, page, t]);
 
   const toggleSort = (field: AssetQueryParams['sort']) => {
     if (sort === field) {
@@ -77,7 +79,7 @@ export default function AssetTable({ selectedAssetId, onSelectAsset }: AssetTabl
             setPage(1);
             setQ(e.target.value);
           }}
-          placeholder="Search name or symbol"
+          placeholder={t('trading.assetTable.searchPlaceholder')}
           className="min-w-[180px] flex-1 rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <select
@@ -88,32 +90,32 @@ export default function AssetTable({ selectedAssetId, onSelectAsset }: AssetTabl
           }}
           className="rounded border border-input bg-background px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="">All types</option>
-          <option value="CRYPTO">Crypto</option>
-          <option value="STOCK">Stock</option>
+          <option value="">{t('trading.assetTable.allTypes')}</option>
+          <option value="CRYPTO">{t('trading.assetTable.crypto')}</option>
+          <option value="STOCK">{t('trading.assetTable.stock')}</option>
         </select>
       </div>
 
       <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 border-b border-border bg-muted px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
         <button onClick={() => toggleSort('name')} className="text-left hover:text-foreground">
-          Asset {sort === 'name' && (order === 'desc' ? '▼' : '▲')}
+          {t('trading.assetTable.colAsset')} {sort === 'name' && (order === 'desc' ? '▼' : '▲')}
         </button>
         <button onClick={() => toggleSort('price')} className="text-right hover:text-foreground">
-          Price {sort === 'price' && (order === 'desc' ? '▼' : '▲')}
+          {t('trading.price')} {sort === 'price' && (order === 'desc' ? '▼' : '▲')}
         </button>
         <button onClick={() => toggleSort('change')} className="w-16 text-right hover:text-foreground">
-          24h {sort === 'change' && (order === 'desc' ? '▼' : '▲')}
+          {t('trading.assetTable.colChange')} {sort === 'change' && (order === 'desc' ? '▼' : '▲')}
         </button>
         <button onClick={() => toggleSort('marketCap')} className="w-20 text-right hover:text-foreground">
-          Mkt cap {sort === 'marketCap' && (order === 'desc' ? '▼' : '▲')}
+          {t('trading.assetTable.colMktCap')} {sort === 'marketCap' && (order === 'desc' ? '▼' : '▲')}
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {loading && <p className="p-4 text-sm text-muted-foreground">Loading assets…</p>}
+        {loading && <p className="p-4 text-sm text-muted-foreground">{t('trading.assetTable.loading')}</p>}
         {error && <p className="p-4 text-sm text-destructive">{error}</p>}
         {!loading && !error && response?.data.length === 0 && (
-          <p className="p-4 text-sm text-muted-foreground">No assets match this search.</p>
+          <p className="p-4 text-sm text-muted-foreground">{t('trading.assetTable.noResults')}</p>
         )}
         {response?.data.map((asset) => {
           const isSelected = asset.id === selectedAssetId;
@@ -148,17 +150,17 @@ export default function AssetTable({ selectedAssetId, onSelectAsset }: AssetTabl
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             className="rounded px-2 py-1 hover:bg-accent disabled:opacity-30"
           >
-            Prev
+            {t('trading.assetTable.prev')}
           </button>
           <span>
-            Page {response.meta.page} / {response.meta.totalPages}
+            {t('trading.assetTable.pageInfo', { current: response.meta.page, total: response.meta.totalPages })}
           </span>
           <button
             disabled={page >= response.meta.totalPages}
             onClick={() => setPage((p) => p + 1)}
             className="rounded px-2 py-1 hover:bg-accent disabled:opacity-30"
           >
-            Next
+            {t('trading.assetTable.next')}
           </button>
         </div>
       )}
