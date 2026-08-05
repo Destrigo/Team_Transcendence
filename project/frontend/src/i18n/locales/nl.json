@@ -1,4 +1,11 @@
 {
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "search": "Zoeken",
+    "trade": "Handel",
+    "analytics": "Analyses",
+    "settings": "Instellingen"
+  },
   "common": {
     "save": "Opslaan",
     "cancel": "Annuleren",
@@ -67,6 +74,57 @@
     "usernameTaken": "Deze gebruikersnaam is al bezet",
     "weakPassword": "Wachtwoord moet minimaal 8 tekens bevatten"
   },
+    "profile": {
+    "loading": "Profiel laden…",
+    "title": "Profiel",
+    "goToTrading": "Naar Trading",
+    "changeAvatar": "Avatar wijzigen",
+    "uploading": "Uploaden…",
+    "online": "Online",
+    "offline": "Offline",
+    "email": "E-mail",
+    "balance": "Saldo",
+    "lastSeen": "Laatst gezien",
+    "depositLabel": "Saldo opwaarderen",
+    "depositPlaceholder": "Bedrag",
+    "depositButton": "Storten",
+    "depositing": "Bezig met storten…",
+    "invalidAmount": "Voer een geldig bedrag in",
+    "depositFailed": "Storting mislukt. Probeer het opnieuw.",
+    "avatarInvalidType": "Kies een afbeeldingsbestand",
+    "avatarTooLarge": "Afbeelding moet kleiner zijn dan 5 MB",
+    "avatarUploadFailed": "Avatar uploaden mislukt. Probeer het opnieuw.",
+    "username": "Gebruikersnaam",
+    "displayName": "Weergavenaam",
+    "displayNamePlaceholder": "Hoe anderen je zien",
+    "usernameRequired": "Gebruikersnaam is verplicht",
+    "saveFailed": "Wijzigingen konden niet worden opgeslagen. Probeer het opnieuw.",
+    "saved": "Wijzigingen opgeslagen",
+    "saveButton": "Wijzigingen opslaan",
+    "saving": "Bezig met opslaan…",
+    "loggingOut": "Bezig met uitloggen…",
+    "logoutButton": "Uitloggen"
+  },
+  "search": {
+    "title": "Traders zoeken",
+    "subtitle": "Zoek op gebruikersnaam of weergavenaam",
+    "placeholder": "Zoek traders…",
+    "noQuery": "Begin te typen om andere traders te vinden.",
+    "noResults": "Geen traders gevonden voor \"{{query}}\".",
+    "loading": "Bezig met zoeken…",
+    "error": "Resultaten konden niet worden geladen. Probeer opnieuw.",
+    "retry": "Opnieuw proberen",
+    "online": "Online",
+    "offlineSince": "Laatst gezien {{time}}",
+    "addFriend": "Vriend toevoegen",
+    "message": "Bericht",
+    "comingSoon": "Binnenkort beschikbaar",
+    "resultsCount": "{{count}} trader gevonden",
+    "resultsCount_other": "{{count}} traders gevonden",
+    "page": "Pagina {{page}} van {{totalPages}}",
+    "prev": "Vorige",
+    "next": "Volgende"
+  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welkom terug, {{name}}",
@@ -101,6 +159,9 @@
   },
   "trading": {
     "title": "Handelen",
+    "cash": "Cash",
+    "holdingsValue": "Waarde posities",
+    "totalPnl": "Totale P&L",
     "buy": "Kopen",
     "sell": "Verkopen",
     "marketOrder": "Marktorder",
@@ -128,7 +189,44 @@
     "cancelled": "Geannuleerd",
     "insufficientBalance": "Onvoldoende saldo",
     "insufficientHoldings": "Onvoldoende positie",
-    "minQuantity": "Minimale hoeveelheid is 0,0001"
+    "minQuantity": "Minimale hoeveelheid is 0,0001",
+    "assetTable": {
+      "searchPlaceholder": "Zoek op naam of symbool",
+      "allTypes": "Alle types",
+      "crypto": "Crypto",
+      "stock": "Aandeel",
+      "colAsset": "Actif",
+      "colChange": "24h",
+      "colMktCap": "Marktkapitalisatie",
+      "loading": "Activa laden…",
+      "noResults": "Geen activa gevonden voor deze zoekopdracht.",
+      "errorLoad": "Laden van activa mislukt. Probeer het opnieuw.",
+      "prev": "Vorige",
+      "next": "Volgende",
+      "pageInfo": "Pagina {{current}} / {{total}}"
+    },
+    "holdingsTable": {
+      "title": "Uw posities",
+      "noHoldings": "Nog geen posities. Koop een actief om het hier te zien.",
+      "avg": "gem"
+    },
+    "orderPanel": {
+      "selectAssetPrompt": "Selecteer een actief uit de marktlijst om een order te plaatsen.",
+      "holdingInfo": "U bezit {{quantity}} {{symbol}} · gem. {{avgPrice}}",
+      "max": "Max",
+      "insufficientHoldingsError": "U bezit slechts {{max}} {{symbol}}.",
+      "successBought": "{{quantity}} {{symbol}} gekocht",
+      "successSold": "{{quantity}} {{symbol}} verkocht",
+      "successLimitPlaced": "Limietorder geplaatst voor {{quantity}} {{symbol}}",
+      "errorFailed": "Order mislukt. Probeer het opnieuw.",
+      "placingOrder": "Order plaatsen…"
+    },
+    "openOrdersTable": {
+      "noOrders": "Geen openstaande limietorders.",
+      "errorCancel": "Order annuleren mislukt.",
+      "cancelling": "Annuleren…",
+      "targetInfo": "doel {{price}} · geplaatst op {{date}}"
+    }
   },
   "portfolio": {
     "title": "Portfolio",
