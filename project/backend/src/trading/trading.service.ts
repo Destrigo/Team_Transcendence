@@ -142,7 +142,7 @@ export class TradingService {
   private async getAssetPriceForUpdate(tx: Prisma.TransactionClient, assetId: string): Promise<Prisma.Decimal> {
 
     const assets = await tx.$queryRaw<Array<{ current_price: string | number | Prisma.Decimal }>>`
-      SELECT current_price FROM "Asset" WHERE id = ${assetId}::uuid FOR UPDATE
+      SELECT current_price FROM assets WHERE id = ${assetId}::uuid FOR UPDATE
     `;
 
     if (!assets || assets.length === 0) {
