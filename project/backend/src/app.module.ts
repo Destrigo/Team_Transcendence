@@ -9,9 +9,10 @@ import { WebsocketModule } from './websocket/websocket.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { GdprModule } from './gdpr/gdpr.module';
 import { OrdersModule } from './orders/orders.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { PortfolioModule } from './portfolio/portfolio.module'
+import { PortfolioModule } from './portfolio/portfolio.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PortfolioModule } from './portfolio/portfolio.module'
     AnalyticsModule,
     AuthModule,
     UsersModule,
+    GdprModule,
     OrdersModule,
     PortfolioModule,
     EventEmitterModule.forRoot(),

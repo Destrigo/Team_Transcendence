@@ -38,6 +38,7 @@ export default function Settings() {
   // --- GDPR ---
   const [gdprDownloading, setGdprDownloading] = useState(false);
   const [gdprError, setGdprError] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -206,13 +207,16 @@ export default function Settings() {
       return;
     }
     setDeleteError('');
+    if (!deletePassword) {
+      setDeleteError(t('gdpr.passwordRequired'));
+      return;
+    }
     try {
       setDeleteLoading(true);
-      await api.delete('/gdpr/delete-account');
+      await api.delete('/gdpr/delete-account', { data: { password: deletePassword } });
       navigate('/login');
     } catch (err: any) {
       setDeleteError(err?.response?.data?.message ?? t('gdpr.deleteFailed'));
-      setConfirmingDelete(false);
     } finally {
       setDeleteLoading(false);
     }
@@ -448,9 +452,19 @@ export default function Settings() {
             <p className="text-sm font-medium text-destructive">{t('gdpr.deleteAccount')}</p>
             <p className="mb-2 text-xs text-muted-foreground">{t('gdpr.deleteAccountDesc')}</p>
             {confirmingDelete && (
-              <p className="mb-2 text-xs font-medium text-destructive">
-                {t('gdpr.deleteConfirmPrompt')}
-              </p>
+              <div className="mb-2 space-y-2">
+                <p className="text-xs font-medium text-destructive">
+                  {t('gdpr.deleteConfirmPrompt')}
+                </p>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  autoComplete="current-password"
+                  placeholder={t('auth.password')}
+                  className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
             )}
             <div className="flex gap-2">
               <button
@@ -466,7 +480,11 @@ export default function Settings() {
               </button>
               {confirmingDelete && !deleteLoading && (
                 <button
-                  onClick={() => setConfirmingDelete(false)}
+                  onClick={() => {
+                    setConfirmingDelete(false);
+                    setDeletePassword('');
+                    setDeleteError('');
+                  }}
                   className="rounded border border-input px-4 py-2 text-sm hover:bg-accent"
                 >
                   {t('gdpr.cancel')}

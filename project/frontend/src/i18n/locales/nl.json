@@ -355,7 +355,11 @@
     "deleteAccountDesc": "Verwijder je account en alle bijbehorende gegevens definitief. Deze actie kan niet ongedaan worden gemaakt.",
     "deleteButton": "Mijn account verwijderen",
     "confirmDelete": "Voer je wachtwoord in om het verwijderen van je account te bevestigen",
-    "confirmDeleteButton": "Account definitief verwijderen"
+    "confirmDeleteButton": "Account definitief verwijderen",
+    "exportSuccess": "Je gegevensdownload is gestart.",
+    "exportFailed": "Kon je gegevens niet exporteren.",
+    "deleteFailed": "Kon je account niet verwijderen.",
+    "passwordRequired": "Wachtwoord is verplicht."
   },
   "privacy": {
     "title": "Privacybeleid",

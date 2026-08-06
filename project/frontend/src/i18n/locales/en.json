@@ -355,7 +355,11 @@
     "deleteAccountDesc": "Permanently delete your account and all associated data. This action cannot be undone.",
     "deleteButton": "Delete my account",
     "confirmDelete": "Type your password to confirm account deletion",
-    "confirmDeleteButton": "Permanently delete account"
+    "confirmDeleteButton": "Permanently delete account",
+    "exportSuccess": "Your data download has started.",
+    "exportFailed": "Could not export your data.",
+    "deleteFailed": "Could not delete your account.",
+    "passwordRequired": "Password is required."
   },
   "privacy": {
     "title": "Privacy Policy",

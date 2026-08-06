@@ -355,7 +355,11 @@
     "deleteAccountDesc": "Supprimer définitivement votre compte et toutes les données associées. Cette action est irréversible.",
     "deleteButton": "Supprimer mon compte",
     "confirmDelete": "Saisissez votre mot de passe pour confirmer la suppression du compte",
-    "confirmDeleteButton": "Supprimer définitivement le compte"
+    "confirmDeleteButton": "Supprimer définitivement le compte",
+    "exportSuccess": "Le téléchargement de vos données a commencé.",
+    "exportFailed": "Impossible d'exporter vos données.",
+    "deleteFailed": "Impossible de supprimer votre compte.",
+    "passwordRequired": "Le mot de passe est requis."
   },
   "privacy": {
     "title": "Politique de confidentialité",
