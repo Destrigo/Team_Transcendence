@@ -1,146 +1,391 @@
-import { useState } from 'react';
-import type { FormEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '../components/LanguageSwitcher';
+import { useAuth } from '../auth/useAuth';
+import { api } from '../api/api';
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+const DEFAULT_AVATAR = 'https://www.gravatar.com/avatar/?d=mp';
 
-function authHeaders(): HeadersInit {
-  const token = localStorage.getItem('access_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-const Settings = () => {
+export default function Settings() {
   const { t } = useTranslation();
+
+  const { user, loading, refreshUser } = useAuth();
+
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositLoading, setDepositLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [exportLoading, setExportLoading] = useState(false);
-  const [exportError, setExportError] = useState('');
-  const [exportSuccess, setExportSuccess] = useState(false);
+  const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
+
+  // --- Password change (independent from the profile-fields form) ---
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  // --- GDPR ---
+  const [gdprDownloading, setGdprDownloading] = useState(false);
+  const [gdprError, setGdprError] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  const handleExport = async () => {
-    setExportError('');
-    setExportSuccess(false);
-    setExportLoading(true);
+  useEffect(() => {
+    if (user) {
+      setUsername(user.username);
+      setDisplayName(user.displayName ?? '');
+    }
+  }, [user]);
+
+  const handleDeposit = async () => {
+    setError('');
+    const amount = Number(depositAmount);
+    if (!amount || amount <= 0) {
+      setError(t('profile.invalidAmount'));
+      return;
+    }
     try {
-      const res = await fetch(`${API}/api/gdpr/export`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: authHeaders(),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(
-          typeof body.message === 'string'
-            ? body.message
-            : t('gdpr.exportFailed'),
-        );
-      }
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'papertrade-personal-data.json';
-      a.click();
-      URL.revokeObjectURL(url);
-      setExportSuccess(true);
-    } catch (err) {
-      setExportError(
-        err instanceof Error ? err.message : t('gdpr.exportFailed'),
-      );
+      setDepositLoading(true);
+      await api.post('/users/deposit', { amount });
+      await refreshUser();
+      setDepositAmount('');
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? t('profile.depositFailed'));
     } finally {
-      setExportLoading(false);
+      setDepositLoading(false);
     }
   };
 
-  const handleDelete = async (e: FormEvent) => {
-    e.preventDefault();
-    setDeleteError('');
-    if (!deletePassword.trim()) {
-      setDeleteError(t('gdpr.passwordRequired'));
+  const handleAvatarClick = () => {
+    if (avatarUploading) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setAvatarError('');
+
+    if (!file.type.startsWith('image/')) {
+      setAvatarError(t('profile.avatarInvalidType'));
+      return;
+    }
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      setAvatarError(t('profile.avatarTooLarge'));
       return;
     }
 
-    setDeleteLoading(true);
-    try {
-      const res = await fetch(`${API}/api/gdpr/delete-account`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders(),
-        },
-        body: JSON.stringify({ password: deletePassword }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(
-          typeof body.message === 'string'
-            ? body.message
-            : t('gdpr.deleteFailed'),
-        );
-      }
+    const formData = new FormData();
+    formData.append('avatar', file);
 
-      localStorage.removeItem('access_token');
-      navigate('/');
-    } catch (err) {
-      setDeleteError(
-        err instanceof Error ? err.message : t('gdpr.deleteFailed'),
+    try {
+      setAvatarUploading(true);
+      // Let axios set the multipart boundary itself — do not set
+      // Content-Type manually here, or the boundary will be missing.
+      await api.put('/users/me/avatar', formData);
+      await refreshUser();
+    } catch (err: any) {
+      setAvatarError(err?.response?.data?.message ?? t('profile.avatarUploadFailed'));
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  // Only touches username / displayName
+  const handleSave = async () => {
+    setSaveError('');
+    setSaveSuccess(false);
+    if (!username.trim()) {
+      setSaveError(t('profile.usernameRequired'));
+      return;
+    }
+    try {
+      setSaveLoading(true);
+      await api.put('/users/me', {
+        username: username.trim(),
+        displayName: displayName.trim() || null,
+      });
+      await refreshUser();
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } catch (err: any) {
+      setSaveError(err?.response?.data?.message ?? t('profile.saveFailed'));
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  // Only touches password fields
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    setPasswordSuccess(false);
+
+    if (!currentPassword || !newPassword) {
+      setPasswordError(t('settings.passwordRequired'));
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordError(t('settings.passwordTooShort'));
+      return;
+    }
+    if (newPassword === currentPassword) {
+      setPasswordError(t('settings.passwordSameAsOld'));
+      return;
+    }
+
+    try {
+      setPasswordLoading(true);
+      await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword,
+      });
+      setCurrentPassword('');
+      setNewPassword('');
+      setPasswordSuccess(true);
+      setTimeout(() => setPasswordSuccess(false), 2500);
+    } catch (err: any) {
+      setPasswordError(
+        err?.response?.data?.message ?? t('settings.passwordChangeFailed'),
       );
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setLogoutLoading(true);
+      await api.post('/auth/logout');
+    } catch {
+      // logout is best-effort client-side; fall through to redirect either way
+    } finally {
+      await refreshUser();
+      setLogoutLoading(false);
+      navigate('/login');
+    }
+  };
+
+  const handleDownloadData = async () => {
+    setGdprError('');
+    try {
+      setGdprDownloading(true);
+      const res = await api.get('/gdpr/export', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'my-data.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setGdprError(err?.response?.data?.message ?? t('gdpr.downloadFailed'));
+    } finally {
+      setGdprDownloading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirmingDelete) {
+      setConfirmingDelete(true);
+      return;
+    }
+    setDeleteError('');
+    if (!deletePassword) {
+      setDeleteError(t('gdpr.passwordRequired'));
+      return;
+    }
+    try {
+      setDeleteLoading(true);
+      await api.delete('/gdpr/delete-account', { data: { password: deletePassword } });
+      navigate('/login');
+    } catch (err: any) {
+      setDeleteError(err?.response?.data?.message ?? t('gdpr.deleteFailed'));
     } finally {
       setDeleteLoading(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted">
+        <p className="text-sm text-muted-foreground">{t('profile.loading')}</p>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  const avatar = user.avatarUrl ? `${API}${user.avatarUrl}` : DEFAULT_AVATAR;
+  const balance = Number(user.balance ?? 0);
+  const hasChanges =
+    username.trim() !== user.username ||
+    (displayName.trim() || null) !== (user.displayName ?? null);
+
   return (
-    <div className="mx-auto max-w-2xl p-6">
+    <div className="mx-auto p-6">
       <h1 className="mb-6 text-2xl font-bold">{t('settings.title')}</h1>
 
+      {/* Profile section */}
       <section className="mb-6 rounded-lg border border-border bg-card p-4">
-        <h2 className="mb-4 text-lg font-semibold">{t('settings.profile')}</h2>
-        <div className="space-y-4">
+        <div className="grid gap-8 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium">
-              {t('settings.displayName')}
-            </label>
-            <input
-              type="text"
-              className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+            <div className="mb-6 flex items-center gap-4">
+              <button
+                type="button"
+                onClick={handleAvatarClick}
+                disabled={avatarUploading}
+                className="group relative h-20 w-20 shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed"
+                aria-label={t('profile.changeAvatar')}
+              >
+                <img
+                  src={avatar}
+                  alt="avatar"
+                  className="h-20 w-20 rounded-full object-cover"
+                />
+                <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 text-[10px] font-medium text-transparent transition-colors group-hover:bg-black/40 group-hover:text-white">
+                  {avatarUploading ? t('profile.uploading') : t('profile.changeAvatar')}
+                </span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+              </button>
+              <div>
+                <h2 className="text-lg font-semibold">
+                  {user.displayName || user.username}
+                </h2>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span
+                    className={`inline-block h-2 w-2 rounded-full ${
+                      user.isOnline ? 'bg-green-500' : 'bg-gray-400'
+                    }`}
+                  />
+                  {user.isOnline ? t('profile.online') : t('profile.offline')}
+                </div>
+              </div>
+            </div>
+
+            {avatarError && (
+              <p className="-mt-4 mb-4 text-sm text-destructive">{avatarError}</p>
+            )}
+
+            <div className="space-y-2 border-t border-input pt-4 text-sm">
+              <p>
+                <span className="font-medium">{t('profile.email')}:</span>{' '}
+                <span className="text-muted-foreground">{user.email}</span>
+              </p>
+              <p>
+                <span className="font-medium">{t('profile.balance')}:</span>{' '}
+                <span className="text-muted-foreground">{balance.toFixed(2)}</span>
+              </p>
+              {user.lastSeen && (
+                <p>
+                  <span className="font-medium">{t('profile.lastSeen')}:</span>{' '}
+                  <span className="text-muted-foreground">
+                    {new Date(user.lastSeen).toLocaleString()}
+                  </span>
+                </p>
+              )}
+            </div>
+
+            <div className="mt-6 border-t border-input pt-4">
+              <label className="mb-1 block text-sm font-medium">
+                {t('profile.depositLabel')}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  placeholder={t('profile.depositPlaceholder')}
+                  className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <button
+                  onClick={handleDeposit}
+                  disabled={depositLoading}
+                  className="whitespace-nowrap rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {depositLoading ? t('profile.depositing') : t('profile.depositButton')}
+                </button>
+              </div>
+              {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+            </div>
           </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              {t('settings.avatar')}
-            </label>
-            <button
-              type="button"
-              className="rounded border border-border px-4 py-2 text-sm hover:bg-accent"
-            >
-              {t('settings.changeAvatar')}
-            </button>
+
+          <div className="flex flex-col">
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  {t('profile.username')}
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  {t('profile.displayName')}
+                </label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder={t('profile.displayNamePlaceholder')}
+                  className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+
+              {saveError && <p className="text-sm text-destructive">{saveError}</p>}
+              {saveSuccess && (
+                <p className="text-sm text-green-600">{t('profile.saved')}</p>
+              )}
+
+              <button
+                onClick={handleSave}
+                disabled={saveLoading || !hasChanges}
+                className="w-full rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saveLoading ? t('profile.saving') : t('profile.saveButton')}
+              </button>
+            </div>
+
+            <div className="mt-auto border-t border-input pt-4 md:mt-6">
+              <button
+                onClick={handleLogout}
+                disabled={logoutLoading}
+                className="w-full rounded border border-input px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {logoutLoading ? t('profile.loggingOut') : t('profile.logoutButton')}
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="mb-6 rounded-lg border border-border bg-card p-4">
-        <h2 className="mb-4 text-lg font-semibold">
-          {t('settings.preferences')}
-        </h2>
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            {t('settings.languageLabel')}
-          </label>
-          <LanguageSwitcher className="mt-1" />
-        </div>
-      </section>
-
+      {/* Security section — password change is independent of the profile form */}
       <section className="mb-6 rounded-lg border border-border bg-card p-4">
         <h2 className="mb-4 text-lg font-semibold">{t('settings.security')}</h2>
         <div className="space-y-4">
@@ -150,6 +395,9 @@ const Settings = () => {
             </label>
             <input
               type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              autoComplete="current-password"
               className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -159,114 +407,94 @@ const Settings = () => {
             </label>
             <input
               type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              autoComplete="new-password"
               className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
+
+          {passwordError && (
+            <p className="text-sm text-destructive">{passwordError}</p>
+          )}
+          {passwordSuccess && (
+            <p className="text-sm text-green-600">{t('settings.passwordChanged')}</p>
+          )}
+
           <button
-            type="button"
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+            onClick={handleChangePassword}
+            disabled={passwordLoading || !currentPassword || !newPassword}
+            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {t('settings.changePassword')}
+            {passwordLoading ? t('settings.changingPassword') : t('settings.changePassword')}
           </button>
         </div>
       </section>
 
+      {/* GDPR section */}
       <section className="rounded-lg border border-border bg-card p-4">
         <h2 className="mb-4 text-lg font-semibold">{t('settings.privacy')}</h2>
         <div className="space-y-3">
           <div>
             <p className="text-sm font-medium">{t('gdpr.downloadData')}</p>
-            <p className="mb-2 text-xs text-muted-foreground">
-              {t('gdpr.downloadDataDesc')}
-            </p>
+            <p className="mb-2 text-xs text-muted-foreground">{t('gdpr.downloadDataDesc')}</p>
             <button
-              type="button"
-              onClick={handleExport}
-              disabled={exportLoading}
-              className="rounded border border-border px-4 py-2 text-sm hover:bg-accent disabled:opacity-50"
+              onClick={handleDownloadData}
+              disabled={gdprDownloading}
+              className="rounded border border-border px-4 py-2 text-sm hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {exportLoading ? t('common.loading') : t('gdpr.downloadButton')}
+              {gdprDownloading ? t('gdpr.downloading') : t('gdpr.downloadButton')}
             </button>
-            {exportError ? (
-              <p className="mt-2 text-xs text-destructive">{exportError}</p>
-            ) : null}
-            {exportSuccess ? (
-              <p className="mt-2 text-xs text-green-600">{t('gdpr.exportSuccess')}</p>
-            ) : null}
+            {gdprError && <p className="mt-2 text-sm text-destructive">{gdprError}</p>}
           </div>
           <hr className="border-border" />
           <div>
-            <p className="text-sm font-medium text-destructive">
-              {t('gdpr.deleteAccount')}
-            </p>
-            <p className="mb-2 text-xs text-muted-foreground">
-              {t('gdpr.deleteAccountDesc')}
-            </p>
-            {!showDeleteConfirm ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setShowDeleteConfirm(true);
-                  setDeleteError('');
-                }}
-                className="rounded border border-destructive px-4 py-2 text-sm text-destructive hover:bg-destructive hover:text-destructive-foreground"
-              >
-                {t('gdpr.deleteButton')}
-              </button>
-            ) : (
-              <form onSubmit={handleDelete} className="space-y-3">
-                <p className="text-xs text-muted-foreground">
-                  {t('gdpr.confirmDelete')}
+            <p className="text-sm font-medium text-destructive">{t('gdpr.deleteAccount')}</p>
+            <p className="mb-2 text-xs text-muted-foreground">{t('gdpr.deleteAccountDesc')}</p>
+            {confirmingDelete && (
+              <div className="mb-2 space-y-2">
+                <p className="text-xs font-medium text-destructive">
+                  {t('gdpr.deleteConfirmPrompt')}
                 </p>
                 <input
                   type="password"
                   value={deletePassword}
                   onChange={(e) => setDeletePassword(e.target.value)}
                   autoComplete="current-password"
-                  className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder={t('auth.password')}
+                  className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
-                {deleteError ? (
-                  <p className="text-xs text-destructive">{deleteError}</p>
-                ) : null}
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={deleteLoading}
-                    className="rounded bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90 disabled:opacity-50"
-                  >
-                    {deleteLoading
-                      ? t('common.loading')
-                      : t('gdpr.confirmDeleteButton')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowDeleteConfirm(false);
-                      setDeletePassword('');
-                      setDeleteError('');
-                    }}
-                    className="rounded border border-border px-4 py-2 text-sm hover:bg-accent"
-                  >
-                    {t('common.cancel')}
-                  </button>
-                </div>
-              </form>
+              </div>
             )}
+            <div className="flex gap-2">
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading}
+                className="rounded border border-destructive px-4 py-2 text-sm text-destructive hover:bg-destructive hover:text-destructive-foreground disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleteLoading
+                  ? t('gdpr.deleting')
+                  : confirmingDelete
+                  ? t('gdpr.deleteConfirmButton')
+                  : t('gdpr.deleteButton')}
+              </button>
+              {confirmingDelete && !deleteLoading && (
+                <button
+                  onClick={() => {
+                    setConfirmingDelete(false);
+                    setDeletePassword('');
+                    setDeleteError('');
+                  }}
+                  className="rounded border border-input px-4 py-2 text-sm hover:bg-accent"
+                >
+                  {t('gdpr.cancel')}
+                </button>
+              )}
+            </div>
+            {deleteError && <p className="mt-2 text-sm text-destructive">{deleteError}</p>}
           </div>
         </div>
       </section>
-
-      <div className="mt-6">
-        <button
-          type="button"
-          className="rounded bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-        >
-          {t('settings.saveChanges')}
-        </button>
-      </div>
     </div>
   );
-};
-
-export default Settings;
+}

@@ -1,0 +1,32 @@
+# Single HTTPS entrypoint for PaperTrade (subject: browser → backend must use HTTPS).
+# Caddy generates a local CA + leaf cert automatically (`tls internal`).
+# First visit: accept the browser warning for https://localhost
+# (or trust Caddy's local root CA from the caddy_data volume).
+
+localhost {
+	tls internal
+
+	# NestJS REST (global prefix /api)
+	handle /api/* {
+		reverse_proxy backend:4000
+	}
+
+	# Socket.IO (price feed namespace /prices uses default /socket.io path)
+	handle /socket.io/* {
+		reverse_proxy backend:4000
+	}
+
+	# Static uploads (avatars) when served by Nest
+	handle /uploads/* {
+		reverse_proxy backend:4000
+	}
+
+	# React / Vite dev server
+	handle {
+		reverse_proxy frontend:3000
+	}
+}
+
+http://localhost {
+	redir https://localhost{uri} permanent
+}

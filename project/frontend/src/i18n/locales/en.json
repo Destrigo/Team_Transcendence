@@ -1,4 +1,11 @@
 {
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "search": "Search",
+    "trade": "Trade",
+    "analytics": "Analytics",
+    "settings": "Settings"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -67,6 +74,57 @@
     "usernameTaken": "This username is already taken",
     "weakPassword": "Password must be at least 8 characters"
   },
+    "profile": {
+    "loading": "Loading your profile…",
+    "title": "Profile",
+    "goToTrading": "Go to Trading",
+    "changeAvatar": "Change avatar",
+    "uploading": "Uploading…",
+    "online": "Online",
+    "offline": "Offline",
+    "email": "Email",
+    "balance": "Balance",
+    "lastSeen": "Last seen",
+    "depositLabel": "Add funds",
+    "depositPlaceholder": "Amount",
+    "depositButton": "Deposit",
+    "depositing": "Depositing…",
+    "invalidAmount": "Enter a valid amount",
+    "depositFailed": "Deposit failed. Please try again.",
+    "avatarInvalidType": "Please choose an image file",
+    "avatarTooLarge": "Image must be smaller than 5 MB",
+    "avatarUploadFailed": "Could not upload avatar. Please try again.",
+    "username": "Username",
+    "displayName": "Display name",
+    "displayNamePlaceholder": "How others see you",
+    "usernameRequired": "Username is required",
+    "saveFailed": "Could not save changes. Please try again.",
+    "saved": "Changes saved",
+    "saveButton": "Save changes",
+    "saving": "Saving…",
+    "loggingOut": "Logging out…",
+    "logoutButton": "Log out"
+  },
+  "search": {
+    "title": "Find traders",
+    "subtitle": "Search by username or display name",
+    "placeholder": "Search traders…",
+    "noQuery": "Start typing to find other traders.",
+    "noResults": "No traders match \"{{query}}\".",
+    "loading": "Searching…",
+    "error": "Couldn't load results. Try again.",
+    "retry": "Retry",
+    "online": "Online",
+    "offlineSince": "Last seen {{time}}",
+    "addFriend": "Add friend",
+    "message": "Message",
+    "comingSoon": "Coming soon",
+    "resultsCount": "{{count}} trader found",
+    "resultsCount_other": "{{count}} traders found",
+    "page": "Page {{page}} of {{totalPages}}",
+    "prev": "Previous",
+    "next": "Next"
+  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome back, {{name}}",
@@ -101,6 +159,9 @@
   },
   "trading": {
     "title": "Trade",
+    "cash": "Cash",
+    "holdingsValue": "Holdings value",
+    "totalPnl": "Total P&L",
     "buy": "Buy",
     "sell": "Sell",
     "marketOrder": "Market order",
@@ -128,7 +189,44 @@
     "cancelled": "Cancelled",
     "insufficientBalance": "Insufficient balance",
     "insufficientHoldings": "Insufficient holdings",
-    "minQuantity": "Minimum quantity is 0.0001"
+    "minQuantity": "Minimum quantity is 0.0001",
+    "assetTable": {
+      "searchPlaceholder": "Search name or symbol",
+      "allTypes": "All types",
+      "crypto": "Crypto",
+      "stock": "Stock",
+      "colAsset": "Asset",
+      "colChange": "24h",
+      "colMktCap": "Mkt cap",
+      "loading": "Loading assets…",
+      "noResults": "No assets match this search.",
+      "errorLoad": "Could not load assets. Try again.",
+      "prev": "Prev",
+      "next": "Next",
+      "pageInfo": "Page {{current}} / {{total}}"
+    },
+    "holdingsTable": {
+      "title": "Your holdings",
+      "noHoldings": "No holdings yet. Buy an asset to see it here.",
+      "avg": "avg"
+    },
+    "orderPanel": {
+      "selectAssetPrompt": "Select an asset from the market list to place an order.",
+      "holdingInfo": "You hold {{quantity}} {{symbol}} · avg {{avgPrice}}",
+      "max": "Max",
+      "insufficientHoldingsError": "You only hold {{max}} {{symbol}}.",
+      "successBought": "Bought {{quantity}} {{symbol}}",
+      "successSold": "Sold {{quantity}} {{symbol}}",
+      "successLimitPlaced": "Limit order placed for {{quantity}} {{symbol}}",
+      "errorFailed": "Order failed. Try again.",
+      "placingOrder": "Placing order…"
+    },
+    "openOrdersTable": {
+      "noOrders": "No open limit orders.",
+      "errorCancel": "Could not cancel order.",
+      "cancelling": "Cancelling…",
+      "targetInfo": "target {{price}} · placed {{date}}"
+    }
   },
   "portfolio": {
     "title": "Portfolio",

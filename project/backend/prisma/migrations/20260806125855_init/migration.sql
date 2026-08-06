@@ -8,7 +8,7 @@ CREATE TYPE "OrderType" AS ENUM ('BUY', 'SELL');
 CREATE TYPE "OrderExecutionType" AS ENUM ('MARKET', 'LIMIT');
 
 -- CreateEnum
-CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'FILLED', 'CANCELLED');
+CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'PROCESSING', 'FILLED', 'CANCELLED');
 
 -- CreateTable
 CREATE TABLE "users" (

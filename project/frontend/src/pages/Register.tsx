@@ -34,7 +34,7 @@ export default function Register() {
       });
 
       await refreshUser();
-      navigate('/profile');
+      navigate('/settings');
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(

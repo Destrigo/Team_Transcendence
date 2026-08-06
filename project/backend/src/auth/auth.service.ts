@@ -45,6 +45,7 @@ export class AuthService {
         username: dto.username,
         passwordHash,
         language: dto.language || 'en',
+        isOnline: true,
       },
     });
 
@@ -219,8 +220,6 @@ export class AuthService {
 
     return { success: true };
   }
-
-  // helper utilities
 
   private async updateRefreshToken(userId: string, rt: string) {
     const hash = await bcrypt.hash(rt, 10);
