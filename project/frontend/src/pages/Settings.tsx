@@ -214,6 +214,7 @@ export default function Settings() {
     try {
       setDeleteLoading(true);
       await api.delete('/gdpr/delete-account', { data: { password: deletePassword } });
+      await refreshUser();
       navigate('/login');
     } catch (err: any) {
       setDeleteError(err?.response?.data?.message ?? t('gdpr.deleteFailed'));

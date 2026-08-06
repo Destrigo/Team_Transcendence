@@ -87,12 +87,14 @@ export class TradingService {
     try {
       const filled =
         order.type === OrderType.BUY
-          ? await this.executeBuy(order.userId, fillDto, order.id)
-          : await this.executeSell(order.userId, fillDto, order.id);
+          ? await this.executeBuy(order.userId, fillDto, order.id, order.price)
+          : await this.executeSell(order.userId, fillDto, order.id, order.price);
 
       return filled;
     } catch (err) {
-      if (err instanceof BadRequestException) {
+      const isUnfulfillable =
+      err instanceof BadRequestException || err instanceof NotFoundException;
+      if (isUnfulfillable) {
           const cancelled = await this.prisma.order.updateMany({
           where: {
             id: order.id,
@@ -152,9 +154,10 @@ export class TradingService {
     return new Prisma.Decimal(assets[0].current_price);
   }
 
-  private async executeBuy(userId: string, dto: CreateOrderDto, existingOrderId?: string) {
+  private async executeBuy(userId: string, dto: CreateOrderDto, existingOrderId?: string, fixedPrice?: Prisma.Decimal,) {
     const filledOrder = await this.prisma.$transaction(async (tx) => {
-      const price = await this.getAssetPriceForUpdate(tx, dto.assetId);
+      const marketPrice = await this.getAssetPriceForUpdate(tx, dto.assetId);
+      const price = fixedPrice ?? marketPrice;
       const total = price.mul(dto.quantity);
 
       const debited = await tx.user.updateMany({
@@ -175,9 +178,10 @@ export class TradingService {
     return filledOrder;
   }
 
-  private async executeSell(userId: string, dto: CreateOrderDto, existingOrderId?: string) {
+  private async executeSell(userId: string, dto: CreateOrderDto, existingOrderId?: string, fixedPrice?: Prisma.Decimal,) {
     const filledOrder = await this.prisma.$transaction(async (tx) => {
-      const price = await this.getAssetPriceForUpdate(tx, dto.assetId);
+      const marketPrice = await this.getAssetPriceForUpdate(tx, dto.assetId);
+      const price = fixedPrice ?? marketPrice;
       const total = price.mul(dto.quantity);
 
       const debited = await tx.holding.updateMany({
