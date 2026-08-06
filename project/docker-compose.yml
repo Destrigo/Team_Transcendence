@@ -1,3 +1,7 @@
+# PaperTrade stack.
+# Public entry: https://localhost  (Caddy terminates TLS)
+# Backend/frontend stay HTTP on the internal Docker network only.
+
 services:
   db:
     image: postgres:16-alpine
@@ -30,10 +34,11 @@ services:
       FINNHUB_API_KEY: ${FINNHUB_API_KEY:-}
       FINNHUB_API_URL: ${FINNHUB_API_URL:-https://finnhub.io/api/v1}
       JWT_SECRET: ${JWT_SECRET:-changeme}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-https://localhost}
       PORT: 4000
-    ports:
-      - "4000:4000"
+    # Not published on host — reach API via https://localhost/api
+    expose:
+      - "4000"
     volumes:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
@@ -54,18 +59,36 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - backend
-    ports:
-      - "3000:3000"
+    # Not published on host — reach UI via https://localhost
+    expose:
+      - "3000"
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
       - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
       - /app/node_modules
     environment:
-      VITE_API_URL: http://localhost:4000
-      VITE_WS_URL: http://localhost:4000
+      VITE_API_URL: ${PUBLIC_URL:-https://localhost}
+      VITE_WS_URL: ${PUBLIC_URL:-https://localhost}
+    restart: unless-stopped
+
+  proxy:
+    image: caddy:2.8-alpine
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     restart: unless-stopped
 
 volumes:
   pgdata:
   avatar_uploads:
+  caddy_data:
+  caddy_config:
