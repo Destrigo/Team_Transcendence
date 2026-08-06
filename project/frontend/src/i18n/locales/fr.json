@@ -1,4 +1,11 @@
 {
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "search": "Recherche",
+    "trade": "Transaction",
+    "analytics": "Analyses",
+    "settings": "Paramètres"
+  },
   "common": {
     "save": "Enregistrer",
     "cancel": "Annuler",
@@ -67,6 +74,57 @@
     "usernameTaken": "Ce nom d'utilisateur est déjà pris",
     "weakPassword": "Le mot de passe doit comporter au moins 8 caractères"
   },
+    "profile": {
+    "loading": "Chargement de votre profil…",
+    "title": "Profil",
+    "goToTrading": "Accéder au trading",
+    "changeAvatar": "Changer l'avatar",
+    "uploading": "Envoi en cours…",
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "email": "E-mail",
+    "balance": "Solde",
+    "lastSeen": "Vu pour la dernière fois",
+    "depositLabel": "Ajouter des fonds",
+    "depositPlaceholder": "Montant",
+    "depositButton": "Déposer",
+    "depositing": "Dépôt en cours…",
+    "invalidAmount": "Saisissez un montant valide",
+    "depositFailed": "Échec du dépôt. Veuillez réessayer.",
+    "avatarInvalidType": "Veuillez choisir un fichier image",
+    "avatarTooLarge": "L'image doit faire moins de 5 Mo",
+    "avatarUploadFailed": "Impossible d'envoyer l'avatar. Veuillez réessayer.",
+    "username": "Nom d'utilisateur",
+    "displayName": "Nom affiché",
+    "displayNamePlaceholder": "Comment les autres vous voient",
+    "usernameRequired": "Le nom d'utilisateur est requis",
+    "saveFailed": "Impossible d'enregistrer les modifications. Veuillez réessayer.",
+    "saved": "Modifications enregistrées",
+    "saveButton": "Enregistrer les modifications",
+    "saving": "Enregistrement…",
+    "loggingOut": "Déconnexion…",
+    "logoutButton": "Se déconnecter"
+  },
+  "search": {
+    "title": "Trouver des traders",
+    "subtitle": "Rechercher par nom d'utilisateur ou nom affiché",
+    "placeholder": "Rechercher des traders…",
+    "noQuery": "Commencez à taper pour trouver d'autres traders.",
+    "noResults": "Aucun trader ne correspond à \"{{query}}\".",
+    "loading": "Recherche en cours…",
+    "error": "Impossible de charger les résultats. Réessayez.",
+    "retry": "Réessayer",
+    "online": "En ligne",
+    "offlineSince": "Vu {{time}}",
+    "addFriend": "Ajouter en ami",
+    "message": "Message",
+    "comingSoon": "Bientôt disponible",
+    "resultsCount": "{{count}} trader trouvé",
+    "resultsCount_other": "{{count}} traders trouvés",
+    "page": "Page {{page}} sur {{totalPages}}",
+    "prev": "Précédent",
+    "next": "Suivant"
+  },
   "dashboard": {
     "title": "Tableau de bord",
     "welcome": "Bon retour, {{name}}",
@@ -101,6 +159,9 @@
   },
   "trading": {
     "title": "Trader",
+    "cash": "Espèces",
+    "holdingsValue": "Valeur des portefeuilles",
+    "totalPnl": "P&L total",
     "buy": "Acheter",
     "sell": "Vendre",
     "marketOrder": "Ordre au marché",
@@ -128,7 +189,44 @@
     "cancelled": "Annulé",
     "insufficientBalance": "Solde insuffisant",
     "insufficientHoldings": "Position insuffisante",
-    "minQuantity": "La quantité minimale est 0,0001"
+    "minQuantity": "La quantité minimale est 0,0001",
+    "assetTable": {
+      "searchPlaceholder": "Rechercher un nom ou un symbole",
+      "allTypes": "Tous les types",
+      "crypto": "Crypto",
+      "stock": "Action",
+      "colAsset": "Actif",
+      "colChange": "24h",
+      "colMktCap": "Cap. boursière",
+      "loading": "Chargement des actifs…",
+      "noResults": "Aucun actif ne correspond à cette recherche.",
+      "errorLoad": "Impossible de charger les actifs. Réessayez.",
+      "prev": "Précédent",
+      "next": "Suivant",
+      "pageInfo": "Page {{current}} / {{total}}"
+    },
+    "holdingsTable": {
+      "title": "Vos actifs détenus",
+      "noHoldings": "Aucun actif pour le moment. Achetez un actif pour le voir ici.",
+      "avg": "moyen"
+    },
+    "orderPanel": {
+      "selectAssetPrompt": "Sélectionnez un actif dans la liste du marché pour passer une commande.",
+      "holdingInfo": "Vous détenez {{quantity}} {{symbol}} · moy. {{avgPrice}}",
+      "max": "Max",
+      "insufficientHoldingsError": "Vous ne détenez que {{max}} {{symbol}}.",
+      "successBought": "Achat de {{quantity}} {{symbol}} réussi",
+      "successSold": "Vente de {{quantity}} {{symbol}} réussie",
+      "successLimitPlaced": "Ordre limite passé pour {{quantity}} {{symbol}}",
+      "errorFailed": "L'ordre a échoué. Réessayez.",
+      "placingOrder": "Placement de l'ordre…"
+    },
+    "openOrdersTable": {
+      "noOrders": "Aucun ordre limite ouvert.",
+      "errorCancel": "Impossible d'annuler l'ordre.",
+      "cancelling": "Annulation…",
+      "targetInfo": "cible {{price}} · placé le {{date}}"
+    }
   },
   "portfolio": {
     "title": "Portefeuille",

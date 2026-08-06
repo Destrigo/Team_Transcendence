@@ -26,7 +26,7 @@ export default function Login() {
       });
 
       await refreshUser();
-      navigate('/profile');
+      navigate('/settings');
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(

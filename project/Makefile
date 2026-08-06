@@ -8,7 +8,7 @@ restart:
 	docker compose restart
 
 rebuild:
-	docker compose up -d --build
+	docker compose up -d --build 
 
 logs:
 	docker compose logs -f
@@ -19,14 +19,17 @@ status:
 clean:
 	docker compose down -v --remove-orphans
 
-backend:
+logs-back:
 	docker compose logs -f backend
 
-frontend:
+logs-front:
 	docker compose logs -f frontend
 
-db:
+logs-db:
 	docker compose logs -f db
+
+logs-proxy:
+	docker compose logs -f proxy
 
 bash-back:
 	docker compose exec backend sh
