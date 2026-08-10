@@ -46,11 +46,4 @@ psql:
 prune:
 	docker system prune -a --volumes -f
 
-delete:
-	docker stop $$(docker ps -qa) 2>/dev/null; \
-	docker rm -f $$(docker ps -qa) 2>/dev/null; \
-	docker rmi -f $$(docker images -qa) 2>/dev/null; \
-	docker volume rm $$(docker volume ls -q) 2>/dev/null; \
-	docker network rm $$(docker network ls -q) 2>/dev/null
-
 .PHONY: up down restart rebuild logs status clean logs-back logs-front logs-db logs-proxy bash-back bash-front bash-db psql prune delete

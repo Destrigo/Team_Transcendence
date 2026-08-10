@@ -95,7 +95,7 @@ export class AuthService {
 
     try {
       payload = await this.jwtService.verifyAsync(refreshToken, {
-        secret: process.env.JWT_SECRET,
+        secret: process.env.JWT_REFRESH_SECRET,
       });
     } catch {
       throw new UnauthorizedException('auth.errors.accessDenied');
@@ -238,11 +238,11 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         expiresIn: '15m',
-        secret: process.env.JWT_SECRET,
+        secret: process.env.JWT_ACCESS_SECRET,
       }),
       this.jwtService.signAsync(payload, {
         expiresIn: '7d',
-        secret: process.env.JWT_SECRET,
+        secret: process.env.JWT_REFRESH_SECRET,
       }),
     ]);
 

@@ -48,8 +48,8 @@ export class GdprController {
       dto.password,
     );
 
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token');
+    res.clearCookie('access_token', { path: '/' });
+    res.clearCookie('refresh_token', { path: '/api/auth' });
 
     return result;
   }
