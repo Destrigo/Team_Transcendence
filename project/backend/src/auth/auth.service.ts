@@ -9,11 +9,17 @@ import { JwtService } from '@nestjs/jwt';
 import {
   RegisterDto,
   LoginDto,
-  OAuthDto,
   TwoFactorCodeDto,
 } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { OTP } from 'otplib';
+
+interface OAuthProfile {
+  provider: string;
+  providerId: string;
+  email: string;
+  displayName?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -70,9 +76,13 @@ export class AuthService {
     const isMatch = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isMatch) throw new UnauthorizedException('auth.invalidCredentials');
 
+    // authService.login()
     if (user.twoFactorEnabled) {
-      // if 2FA is active, restrict token drop until 2FA code is verified
-      return { requires2FA: true, userId: user.id };
+      const loginToken = await this.jwtService.signAsync(
+        { sub: user.id, purpose: '2fa-pending' },
+        { expiresIn: '5m', secret: process.env.JWT_ACCESS_SECRET },
+      );
+      return { requires2FA: true, loginToken };
     }
 
     const tokens = await this.generateTokens(user.id, user.email, false);
@@ -128,36 +138,6 @@ export class AuthService {
     return tokens;
   }
 
-  // POST /auth/oauth/:provider
-  async validateOAuth(provider: string, token: string) {
-    // OAuth fetches token data from provider API (Google/42/Github)
-    const externalEmail = `oauth-${provider}-${token.substring(0, 5)}@example.com`;
-    const fallbackUsername = `${provider}_user_${Date.now().toString().slice(-4)}`;
-
-    let user = await this.prisma.user.findUnique({
-      where: { email: externalEmail },
-    });
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email: externalEmail,
-          username: fallbackUsername,
-          oauthProvider: provider,
-          oauthId: `id-${token.substring(0, 10)}`,
-        },
-      });
-    }
-
-    const tokens = await this.generateTokens(
-      user.id,
-      user.email,
-      user.twoFactorEnabled,
-    );
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
-
-    return tokens;
-  }
-
   // POST /auth/2fa/setup
   async generate2FASecret(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -176,6 +156,37 @@ export class AuthService {
     });
 
     return { secret, otpauthUrl };
+  }
+
+  // новый метод, БЕЗ JwtAuthGuard
+  async verifyLogin2FA(loginToken: string, code: string) {
+    let payload: any;
+    try {
+      payload = await this.jwtService.verifyAsync(loginToken, {
+        secret: process.env.JWT_LOGIN_SECRET,
+      });
+    } catch {
+      throw new UnauthorizedException('auth.errors.accessDenied');
+    }
+
+    if (payload.purpose !== '2fa-pending') {
+      throw new UnauthorizedException('auth.errors.accessDenied');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+    if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
+      throw new UnauthorizedException('auth.errors.accessDenied');
+    }
+
+    const result = await this.otp.verify({ token: code, secret: user.twoFactorSecret });
+    if (!result.valid) {
+      throw new UnauthorizedException('auth.errors.invalid2faCode');
+    }
+
+    const tokens = await this.generateTokens(user.id, user.email, true);
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
+
+    return { ...tokens, language: user.language };
   }
 
   // POST /auth/2fa/verify
@@ -259,4 +270,67 @@ export class AuthService {
       },
     });
   }
+
+async validateOAuthLogin(profile: OAuthProfile) {
+  const { provider, providerId, email, displayName } = profile;
+
+  if (!email) {
+    throw new BadRequestException(
+      `No email returned by ${provider}. Check the requested OAuth scopes.`,
+    );
+  }
+
+  let user = await this.prisma.user.findUnique({ where: { email } });
+
+  if (user) {
+    // Email already exists - was it created via password signup, or a
+    // different OAuth provider? Decide your policy here. This example
+    // auto-links: if the account has no oauthProvider yet, attach this one.
+    if (!user.oauthProvider) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { oauthProvider: provider, oauthId: providerId },
+      });
+    }
+    // If you'd rather block linking and force explicit user consent,
+    // throw a ConflictException here instead.
+  } else {
+    const username = await this.generateUniqueUsername(
+      displayName || `${provider}_user`,
+    );
+
+    user = await this.prisma.user.create({
+      data: {
+        email,
+        username,
+        oauthProvider: provider,
+        oauthId: providerId,
+        // no password_hash - make sure that column is nullable in schema.prisma
+      },
+    });
+  }
+
+  const tokens = await this.generateTokens(
+    user.id,
+    user.email,
+    user.twoFactorEnabled,
+  );
+  await this.updateRefreshToken(user.id, tokens.refreshToken);
+  return tokens;
 }
+
+// Small helper to avoid username collisions (e.g. two Google users both
+// named "John Smith"). Adjust to taste.
+private async generateUniqueUsername(base: string): Promise<string> {
+  const slug = base.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
+  let candidate = slug || `user${Date.now()}`;
+  let suffix = 0;
+
+  while (await this.prisma.user.findUnique({ where: { username: candidate } })) {
+    suffix += 1;
+    candidate = `${slug}${suffix}`;
+  }
+  return candidate;
+}
+}
+

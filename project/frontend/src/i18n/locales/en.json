@@ -72,7 +72,9 @@
     "invalidCredentials": "Invalid email or password",
     "emailTaken": "This email is already in use",
     "usernameTaken": "This username is already taken",
-    "weakPassword": "Password must be at least 8 characters"
+    "weakPassword": "Password must be at least 8 characters",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithGithub": "Continue with GitHub"
   },
     "profile": {
     "loading": "Loading your profile…",

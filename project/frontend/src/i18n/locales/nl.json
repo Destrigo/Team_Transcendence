@@ -72,7 +72,9 @@
     "invalidCredentials": "Ongeldig e-mailadres of wachtwoord",
     "emailTaken": "Dit e-mailadres is al in gebruik",
     "usernameTaken": "Deze gebruikersnaam is al bezet",
-    "weakPassword": "Wachtwoord moet minimaal 8 tekens bevatten"
+    "weakPassword": "Wachtwoord moet minimaal 8 tekens bevatten",
+    "continueWithGoogle": "Doorgaan met Google",
+    "continueWithGithub": "Doorgaan met GitHub"
   },
     "profile": {
     "loading": "Profiel laden…",

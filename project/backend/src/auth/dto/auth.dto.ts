@@ -47,15 +47,20 @@ export class LoginDto {
   password: string;
 }
 
-// validates POST /auth/oauth/:provider
-export class OAuthDto {
-  @IsString()
-  @IsNotEmpty({ message: 'auth.validation.oauthTokenRequired' })
-  token: string;
-}
-
 // validates 2FA verification codes
 export class TwoFactorCodeDto {
+  @IsString()
+  @IsNotEmpty({ message: 'auth.validation.codeRequired' })
+  @Length(6, 6, { message: 'auth.validation.codeLengthInvalid' })
+  @Matches(/^[0-9]+$/, { message: 'auth.validation.codeNumericOnly' })
+  code: string;
+}
+
+export class LoginTwoFactorDto {
+  @IsString()
+  @IsNotEmpty({ message: 'auth.validation.loginTokenRequired' })
+  loginToken: string;
+
   @IsString()
   @IsNotEmpty({ message: 'auth.validation.codeRequired' })
   @Length(6, 6, { message: 'auth.validation.codeLengthInvalid' })
