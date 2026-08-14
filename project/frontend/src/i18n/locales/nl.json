@@ -74,7 +74,8 @@
     "usernameTaken": "Deze gebruikersnaam is al bezet",
     "weakPassword": "Wachtwoord moet minimaal 8 tekens bevatten",
     "continueWithGoogle": "Doorgaan met Google",
-    "continueWithGithub": "Doorgaan met GitHub"
+    "continueWithGithub": "Doorgaan met GitHub",
+    "continueWithFortyTwo": "Doorgaan met 42"
   },
     "profile": {
     "loading": "Profiel laden…",

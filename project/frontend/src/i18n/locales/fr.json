@@ -74,7 +74,8 @@
     "usernameTaken": "Ce nom d'utilisateur est déjà pris",
     "weakPassword": "Le mot de passe doit comporter au moins 8 caractères",
     "continueWithGoogle": "Continuer avec Google",
-    "continueWithGithub": "Continuer avec GitHub"
+    "continueWithGithub": "Continuer avec GitHub",
+    "continueWithFortyTwo": "Continuer avec 42"
   },
     "profile": {
     "loading": "Chargement de votre profil…",

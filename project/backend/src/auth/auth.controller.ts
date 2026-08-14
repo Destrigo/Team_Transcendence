@@ -145,9 +145,7 @@ export class AuthController {
   // AuthGuard('google') redirects the browser to Google's consent screen.
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  googleAuth() {
-    // Intentionally empty - the guard handles the redirect.
-  }
+  googleAuth() { }
 
   // Step 2: Google redirects back here with the auth code already
   // exchanged for a profile by GoogleStrategy.validate()
@@ -175,9 +173,7 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  githubAuth() {
-    // Intentionally empty - the guard handles the redirect.
-  }
+  githubAuth() { }
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
@@ -195,7 +191,27 @@ export class AuthController {
 
     return res.redirect(`${FRONTEND_URL}/settings`);
   }
-  
+
+  @Get('42')
+  @UseGuards(AuthGuard('42'))
+  fortyTwoAuth() { }
+
+  @Get('42/callback')
+  @UseGuards(AuthGuard('42'))
+  async fortyTwoCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
+    const { email, providerId, provider, displayName } = req.user;
+
+    const tokens = await this.authService.validateOAuthLogin({
+      provider,
+      providerId,
+      email,
+      displayName,
+    });
+
+    this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+
+    return res.redirect(`${FRONTEND_URL}/dashboard`);
+  }
   private setAuthCookies(
   res: Response,
   accessToken: string,
