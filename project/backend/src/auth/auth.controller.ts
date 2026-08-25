@@ -27,8 +27,6 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'https://localhost';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // create account
-  // POST /auth/register
   @Post('register')
   async register(
     @Body() dto: RegisterDto,
@@ -43,8 +41,6 @@ export class AuthController {
     };
   }
 
-  // email + password login
-  // POST /auth/login
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
@@ -64,7 +60,6 @@ export class AuthController {
     };
   }
 
-  // refresh JWT
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(
@@ -82,7 +77,6 @@ export class AuthController {
     };
   }
 
-  // generate TOTP secret + QR
   @UseGuards(JwtAuthGuard)
   @Post('2fa/setup')
   async setup2FA(@CurrentUser('userId') userId: string,) {
@@ -100,7 +94,6 @@ export class AuthController {
     return { language: result.language };
   }
     
-  // verify TOTP code
   @UseGuards(JwtAuthGuard)
   @Post('2fa/verify')
   @HttpCode(HttpStatus.OK)
@@ -111,7 +104,6 @@ export class AuthController {
     return this.authService.enable2FA(userId, dto.code);
   }
 
-  // disable 2FA
   @UseGuards(JwtAuthGuard)
   @Post('2fa/disable')
   @HttpCode(HttpStatus.OK)
@@ -139,20 +131,13 @@ export class AuthController {
     };
   }
 
-  // ── Google ──────────────────────────────────────────────
-
-  // Step 1: user clicks "Sign in with Google" -> browser hits this route
-  // AuthGuard('google') redirects the browser to Google's consent screen.
   @Get('google')
   @UseGuards(AuthGuard('google'))
   googleAuth() { }
 
-  // Step 2: Google redirects back here with the auth code already
-  // exchanged for a profile by GoogleStrategy.validate()
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
-    // req.user comes from GoogleStrategy.validate()
     const { email, providerId, provider, displayName } = req.user;
 
     const tokens = await this.authService.validateOAuthLogin({
@@ -164,12 +149,8 @@ export class AuthController {
 
     this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
 
-    // Same-origin via Caddy, so a relative-style redirect works fine too -
-    // using FRONTEND_URL explicitly in case that ever changes.
     return res.redirect(`${FRONTEND_URL}/settings`);
   }
-
-  // ── GitHub ──────────────────────────────────────────────
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
@@ -210,8 +191,9 @@ export class AuthController {
 
     this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
 
-    return res.redirect(`${FRONTEND_URL}/dashboard`);
+    return res.redirect(`${FRONTEND_URL}/settings`);
   }
+
   private setAuthCookies(
   res: Response,
   accessToken: string,

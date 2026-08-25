@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-google-oauth20';
 
@@ -21,8 +21,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     });
   }
 
-  // Called automatically by passport after Google redirects back with the code
-  // and the strategy has already exchanged it for an access token + profile.
   async validate(
     accessToken: string,
     refreshToken: string,
@@ -32,7 +30,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const displayName = profile.displayName;
     const providerId = profile.id;
 
-    // Whatever we return here becomes `req.user` in the callback controller method
+    if (!email) {
+      throw new UnauthorizedException('Google account email is not available');
+    }
+
     return {
       provider: 'google',
       providerId,

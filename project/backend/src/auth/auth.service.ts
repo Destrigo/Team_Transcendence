@@ -4,12 +4,12 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import {
   RegisterDto,
   LoginDto,
-  TwoFactorCodeDto,
 } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { OTP } from 'otplib';
@@ -30,7 +30,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // POST /auth/register
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findFirst({
       where: { OR: [{ email: dto.email }, { username: dto.username }] },
@@ -65,7 +64,6 @@ export class AuthService {
     return { ...tokens, language: user.language };
   }
 
-  // POST /auth/login
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -76,7 +74,6 @@ export class AuthService {
     const isMatch = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isMatch) throw new UnauthorizedException('auth.invalidCredentials');
 
-    // authService.login()
     if (user.twoFactorEnabled) {
       const loginToken = await this.jwtService.signAsync(
         { sub: user.id, purpose: '2fa-pending' },
@@ -99,7 +96,6 @@ export class AuthService {
     return { ...tokens, language: user.language };
   }
 
-  // POST /auth/refresh
   async refreshTokens(refreshToken: string) {
     let payload;
 
@@ -138,7 +134,6 @@ export class AuthService {
     return tokens;
   }
 
-  // POST /auth/2fa/setup
   async generate2FASecret(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('auth.errors.userNotFound');
@@ -158,7 +153,6 @@ export class AuthService {
     return { secret, otpauthUrl };
   }
 
-  // новый метод, БЕЗ JwtAuthGuard
   async verifyLogin2FA(loginToken: string, code: string) {
     let payload: any;
     try {
@@ -189,7 +183,6 @@ export class AuthService {
     return { ...tokens, language: user.language };
   }
 
-  // POST /auth/2fa/verify
   async enable2FA(userId: string, code: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.twoFactorSecret)
@@ -210,7 +203,6 @@ export class AuthService {
     return { success: true };
   }
 
-  // POST /auth/2fa/disable
   async disable2FA(userId: string, code: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
@@ -271,66 +263,80 @@ export class AuthService {
     });
   }
 
-async validateOAuthLogin(profile: OAuthProfile) {
-  const { provider, providerId, email, displayName } = profile;
+  async validateOAuthLogin(profile: OAuthProfile) {
+    const { provider, providerId, email, displayName } = profile;
 
-  if (!email) {
-    throw new BadRequestException(
-      `No email returned by ${provider}. Check the requested OAuth scopes.`,
-    );
-  }
-
-  let user = await this.prisma.user.findUnique({ where: { email } });
-
-  if (user) {
-    // Email already exists - was it created via password signup, or a
-    // different OAuth provider? Decide your policy here. This example
-    // auto-links: if the account has no oauthProvider yet, attach this one.
-    if (!user.oauthProvider) {
-      user = await this.prisma.user.update({
-        where: { id: user.id },
-        data: { oauthProvider: provider, oauthId: providerId },
-      });
+    if (!email) {
+      throw new BadRequestException(
+        `No email returned by ${provider}. Check the requested OAuth scopes.`,
+      );
     }
-    // If you'd rather block linking and force explicit user consent,
-    // throw a ConflictException here instead.
-  } else {
-    const username = await this.generateUniqueUsername(
-      displayName || `${provider}_user`,
+
+    let user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (user) {
+      if (!user.oauthProvider) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { oauthProvider: provider, oauthId: providerId },
+        });
+      }
+    } else {
+      const username = await this.generateUniqueUsername(
+        displayName || `${provider}_user`,
+      );
+
+      try {
+        user = await this.prisma.user.create({
+          data: {
+            email,
+            username,
+            oauthProvider: provider,
+            oauthId: providerId,
+          },
+        });
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2002' &&
+          (err.meta?.target as string[])?.includes('email')
+        ) {
+          const existingUser = await this.prisma.user.findUnique({
+            where: { email },
+          });
+
+          if (!existingUser) {
+            throw new ConflictException(
+              'Failed to resolve user after concurrent creation conflict',
+            );
+          }
+
+          user = existingUser;
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    const tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      user.twoFactorEnabled,
     );
-
-    user = await this.prisma.user.create({
-      data: {
-        email,
-        username,
-        oauthProvider: provider,
-        oauthId: providerId,
-        // no password_hash - make sure that column is nullable in schema.prisma
-      },
-    });
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    return tokens;
   }
 
-  const tokens = await this.generateTokens(
-    user.id,
-    user.email,
-    user.twoFactorEnabled,
-  );
-  await this.updateRefreshToken(user.id, tokens.refreshToken);
-  return tokens;
-}
+  private async generateUniqueUsername(base: string): Promise<string> {
+    const slug = base.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20) || 'user';
+    let candidate = slug;
+    let suffix = 0;
 
-// Small helper to avoid username collisions (e.g. two Google users both
-// named "John Smith"). Adjust to taste.
-private async generateUniqueUsername(base: string): Promise<string> {
-  const slug = base.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
-  let candidate = slug || `user${Date.now()}`;
-  let suffix = 0;
-
-  while (await this.prisma.user.findUnique({ where: { username: candidate } })) {
-    suffix += 1;
-    candidate = `${slug}${suffix}`;
+    while (await this.prisma.user.findUnique({ where: { username: candidate } })) {
+      suffix += 1;
+      candidate = `${slug}${suffix}`;
+    }
+    return candidate;
   }
-  return candidate;
-}
 }
 

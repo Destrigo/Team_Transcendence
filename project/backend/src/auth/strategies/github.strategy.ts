@@ -1,6 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-github2';
+
+interface GithubEmail {
+  email: string;
+  primary: boolean;
+  verified: boolean;
+  visibility: string | null;
+}
 
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
@@ -21,30 +28,32 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     });
   }
 
-  async validate(
-    accessToken: string,
-    refreshToken: string,
-    profile: Profile,
-  ) {
-    // GitHub can return multiple emails (work, personal, noreply...).
-    // Prefer the primary/verified one if present, else fall back to first.
-    const emails = profile.emails as Array<{
-      value: string;
-      primary?: boolean;
-      verified?: boolean;
-    }>;
-    const primaryEmail =
-      emails?.find((e) => e.primary && e.verified) ?? emails?.[0];
+  async validate(accessToken: string, refreshToken: string, profile: Profile) {
+    const res = await fetch('https://api.github.com/user/emails', {
+      headers: {
+        Authorization: `token ${accessToken}`,
+        'User-Agent': 'PaperTrade-App',
+      },
+    });
 
-    if (!primaryEmail) {
-      // Happens if the user has no public/verified email and the
-      // user:email scope wasn't granted - handle in the controller/service.
+    if (!res.ok) {
+      throw new UnauthorizedException('Unable to retrieve your email from GitHub');
+    }
+
+    const emails = (await res.json()) as GithubEmail[];
+
+    const verifiedEmail =
+      emails.find((e) => e.primary && e.verified) ??
+      emails.find((e) => e.verified);
+
+    if (!verifiedEmail) {
+      throw new UnauthorizedException('Your GitHub email is not verified');
     }
 
     return {
       provider: 'github',
       providerId: profile.id,
-      email: primaryEmail?.value,
+      email: verifiedEmail.email,
       displayName: profile.displayName || profile.username,
     };
   }
