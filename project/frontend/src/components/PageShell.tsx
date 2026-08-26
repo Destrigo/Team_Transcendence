@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import Footer from './Footer';
 
 export default function PageShell() {
   return (
@@ -11,6 +12,7 @@ export default function PageShell() {
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
+        <Footer />
       </div>
     </div>
   );

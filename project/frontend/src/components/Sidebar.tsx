@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { useTranslation } from 'react-i18next'; // Подключили i18n
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Search,
@@ -8,7 +8,6 @@ import {
   Settings as SettingsIcon,
 } from 'lucide-react';
 
-// Заменили label на labelKey с путями к ключам перевода
 const NAV_ITEMS = [
   { to: '/dashboard', labelKey: 'sidebar.dashboard', icon: LayoutDashboard },
   { to: '/search', labelKey: 'sidebar.search', icon: Search },
@@ -25,7 +24,7 @@ const linkClasses = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export default function Sidebar() {
-  const { t } = useTranslation(); // Инициализация хука
+  const { t } = useTranslation();
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-card">
@@ -37,7 +36,7 @@ export default function Sidebar() {
         {NAV_ITEMS.map(({ to, labelKey, icon: Icon }) => (
           <NavLink key={to} to={to} className={linkClasses}>
             <Icon className="h-4 w-4" />
-            {t(labelKey)} {/* Рендерим перевод по ключу */}
+            {t(labelKey)}
           </NavLink>
         ))}
       </nav>
