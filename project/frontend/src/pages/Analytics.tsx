@@ -5,7 +5,7 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+const API = import.meta.env.VITE_API_URL ?? 'https://localhost';
 
 interface PortfolioPoint { date: string; totalValue: number; balance: number; holdingsValue: number; }
 interface AllocationItem  { symbol: string; name: string; value: number; percentage: number; }

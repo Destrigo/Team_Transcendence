@@ -120,6 +120,7 @@ enum OrderExecutionType {
 
 enum OrderStatus {
   PENDING
+  PROCESSING
   FILLED
   CANCELLED
 }

@@ -9,7 +9,6 @@ export default function Terms() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
@@ -121,7 +120,5 @@ export default function Terms() {
           </Link>
         </p>
       </main>
-      <Footer />
-    </div>
   );
 }

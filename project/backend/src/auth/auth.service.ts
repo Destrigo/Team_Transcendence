@@ -45,6 +45,7 @@ export class AuthService {
         username: dto.username,
         passwordHash,
         language: dto.language || 'en',
+        isOnline: true,
       },
     });
 
@@ -94,7 +95,7 @@ export class AuthService {
 
     try {
       payload = await this.jwtService.verifyAsync(refreshToken, {
-        secret: process.env.JWT_SECRET,
+        secret: process.env.JWT_REFRESH_SECRET,
       });
     } catch {
       throw new UnauthorizedException('auth.errors.accessDenied');
@@ -220,8 +221,6 @@ export class AuthService {
     return { success: true };
   }
 
-  // helper utilities
-
   private async updateRefreshToken(userId: string, rt: string) {
     const hash = await bcrypt.hash(rt, 10);
     await this.prisma.user.update({
@@ -239,11 +238,11 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         expiresIn: '15m',
-        secret: process.env.JWT_SECRET,
+        secret: process.env.JWT_ACCESS_SECRET,
       }),
       this.jwtService.signAsync(payload, {
         expiresIn: '7d',
-        secret: process.env.JWT_SECRET,
+        secret: process.env.JWT_REFRESH_SECRET,
       }),
     ]);
 

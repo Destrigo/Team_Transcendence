@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import Footer from '../components/Footer';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const LAST_UPDATED = '2026-07-29';
@@ -9,7 +8,6 @@ export default function Privacy() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
@@ -115,7 +113,5 @@ export default function Privacy() {
           </Link>
         </p>
       </main>
-      <Footer />
-    </div>
   );
 }

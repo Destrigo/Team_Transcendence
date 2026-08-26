@@ -3,7 +3,6 @@ import type { FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-import Footer from '../components/Footer';
 import { useAuth } from '../auth/useAuth';
 import axios from 'axios';
 import { api } from '../api/api';
@@ -27,7 +26,7 @@ export default function Login() {
       });
 
       await refreshUser();
-      navigate('/profile');
+      navigate('/settings');
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(
@@ -40,7 +39,6 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted">
       <div className="flex flex-1 items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm rounded-lg bg-card p-8 shadow-md">
           <div className="mb-6 flex items-center justify-between">
@@ -90,7 +88,5 @@ export default function Login() {
           </p>
         </div>
       </div>
-      <Footer />
-    </div>
   );
 }
