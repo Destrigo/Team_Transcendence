@@ -6,7 +6,12 @@ import Avatar from '../components/Avatar';
 import MessageBubble from '../components/MessageBubble';
 import { useAuth } from '../auth/useAuth';
 import { useSocial } from '../social/SocialContext';
-import { fetchConversation, fetchFriends, markConversationRead } from '../services/social.service';
+import {
+  fetchConversation,
+  fetchFriends,
+  fetchUnreadMessageCounts,
+  markConversationRead,
+} from '../services/social.service';
 import type { ChatMessage, Friend } from '../types/social';
 
 export default function MessagesPage() {
@@ -18,6 +23,7 @@ export default function MessagesPage() {
 
   const [friends, setFriends] = useState<Friend[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [draft, setDraft] = useState('');
   const [loadingFriends, setLoadingFriends] = useState(true);
   const [loadingConversation, setLoadingConversation] = useState(false);
@@ -28,6 +34,9 @@ export default function MessagesPage() {
     fetchFriends()
       .then(setFriends)
       .finally(() => setLoadingFriends(false));
+    fetchUnreadMessageCounts()
+      .then((counts) => setUnreadCounts(Object.fromEntries(counts.map((c) => [c.senderId, c.count]))))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -35,19 +44,23 @@ export default function MessagesPage() {
     setLoadingConversation(true);
     setSendError('');
     fetchConversation(otherUserId)
-      .then(setMessages)
+      .then((page) => setMessages([...page.messages].reverse()))
       .finally(() => setLoadingConversation(false));
     markConversationRead(otherUserId).catch(() => {});
   }, [otherUserId]);
 
   useEffect(() => {
     return onMessage((message) => {
-      if (!otherUserId) return;
       const inThisConversation =
-        (message.senderId === otherUserId && message.receiverId === user?.id) ||
-        (message.senderId === user?.id && message.receiverId === otherUserId);
+        !!otherUserId &&
+        ((message.senderId === otherUserId && message.receiverId === user?.id) ||
+          (message.senderId === user?.id && message.receiverId === otherUserId));
+
       if (inThisConversation) {
         setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
+      } else if (message.receiverId === user?.id) {
+        // A message for a conversation that isn't currently open.
+        setUnreadCounts((prev) => ({ ...prev, [message.senderId]: (prev[message.senderId] ?? 0) + 1 }));
       }
     });
   }, [onMessage, otherUserId, user?.id]);
@@ -105,7 +118,23 @@ export default function MessagesPage() {
                   }`}
                 />
               </span>
-              <span className="truncate text-sm font-medium">{f.displayName || f.username}</span>
+              <span className="min-w-0 flex-1 truncate text-sm font-medium">{f.displayName || f.username}</span>
+              {(() => {
+                // Always 0 for whichever conversation is currently open —
+                // computed at render time rather than cleared via setState,
+                // so it can't be clobbered by the unread-counts fetch that's
+                // still in flight on first mount (a real race: that fetch
+                // and "mark this conversation read" can resolve in either
+                // order otherwise).
+                const count = f.id === otherUserId ? 0 : (unreadCounts[f.id] ?? 0);
+                return (
+                  count > 0 && (
+                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+                      {count > 9 ? '9+' : count}
+                    </span>
+                  )
+                );
+              })()}
             </button>
           ))
         )}

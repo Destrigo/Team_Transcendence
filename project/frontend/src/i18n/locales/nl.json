@@ -325,6 +325,7 @@
     "requestSent": "Verzoek verzonden",
     "incomingRequests": "Ontvangen verzoeken",
     "outgoingRequests": "Verzonden verzoeken",
+    "cancelRequest": "Verzoek annuleren",
     "loadFailed": "Kon niet laden. Probeer het opnieuw."
   },
   "chat": {

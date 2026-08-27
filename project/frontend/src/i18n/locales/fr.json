@@ -325,6 +325,7 @@
     "requestSent": "Demande envoyée",
     "incomingRequests": "Demandes reçues",
     "outgoingRequests": "Demandes envoyées",
+    "cancelRequest": "Annuler la demande",
     "loadFailed": "Impossible de charger. Réessayez."
   },
   "chat": {

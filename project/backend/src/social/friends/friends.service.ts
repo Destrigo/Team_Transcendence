@@ -124,13 +124,26 @@ export class FriendsService {
   }
 
   async getIncomingRequests(userId: string) {
-    return this.prisma.friendship.findMany({
+    const requests = await this.prisma.friendship.findMany({
       where: { status: FriendshipStatus.PENDING, addresseeId: userId },
       include: {
         requester: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
+    return requests.map(({ requester, ...r }) => ({ ...r, otherUser: requester }));
+  }
+
+  /** Requests this user sent that are still awaiting the other side. */
+  async getOutgoingRequests(userId: string) {
+    const requests = await this.prisma.friendship.findMany({
+      where: { status: FriendshipStatus.PENDING, requesterId: userId },
+      include: {
+        addressee: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return requests.map(({ addressee, ...r }) => ({ ...r, otherUser: addressee }));
   }
 
   async acceptRequest(friendshipId: string, userId: string) {

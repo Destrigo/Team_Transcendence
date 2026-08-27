@@ -47,6 +47,11 @@ export class FriendsController {
     return this.friendsService.getIncomingRequests(userId);
   }
 
+  @Get('requests/outgoing')
+  getOutgoingRequests(@CurrentUser('userId') userId: string) {
+    return this.friendsService.getOutgoingRequests(userId);
+  }
+
   @Put(':id/accept')
   async acceptRequest(@CurrentUser('userId') userId: string, @Param('id') friendshipId: string) {
     const friendship = await this.friendsService.acceptRequest(friendshipId, userId);

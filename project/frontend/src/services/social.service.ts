@@ -19,6 +19,11 @@ export async function fetchFriendRequests(): Promise<FriendRequest[]> {
   return data;
 }
 
+export async function fetchOutgoingFriendRequests(): Promise<FriendRequest[]> {
+  const { data } = await api.get<FriendRequest[]>('/friends/requests/outgoing');
+  return data;
+}
+
 export async function sendFriendRequest(userId: string) {
   const { data } = await api.post(`/friends/request/${userId}`);
   return data;
@@ -41,8 +46,15 @@ export async function removeFriend(friendshipId: string) {
 
 // --- Messages ---
 
-export async function fetchConversation(otherUserId: string): Promise<ChatMessage[]> {
-  const { data } = await api.get<ChatMessage[]>(`/messages/${otherUserId}`);
+export interface ConversationPage {
+  messages: ChatMessage[];
+  hasMore: boolean;
+}
+
+export async function fetchConversation(otherUserId: string, before?: string): Promise<ConversationPage> {
+  const { data } = await api.get<ConversationPage>(`/messages/${otherUserId}`, {
+    params: before ? { before } : undefined,
+  });
   return data;
 }
 
@@ -56,10 +68,21 @@ export async function markConversationRead(otherUserId: string) {
   return data;
 }
 
+export async function fetchUnreadMessageCounts(): Promise<Array<{ senderId: string; count: number }>> {
+  const { data } = await api.get<Array<{ senderId: string; count: number }>>('/messages/unread-counts');
+  return data;
+}
+
 // --- Notifications ---
 
-export async function fetchNotifications(): Promise<AppNotification[]> {
-  const { data } = await api.get<AppNotification[]>('/notifications');
+export interface NotificationsPage {
+  data: AppNotification[];
+  unreadCount: number;
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}
+
+export async function fetchNotifications(): Promise<NotificationsPage> {
+  const { data } = await api.get<NotificationsPage>('/notifications');
   return data;
 }
 

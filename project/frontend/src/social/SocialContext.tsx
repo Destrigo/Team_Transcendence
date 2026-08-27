@@ -3,7 +3,6 @@ import { io, type Socket } from 'socket.io-client';
 import { useAuth } from '../auth/useAuth';
 import {
   fetchNotifications,
-  fetchUnreadCount,
   markAllNotificationsRead,
   markNotificationRead,
   sendMessageRest,
@@ -107,8 +106,13 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       messageHandlers.current.forEach((handler) => handler(message));
     });
 
-    fetchNotifications().then(setNotifications).catch(() => {});
-    fetchUnreadCount().then(setUnreadCount).catch(() => {});
+    // The list endpoint already bundles the unread count in one response.
+    fetchNotifications()
+      .then((page) => {
+        setNotifications(page.data);
+        setUnreadCount(page.unreadCount);
+      })
+      .catch(() => {});
 
     return () => {
       s.disconnect();

@@ -14,7 +14,8 @@ export interface FriendRequest {
   id: string;
   status: FriendshipStatus;
   createdAt: string;
-  requester: {
+  /** The other participant — the requester for an incoming request, the addressee for an outgoing one. */
+  otherUser: {
     id: string;
     username: string;
     displayName: string | null;

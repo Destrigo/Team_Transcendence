@@ -325,6 +325,7 @@
     "requestSent": "Request sent",
     "incomingRequests": "Incoming requests",
     "outgoingRequests": "Outgoing requests",
+    "cancelRequest": "Cancel request",
     "loadFailed": "Could not load this. Try again."
   },
   "chat": {

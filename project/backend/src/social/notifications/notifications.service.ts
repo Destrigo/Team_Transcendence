@@ -33,12 +33,26 @@ export class NotificationsService {
     return notification;
   }
 
-  async list(userId: string, limit = 30) {
-    return this.prisma.notification.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      take: Math.min(limit, 100),
-    });
+  async list(userId: string, page = 1, limit = 30) {
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    const safePage = Math.max(page, 1);
+
+    const [data, total, unreadCount] = await Promise.all([
+      this.prisma.notification.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit,
+      }),
+      this.prisma.notification.count({ where: { userId } }),
+      this.unreadCount(userId),
+    ]);
+
+    return {
+      data,
+      unreadCount,
+      meta: { page: safePage, limit: safeLimit, total, totalPages: Math.ceil(total / safeLimit) },
+    };
   }
 
   async unreadCount(userId: string) {
