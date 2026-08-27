@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Controller,
   Get,
   Query,
@@ -11,23 +10,19 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/jwt-payload.interface';
 import { AnalyticsService } from './analytics.service';
+import { DateRangeDto } from './dto/analytics.dto';
 
-@Controller('analytics')
 @UseGuards(JwtAuthGuard)
+@Controller('analytics')
 export class AnalyticsController {
   constructor(private analytics: AnalyticsService) {}
 
   @Get('portfolio')
   getPortfolio(
     @CurrentUser() user: AuthenticatedUser,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
+    @Query() { from, to }: DateRangeDto,
   ) {
-    return this.analytics.getPortfolioHistory(
-      user.userId,
-      this.parseDate(from, 'from'),
-      this.parseDate(to, 'to'),
-    );
+    return this.analytics.getPortfolioHistory(user.userId, from, to);
   }
 
   @Get('allocation')
@@ -38,41 +33,26 @@ export class AnalyticsController {
   @Get('stats')
   getStats(
     @CurrentUser() user: AuthenticatedUser,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
+    @Query() { from, to }: DateRangeDto,
   ) {
-    return this.analytics.getTradeStats(
-      user.userId,
-      this.parseDate(from, 'from'),
-      this.parseDate(to, 'to'),
-    );
+    return this.analytics.getTradeStats(user.userId, from, to);
   }
 
   @Get('trades')
   getTrades(
     @CurrentUser() user: AuthenticatedUser,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
+    @Query() { from, to }: DateRangeDto,
   ) {
-    return this.analytics.getTrades(
-      user.userId,
-      this.parseDate(from, 'from'),
-      this.parseDate(to, 'to'),
-    );
+    return this.analytics.getTrades(user.userId, from, to);
   }
 
   @Get('export/csv')
   async exportCsv(
     @CurrentUser() user: AuthenticatedUser,
     @Res() res: Response,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
+    @Query() { from, to }: DateRangeDto,
   ) {
-    const csv = await this.analytics.exportCsv(
-      user.userId,
-      this.parseDate(from, 'from'),
-      this.parseDate(to, 'to'),
-    );
+    const csv = await this.analytics.exportCsv(user.userId, from, to);
 
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="trades.csv"');
@@ -83,14 +63,9 @@ export class AnalyticsController {
   async exportPdf(
     @CurrentUser() user: AuthenticatedUser,
     @Res() res: Response,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
+    @Query() { from, to }: DateRangeDto,
   ) {
-    const pdf = await this.analytics.exportPdf(
-      user.userId,
-      this.parseDate(from, 'from'),
-      this.parseDate(to, 'to'),
-    );
+    const pdf = await this.analytics.exportPdf(user.userId, from, to);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
@@ -98,17 +73,5 @@ export class AnalyticsController {
       'attachment; filename="analytics-report.pdf"',
     );
     res.send(pdf);
-  }
-
-  private parseDate(
-    value: string | undefined,
-    field: string,
-  ): Date | undefined {
-    if (!value) return undefined;
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) {
-      throw new BadRequestException(`Invalid date for ${field}`);
-    }
-    return d;
   }
 }

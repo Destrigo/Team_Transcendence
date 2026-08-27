@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -14,8 +14,8 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-
-const API = import.meta.env.VITE_API_URL ?? 'https://localhost';
+import { useAuth } from '../auth/useAuth';
+import { api } from '../api/api';
 
 interface PortfolioPoint {
   date: string;
@@ -67,30 +67,11 @@ function formatTooltipValue(value: unknown) {
   return fmt(Number(value ?? 0));
 }
 
-function rangeQuery(from: string, to: string) {
-  const params = new URLSearchParams();
-  if (from) params.set('from', from);
-  if (to) params.set('to', to);
-  const qs = params.toString();
-  return qs ? `?${qs}` : '';
-}
-
-async function apiFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${API}/api${path}`, { credentials: 'include' });
-  if (!res.ok) throw new Error(`${res.status}`);
-  return res.json();
-}
-
-async function downloadFile(path: string, filename: string) {
-  const res = await fetch(`${API}/api${path}`, { credentials: 'include' });
-  if (!res.ok) throw new Error(`${res.status}`);
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+function rangeParams(from: string, to: string) {
+  const params: Record<string, string> = {};
+  if (from) params.from = from;
+  if (to) params.to = to;
+  return params;
 }
 
 function daysAgoIso(days: number) {
@@ -99,8 +80,19 @@ function daysAgoIso(days: number) {
   return d.toISOString().slice(0, 10);
 }
 
+async function downloadViaApi(path: string, params: Record<string, string>, filename: string) {
+  const res = await api.get(path, { params, responseType: 'blob' });
+  const url = URL.createObjectURL(res.data as Blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function Analytics() {
   const { t } = useTranslation();
+  const { user, loading: authLoading } = useAuth();
   const [portfolioData, setPortfolioData] = useState<PortfolioPoint[]>([]);
   const [allocation, setAllocation] = useState<AllocationItem[]>([]);
   const [stats, setStats] = useState<TradeStats | null>(null);
@@ -110,33 +102,38 @@ export default function Analytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  async function load(nextFrom = from, nextTo = to) {
-    setLoading(true);
-    setError('');
-    try {
-      const qs = rangeQuery(nextFrom, nextTo);
-      const [portfolio, alloc, tradeStats, tradeList] = await Promise.all([
-        apiFetch<PortfolioPoint[]>(`/analytics/portfolio${qs}`),
-        apiFetch<AllocationItem[]>(`/analytics/allocation`),
-        apiFetch<TradeStats>(`/analytics/stats${qs}`),
-        apiFetch<Trade[]>(`/analytics/trades${qs}`),
-      ]);
+  const load = useCallback(
+    async (nextFrom = from, nextTo = to) => {
+      setLoading(true);
+      setError('');
+      try {
+        const params = rangeParams(nextFrom, nextTo);
+        const [portfolio, alloc, tradeStats, tradeList] = await Promise.all([
+          api.get<PortfolioPoint[]>('/analytics/portfolio', { params }),
+          api.get<AllocationItem[]>('/analytics/allocation'),
+          api.get<TradeStats>('/analytics/stats', { params }),
+          api.get<Trade[]>('/analytics/trades', { params }),
+        ]);
 
-      setPortfolioData(portfolio);
-      setAllocation(alloc);
-      setStats(tradeStats);
-      setTrades(tradeList);
-    } catch {
-      setError(t('analytics.loadError'));
-    } finally {
-      setLoading(false);
-    }
-  }
+        setPortfolioData(portfolio.data);
+        setAllocation(alloc.data);
+        setStats(tradeStats.data);
+        setTrades(tradeList.data);
+      } catch {
+        setError(t('analytics.loadError'));
+      } finally {
+        setLoading(false);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   useEffect(() => {
-    load();
+    if (authLoading || !user) return;
+    void load('', '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authLoading, user]);
 
   function applyPreset(days: number | null) {
     if (days === null) {
@@ -154,10 +151,7 @@ export default function Analytics() {
 
   async function downloadCsv() {
     try {
-      await downloadFile(
-        `/analytics/export/csv${rangeQuery(from, to)}`,
-        'trades.csv',
-      );
+      await downloadViaApi('/analytics/export/csv', rangeParams(from, to), 'trades.csv');
     } catch {
       setError(t('analytics.exportError'));
     }
@@ -165,10 +159,7 @@ export default function Analytics() {
 
   async function downloadPdf() {
     try {
-      await downloadFile(
-        `/analytics/export/pdf${rangeQuery(from, to)}`,
-        'analytics-report.pdf',
-      );
+      await downloadViaApi('/analytics/export/pdf', rangeParams(from, to), 'analytics-report.pdf');
     } catch {
       setError(t('analytics.exportError'));
     }

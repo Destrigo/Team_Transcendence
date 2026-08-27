@@ -29,9 +29,9 @@ export default function Login() {
       navigate('/settings');
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        setError(
-          err.response?.data?.message ?? t('auth.invalidCredentials')
-        );
+        const message = err.response?.data?.message;
+
+        setError(message ? t(message) : t('auth.invalidCredentials'));
       } else {
         setError(t('auth.invalidCredentials'));
       }
@@ -39,7 +39,7 @@ export default function Login() {
   };
 
   return (
-      <div className="flex flex-1 items-center justify-center px-4 py-8">
+      <div className="flex min-h-screen items-center justify-center bg-muted">
         <div className="w-full max-w-sm rounded-lg bg-card p-8 shadow-md">
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-2xl font-bold">{t('auth.loginTitle')}</h1>
