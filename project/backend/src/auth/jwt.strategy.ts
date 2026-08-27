@@ -6,10 +6,10 @@ import { AuthenticatedUser, JwtPayload } from './jwt-payload.interface';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.JWT_ACCESS_SECRET;
 
     if (!secret) {
-      throw new Error('JWT_SECRET is not defined');
+      throw new Error('JWT_ACCESS_SECRET is not defined');
     }
 
     super({

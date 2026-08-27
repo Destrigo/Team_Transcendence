@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, UserPlus, MessageCircle, Loader2 } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
-import { searchUsers } from '../services/user.service';
-import { type PublicProfile } from '../services/user.service';
+import { searchUsers, type PublicProfile } from '../services/user.service';
+import { resolveAvatarUrl } from '../api/avatar';
 
 const LIMIT = 20;
 
@@ -158,9 +158,9 @@ export default function SearchPage() {
                 className="group flex cursor-pointer items-center gap-4 rounded-xl border border-slate-200 bg-white p-3 transition hover:border-indigo-200 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:hover:border-indigo-800"
               >
                 <div className="relative shrink-0">
-                  {u.avatarUrl ? (
+                  {resolveAvatarUrl(u.avatarUrl) ? (
                     <img
-                      src={u.avatarUrl}
+                      src={resolveAvatarUrl(u.avatarUrl)!}
                       alt=""
                       className="h-11 w-11 rounded-full object-cover"
                     />
