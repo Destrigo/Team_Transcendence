@@ -104,17 +104,15 @@ export default function Analytics() {
 
   const load = useCallback(
     async (nextFrom: string, nextTo: string) => {
-      setLoading(true);
+      if (new Date(nextFrom) > new Date(nextTo)) {
+        setError('analytics.invalidDateRange');
+        return;
+      }
       setError('');
+      setLoading(true);
 
       try {
-
-        if (new Date(nextFrom) > new Date(nextTo)) {
-          setError(t('analytics.invalidDateRange'));
-          return;
-        }
         const params = rangeParams(nextFrom, nextTo);
-
         const [portfolio, alloc, tradeStats, tradeList] = await Promise.all([
           api.get<PortfolioPoint[]>('/analytics/portfolio', { params }),
           api.get<AllocationItem[]>('/analytics/allocation'),
@@ -127,12 +125,12 @@ export default function Analytics() {
         setStats(tradeStats.data);
         setTrades(tradeList.data);
       } catch {
-        setError(t('analytics.loadError'));
+        setError('analytics.loadError');
       } finally {
         setLoading(false);
       }
     },
-    [t],
+    [],
   );
 
   useEffect(() => {
@@ -240,7 +238,7 @@ export default function Analytics() {
       {loading && (
         <p className="text-sm text-muted-foreground">{t('analytics.loading')}</p>
       )}
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-sm text-destructive">{t(error)}</p>}
 
       {!loading && !error && (
         <>
