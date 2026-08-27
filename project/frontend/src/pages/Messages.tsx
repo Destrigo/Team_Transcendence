@@ -19,7 +19,7 @@ export default function MessagesPage() {
   const navigate = useNavigate();
   const { userId: otherUserId } = useParams<{ userId?: string }>();
   const { user } = useAuth();
-  const { onlineUserIds, onMessage, sendMessage } = useSocial();
+  const { onlineUserIds, presenceReady, onMessage, sendMessage } = useSocial();
 
   const [friends, setFriends] = useState<Friend[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -30,12 +30,30 @@ export default function MessagesPage() {
   const [sendError, setSendError] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // Anything written here since mount (a live increment, or a conversation
+  // being marked read) is more current than the initial GET that seeds
+  // unreadCounts — that fetch can still resolve *after* one of those, and
+  // without this it would silently overwrite the correct value with a
+  // stale pre-fetch snapshot.
+  const localOverrides = useRef<Record<string, number>>({});
+
+  const setUnreadCount = (id: string, valueOrUpdater: number | ((current: number) => number)) => {
+    setUnreadCounts((prev) => {
+      const next = typeof valueOrUpdater === 'function' ? valueOrUpdater(prev[id] ?? 0) : valueOrUpdater;
+      localOverrides.current = { ...localOverrides.current, [id]: next };
+      return { ...prev, [id]: next };
+    });
+  };
+
   useEffect(() => {
     fetchFriends()
       .then(setFriends)
       .finally(() => setLoadingFriends(false));
     fetchUnreadMessageCounts()
-      .then((counts) => setUnreadCounts(Object.fromEntries(counts.map((c) => [c.senderId, c.count]))))
+      .then((counts) => {
+        const server = Object.fromEntries(counts.map((c) => [c.senderId, c.count]));
+        setUnreadCounts({ ...server, ...localOverrides.current });
+      })
       .catch(() => {});
   }, []);
 
@@ -46,7 +64,9 @@ export default function MessagesPage() {
     fetchConversation(otherUserId)
       .then((page) => setMessages([...page.messages].reverse()))
       .finally(() => setLoadingConversation(false));
-    markConversationRead(otherUserId).catch(() => {});
+    markConversationRead(otherUserId)
+      .then(() => setUnreadCount(otherUserId, 0))
+      .catch(() => {});
   }, [otherUserId]);
 
   useEffect(() => {
@@ -60,7 +80,7 @@ export default function MessagesPage() {
         setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
       } else if (message.receiverId === user?.id) {
         // A message for a conversation that isn't currently open.
-        setUnreadCounts((prev) => ({ ...prev, [message.senderId]: (prev[message.senderId] ?? 0) + 1 }));
+        setUnreadCount(message.senderId, (current) => current + 1);
       }
     });
   }, [onMessage, otherUserId, user?.id]);
@@ -114,7 +134,7 @@ export default function MessagesPage() {
                 <Avatar url={f.avatarUrl} label={f.displayName || f.username} size={8} />
                 <span
                   className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card ${
-                    onlineUserIds.has(f.id) ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+                    (presenceReady ? onlineUserIds.has(f.id) : f.isOnline) ? 'bg-emerald-500' : 'bg-muted-foreground/40'
                   }`}
                 />
               </span>

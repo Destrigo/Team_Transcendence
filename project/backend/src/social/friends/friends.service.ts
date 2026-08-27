@@ -31,17 +31,25 @@ export class FriendsService {
     // same instant — each would land on a different ordered pair. Serializable
     // isolation makes the check-then-act atomic instead: whichever transaction
     // commits second sees a write conflict and retries against the now-visible row.
-    try {
-      return await this.prisma.$transaction(
-        (tx) => this.createOrRetryRequest(tx, requesterId, addresseeId),
-        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-      );
-    } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === SERIALIZATION_FAILURE) {
-        return this.createOrRetryRequest(this.prisma, requesterId, addresseeId);
+    // The retry has to be another transaction too, or it's back to a plain
+    // check-then-act outside any isolation — which is exactly the race this
+    // exists to close.
+    const MAX_ATTEMPTS = 3;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        return await this.prisma.$transaction(
+          (tx) => this.createOrRetryRequest(tx, requesterId, addresseeId),
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+      } catch (err) {
+        const isConflict =
+          err instanceof Prisma.PrismaClientKnownRequestError && err.code === SERIALIZATION_FAILURE;
+        if (!isConflict || attempt === MAX_ATTEMPTS) throw err;
       }
-      throw err;
     }
+    // Unreachable — the loop above always returns or throws — but keeps
+    // TypeScript satisfied that every path yields a value.
+    throw new Error('Unreachable');
   }
 
   private async createOrRetryRequest(
@@ -175,6 +183,12 @@ export class FriendsService {
     });
   }
 
+  // Doubles as "cancel my own outgoing request" (Friends.tsx reuses this
+  // endpoint for that) — the row is deleted the same way regardless of its
+  // status. If a "you've been unfriended" notification is ever added here,
+  // it needs to check `friendship.status` first, or cancelling a PENDING
+  // request you sent would wrongly notify the other side as if they'd been
+  // removed.
   async removeFriend(friendshipId: string, userId: string) {
     const friendship = await this.prisma.friendship.findUnique({ where: { id: friendshipId } });
     if (!friendship) throw new NotFoundException('Friendship not found');

@@ -46,6 +46,7 @@ export class MessagesService {
   // oldest message id) to load older history, same shape as a scroll-up
   // "load more". Returned newest-first — the caller reverses for display.
   async getConversation(userId: string, otherUserId: string, limit = 50, before?: string) {
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
     const where = {
       OR: [
         { senderId: userId, receiverId: otherUserId },
@@ -53,15 +54,26 @@ export class MessagesService {
       ],
     };
 
+    // The cursor is a bare message id — Prisma resolves it globally, not
+    // scoped to `where`, so an id from a conversation the caller isn't part
+    // of would otherwise work as a pagination boundary. Confirm it's
+    // actually in this conversation first; an unrecognized cursor just
+    // falls back to the first page instead of erroring.
+    let cursor: { id: string } | undefined;
+    if (before) {
+      const cursorMessage = await this.prisma.message.findFirst({ where: { id: before, ...where } });
+      if (cursorMessage) cursor = { id: before };
+    }
+
     const messages = await this.prisma.message.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      take: Math.min(limit, 100) + 1,
-      ...(before ? { cursor: { id: before }, skip: 1 } : {}),
+      take: safeLimit + 1,
+      ...(cursor ? { cursor, skip: 1 } : {}),
     });
 
-    const hasMore = messages.length > limit;
-    return { messages: messages.slice(0, limit), hasMore };
+    const hasMore = messages.length > safeLimit;
+    return { messages: messages.slice(0, safeLimit), hasMore };
   }
 
   async markAsRead(userId: string, otherUserId: string) {

@@ -14,6 +14,8 @@ const SOCIAL_URL = `${import.meta.env.VITE_API_URL ?? 'https://localhost'}/socia
 interface SocialContextType {
   socket: Socket | null;
   onlineUserIds: Set<string>;
+  /** True once the initial presence:snapshot has arrived — before that, onlineUserIds is empty by default, not "confirmed nobody's online". */
+  presenceReady: boolean;
   notifications: AppNotification[];
   unreadCount: number;
   markAsRead: (id: string) => Promise<void>;
@@ -27,6 +29,7 @@ interface SocialContextType {
 const SocialContext = createContext<SocialContextType>({
   socket: null,
   onlineUserIds: new Set(),
+  presenceReady: false,
   notifications: [],
   unreadCount: 0,
   markAsRead: async () => {},
@@ -45,6 +48,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const [presenceReady, setPresenceReady] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const messageHandlers = useRef(new Set<(message: ChatMessage) => void>());
@@ -66,6 +70,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     if (!user) {
       setSocket(null);
       setOnlineUserIds(new Set());
+      setPresenceReady(false);
       return;
     }
 
@@ -76,6 +81,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     // friend who was already online needs an initial snapshot to seed from.
     s.on('presence:snapshot', ({ onlineUserIds: ids }: { onlineUserIds: string[] }) => {
       setOnlineUserIds(new Set(ids));
+      setPresenceReady(true);
     });
 
     s.on('presence:update', ({ userId, online }: { userId: string; online: boolean }) => {
@@ -153,7 +159,17 @@ export function SocialProvider({ children }: { children: ReactNode }) {
 
   return (
     <SocialContext.Provider
-      value={{ socket, onlineUserIds, notifications, unreadCount, markAsRead, markAllAsRead, onMessage, sendMessage }}
+      value={{
+        socket,
+        onlineUserIds,
+        presenceReady,
+        notifications,
+        unreadCount,
+        markAsRead,
+        markAllAsRead,
+        onMessage,
+        sendMessage,
+      }}
     >
       {children}
     </SocialContext.Provider>

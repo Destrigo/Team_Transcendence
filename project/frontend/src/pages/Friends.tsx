@@ -16,7 +16,7 @@ import type { Friend, FriendRequest } from '../types/social';
 
 export default function FriendsPage() {
   const { t } = useTranslation();
-  const { onlineUserIds } = useSocial();
+  const { onlineUserIds, presenceReady } = useSocial();
 
   const [friends, setFriends] = useState<Friend[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
@@ -181,7 +181,7 @@ export default function FriendsPage() {
                   <FriendCard
                     key={f.friendshipId}
                     friend={f}
-                    online={onlineUserIds.has(f.id)}
+                    online={presenceReady ? onlineUserIds.has(f.id) : f.isOnline}
                     onRemove={handleRemove}
                   />
                 ))}
