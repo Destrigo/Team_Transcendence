@@ -3,6 +3,9 @@
     "dashboard": "Tableau de bord",
     "search": "Recherche",
     "trade": "Transaction",
+    "friends": "Amis",
+    "messages": "Messages",
+    "leaderboard": "Classement",
     "analytics": "Analyses",
     "settings": "Paramètres"
   },
@@ -308,6 +311,7 @@
   "friends": {
     "title": "Amis",
     "addFriend": "Ajouter un ami",
+    "message": "Message",
     "removeFriend": "Supprimer l'ami",
     "pending": "En attente",
     "accept": "Accepter",
@@ -315,17 +319,24 @@
     "online": "En ligne",
     "offline": "Hors ligne",
     "searchUsers": "Rechercher des utilisateurs...",
-    "noFriends": "Pas encore d'amis",
+    "noFriends": "Pas encore d'amis. Trouvez des gens dans Recherche et envoyez une demande.",
+    "yourFriends": "Vos amis",
     "requestSent": "Demande envoyée",
     "incomingRequests": "Demandes reçues",
-    "outgoingRequests": "Demandes envoyées"
+    "outgoingRequests": "Demandes envoyées",
+    "loadFailed": "Impossible de charger. Réessayez."
   },
   "chat": {
     "title": "Messages",
     "newMessage": "Nouveau message",
     "messagePlaceholder": "Tapez un message...",
     "send": "Envoyer",
+    "conversations": "Conversations",
     "noConversations": "Aucune conversation",
+    "noFriendsToMessage": "Ajoutez un ami pour démarrer une conversation.",
+    "selectConversation": "Sélectionnez une conversation pour discuter.",
+    "noMessagesYet": "Pas encore de messages. Dites bonjour !",
+    "sendFailed": "Échec de l'envoi. Réessayez.",
     "startChat": "Démarrer une conversation",
     "online": "En ligne",
     "lastSeen": "Vu {{time}}"
@@ -337,7 +348,9 @@
     "portfolioValue": "Valeur du portefeuille",
     "pnlPercent": "P&L %",
     "trades": "Transactions",
-    "you": "Vous"
+    "you": "Vous",
+    "empty": "Aucun trader pour le moment.",
+    "loadFailed": "Impossible de charger le classement. Réessayez."
   },
   "notifications": {
     "title": "Notifications",

@@ -17,6 +17,9 @@ import TradingPage from './pages/Trading';
 import PageShell from './components/PageShell';
 import PublicLayout from './components/PublicLayout';
 import PublicProfile from './pages/PublicProfile';
+import FriendsPage from './pages/Friends';
+import MessagesPage from './pages/Messages';
+import LeaderboardPage from './pages/Leaderboard';
 
 const App = () => (
   <BrowserRouter>
@@ -36,6 +39,10 @@ const App = () => (
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/trading" element={<Trading />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/friends" element={<FriendsPage />} />
+        <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/messages/:userId" element={<MessagesPage />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
 

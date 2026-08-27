@@ -3,6 +3,9 @@
     "dashboard": "Dashboard",
     "search": "Zoeken",
     "trade": "Handel",
+    "friends": "Vrienden",
+    "messages": "Berichten",
+    "leaderboard": "Ranglijst",
     "analytics": "Analyses",
     "settings": "Instellingen"
   },
@@ -308,6 +311,7 @@
   "friends": {
     "title": "Vrienden",
     "addFriend": "Vriend toevoegen",
+    "message": "Bericht",
     "removeFriend": "Vriend verwijderen",
     "pending": "In behandeling",
     "accept": "Accepteren",
@@ -315,17 +319,24 @@
     "online": "Online",
     "offline": "Offline",
     "searchUsers": "Gebruikers zoeken...",
-    "noFriends": "Nog geen vrienden",
+    "noFriends": "Nog geen vrienden. Zoek mensen via Zoeken en stuur een verzoek.",
+    "yourFriends": "Jouw vrienden",
     "requestSent": "Verzoek verzonden",
     "incomingRequests": "Ontvangen verzoeken",
-    "outgoingRequests": "Verzonden verzoeken"
+    "outgoingRequests": "Verzonden verzoeken",
+    "loadFailed": "Kon niet laden. Probeer het opnieuw."
   },
   "chat": {
     "title": "Berichten",
     "newMessage": "Nieuw bericht",
     "messagePlaceholder": "Typ een bericht...",
     "send": "Verzenden",
+    "conversations": "Gesprekken",
     "noConversations": "Nog geen gesprekken",
+    "noFriendsToMessage": "Voeg een vriend toe om een gesprek te starten.",
+    "selectConversation": "Selecteer een gesprek om te chatten.",
+    "noMessagesYet": "Nog geen berichten. Zeg hallo!",
+    "sendFailed": "Bericht versturen mislukt. Probeer het opnieuw.",
     "startChat": "Begin een gesprek",
     "online": "Online",
     "lastSeen": "Laatst gezien {{time}}"
@@ -337,7 +348,9 @@
     "portfolioValue": "Portfoliowaarde",
     "pnlPercent": "W&V %",
     "trades": "Transacties",
-    "you": "Jij"
+    "you": "Jij",
+    "empty": "Nog geen traders.",
+    "loadFailed": "Kon de ranglijst niet laden. Probeer het opnieuw."
   },
   "notifications": {
     "title": "Meldingen",

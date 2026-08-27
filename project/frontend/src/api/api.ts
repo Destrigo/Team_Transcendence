@@ -5,7 +5,7 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-let refreshPromise = null;
+let refreshPromise: Promise<unknown> | null = null;
 
 api.interceptors.response.use(
   response => response,

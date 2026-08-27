@@ -1,0 +1,17 @@
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import { LeaderboardService } from './leaderboard.service';
+
+@Controller('leaderboard')
+@UseGuards(JwtAuthGuard)
+export class LeaderboardController {
+  constructor(private readonly leaderboardService: LeaderboardService) {}
+
+  @Get()
+  getLeaderboard(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.leaderboardService.getLeaderboard(
+      page ? Number(page) : undefined,
+      limit ? Number(limit) : undefined,
+    );
+  }
+}
