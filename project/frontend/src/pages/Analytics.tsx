@@ -103,11 +103,18 @@ export default function Analytics() {
   const [error, setError] = useState('');
 
   const load = useCallback(
-    async (nextFrom = from, nextTo = to) => {
+    async (nextFrom: string, nextTo: string) => {
       setLoading(true);
       setError('');
+
       try {
+
+        if (new Date(nextFrom) > new Date(nextTo)) {
+          setError(t('analytics.invalidDateRange'));
+          return;
+        }
         const params = rangeParams(nextFrom, nextTo);
+
         const [portfolio, alloc, tradeStats, tradeList] = await Promise.all([
           api.get<PortfolioPoint[]>('/analytics/portfolio', { params }),
           api.get<AllocationItem[]>('/analytics/allocation'),
@@ -125,15 +132,13 @@ export default function Analytics() {
         setLoading(false);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [t],
   );
 
   useEffect(() => {
     if (authLoading || !user) return;
     void load('', '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user]);
+  }, [authLoading, user, load]);
 
   function applyPreset(days: number | null) {
     if (days === null) {
@@ -201,7 +206,7 @@ export default function Analytics() {
         </label>
         <button
           type="button"
-          onClick={() => load()}
+          onClick={() => load(from, to)}
           className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
           {t('analytics.apply')}

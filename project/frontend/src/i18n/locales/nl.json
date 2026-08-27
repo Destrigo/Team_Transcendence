@@ -265,6 +265,7 @@
     "apply": "Toepassen",
     "loading": "Laden...",
     "loadError": "Analyse laden mislukt. Log in en controleer de backend.",
+    "invalidDateRange": "De startdatum moet vóór of gelijk aan de einddatum liggen.",
     "exportError": "Exporteren mislukt. Probeer opnieuw na inloggen.",
     "allTime": "Altijd",
     "last7Days": "Afgelopen 7 dagen",
