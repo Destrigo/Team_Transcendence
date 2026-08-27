@@ -1,121 +1,77 @@
 import {
-  BadRequestException,
   Controller,
   Get,
   Query,
-  Req,
   Res,
-  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/jwt-payload.interface';
 import { AnalyticsService } from './analytics.service';
+import { DateRangeDto } from './dto/analytics.dto';
 
-type AuthenticatedRequest = Request & {
-  user?: {
-    userId?: string;
-    id?: string;
-  };
-};
-
+@UseGuards(JwtAuthGuard)
 @Controller('analytics')
 export class AnalyticsController {
   constructor(private analytics: AnalyticsService) {}
 
   @Get('portfolio')
   getPortfolio(
-    @Req() req: AuthenticatedRequest,
-    @Query('userId') userIdOverride?: string,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() { from, to }: DateRangeDto,
   ) {
-    const userId = this.getUserId(req, userIdOverride);
-    return this.analytics.getPortfolioHistory(
-      userId,
-      this.parseDate(from, 'from'),
-      this.parseDate(to, 'to'),
-    );
+    return this.analytics.getPortfolioHistory(user.userId, from, to);
   }
 
   @Get('allocation')
-  getAllocation(
-    @Req() req: AuthenticatedRequest,
-    @Query('userId') userIdOverride?: string,
-  ) {
-    return this.analytics.getAllocation(this.getUserId(req, userIdOverride));
+  getAllocation(@CurrentUser() user: AuthenticatedUser) {
+    return this.analytics.getAllocation(user.userId);
   }
 
   @Get('stats')
   getStats(
-    @Req() req: AuthenticatedRequest,
-    @Query('userId') userIdOverride?: string,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() { from, to }: DateRangeDto,
   ) {
-    const userId = this.getUserId(req, userIdOverride);
-    return this.analytics.getTradeStats(
-      userId,
-      this.parseDate(from, 'from'),
-      this.parseDate(to, 'to'),
-    );
+    return this.analytics.getTradeStats(user.userId, from, to);
   }
 
   @Get('trades')
   getTrades(
-    @Req() req: AuthenticatedRequest,
-    @Query('userId') userIdOverride?: string,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() { from, to }: DateRangeDto,
   ) {
-    const userId = this.getUserId(req, userIdOverride);
-    return this.analytics.getTrades(
-      userId,
-      this.parseDate(from, 'from'),
-      this.parseDate(to, 'to'),
-    );
+    return this.analytics.getTrades(user.userId, from, to);
   }
 
   @Get('export/csv')
   async exportCsv(
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthenticatedUser,
     @Res() res: Response,
-    @Query('userId') userIdOverride?: string,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
+    @Query() { from, to }: DateRangeDto,
   ) {
-    const userId = this.getUserId(req, userIdOverride);
-    const csv = await this.analytics.exportCsv(
-      userId,
-      this.parseDate(from, 'from'),
-      this.parseDate(to, 'to'),
-    );
+    const csv = await this.analytics.exportCsv(user.userId, from, to);
 
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="trades.csv"');
     res.send(csv);
   }
 
-  private getUserId(
-    req: AuthenticatedRequest,
-    userIdOverride?: string,
-  ): string {
-    const userId = req.user?.userId ?? req.user?.id ?? userIdOverride;
+  @Get('export/pdf')
+  async exportPdf(
+    @CurrentUser() user: AuthenticatedUser,
+    @Res() res: Response,
+    @Query() { from, to }: DateRangeDto,
+  ) {
+    const pdf = await this.analytics.exportPdf(user.userId, from, to);
 
-    if (!userId) {
-      throw new UnauthorizedException('Authenticated user is required');
-    }
-
-    return userId;
-  }
-
-  private parseDate(
-    value: string | undefined,
-    field: string,
-  ): Date | undefined {
-    if (!value) return undefined;
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) {
-      throw new BadRequestException(`Invalid date for ${field}`);
-    }
-    return d;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="analytics-report.pdf"',
+    );
+    res.send(pdf);
   }
 }
