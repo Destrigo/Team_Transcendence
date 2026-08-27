@@ -4,8 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { FriendshipStatus } from '@prisma/client';
+import { FriendshipStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+
+const SERIALIZATION_FAILURE = 'P2034';
 
 @Injectable()
 export class FriendsService {
@@ -24,7 +26,30 @@ export class FriendsService {
       throw new NotFoundException('User not found');
     }
 
-    const existing = await this.prisma.friendship.findFirst({
+    // The unique index only covers the ordered (requester, addressee) pair, so
+    // it can't by itself stop two people sending each other a request at the
+    // same instant — each would land on a different ordered pair. Serializable
+    // isolation makes the check-then-act atomic instead: whichever transaction
+    // commits second sees a write conflict and retries against the now-visible row.
+    try {
+      return await this.prisma.$transaction(
+        (tx) => this.createOrRetryRequest(tx, requesterId, addresseeId),
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === SERIALIZATION_FAILURE) {
+        return this.createOrRetryRequest(this.prisma, requesterId, addresseeId);
+      }
+      throw err;
+    }
+  }
+
+  private async createOrRetryRequest(
+    db: Prisma.TransactionClient | PrismaService,
+    requesterId: string,
+    addresseeId: string,
+  ) {
+    const existing = await db.friendship.findFirst({
       where: {
         OR: [
           { requesterId, addresseeId },
@@ -36,7 +61,7 @@ export class FriendsService {
     if (existing) {
       if (existing.status === FriendshipStatus.DECLINED) {
         // Let a previously-declined request be retried instead of being stuck forever.
-        return this.prisma.friendship.update({
+        return db.friendship.update({
           where: { id: existing.id },
           data: {
             status: FriendshipStatus.PENDING,
@@ -48,7 +73,7 @@ export class FriendsService {
       throw new BadRequestException('A friend request already exists between these users');
     }
 
-    return this.prisma.friendship.create({
+    return db.friendship.create({
       data: { requesterId, addresseeId, status: FriendshipStatus.PENDING },
     });
   }

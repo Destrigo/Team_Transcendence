@@ -98,7 +98,19 @@ export class GdprService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.notification.deleteMany({ where: { userId } });
+      // Also scrubs notifications *other* users hold that reference this
+      // account (a friend-request or message notification stores the other
+      // party's id in `data`) — otherwise clicking one afterwards points at
+      // a user that no longer exists.
+      await tx.notification.deleteMany({
+        where: {
+          OR: [
+            { userId },
+            { data: { path: ['fromUserId'], equals: userId } },
+            { data: { path: ['byUserId'], equals: userId } },
+          ],
+        },
+      });
       await tx.message.deleteMany({ where: { OR: [{ senderId: userId }, { receiverId: userId }] } });
       await tx.friendship.deleteMany({ where: { OR: [{ requesterId: userId }, { addresseeId: userId }] } });
       await tx.portfolioSnapshot.deleteMany({ where: { userId } });

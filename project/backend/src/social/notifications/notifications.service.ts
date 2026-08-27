@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SocialGateway } from '../social.gateway';
@@ -14,6 +14,7 @@ export interface CreateNotificationInput {
 export class NotificationsService {
   constructor(
     private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => SocialGateway))
     private readonly gateway: SocialGateway,
   ) {}
 
@@ -49,16 +50,25 @@ export class NotificationsService {
     if (!notification) throw new NotFoundException('Notification not found');
     if (notification.userId !== userId) throw new ForbiddenException('Not your notification');
 
-    return this.prisma.notification.update({
+    const updated = await this.prisma.notification.update({
       where: { id: notificationId },
       data: { isRead: true },
     });
+
+    // A user can have several tabs/devices open, each holding its own socket
+    // (see SocialGateway) — broadcast so the read state doesn't go stale on
+    // the ones that didn't trigger this call.
+    this.gateway.emitToUser(userId, 'notification:read', { id: notificationId });
+    return updated;
   }
 
   async markAllAsRead(userId: string) {
-    return this.prisma.notification.updateMany({
+    const result = await this.prisma.notification.updateMany({
       where: { userId, isRead: false },
       data: { isRead: true },
     });
+
+    this.gateway.emitToUser(userId, 'notifications:allRead', {});
+    return result;
   }
 }

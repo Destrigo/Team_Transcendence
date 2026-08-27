@@ -120,6 +120,7 @@
     "online": "Online",
     "offlineSince": "Laatst gezien {{time}}",
     "addFriend": "Vriend toevoegen",
+    "requestFailed": "Verzoek kon niet worden verzonden",
     "message": "Bericht",
     "comingSoon": "Binnenkort beschikbaar",
     "resultsCount": "{{count}} trader gevonden",

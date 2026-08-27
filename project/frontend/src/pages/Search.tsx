@@ -70,9 +70,17 @@ export default function SearchPage() {
       await sendFriendRequest(id);
       setSentRequests((prev) => new Set(prev).add(id));
       setFlashed(`${id}:friend`);
+    } catch (err: any) {
+      // A 400 here almost always means "a request already exists between
+      // you two" — functionally the same end state as just having sent one.
+      if (err?.response?.status === 400) {
+        setSentRequests((prev) => new Set(prev).add(id));
+        setFlashed(`${id}:friend`);
+      } else {
+        setFlashed(`${id}:error`);
+      }
+    } finally {
       setTimeout(() => setFlashed(null), 1500);
-    } catch {
-      // request already exists, or some other transient error — no need to block the UI
     }
   };
 
@@ -214,7 +222,12 @@ export default function SearchPage() {
                     {sentRequests.has(u.id) ? <Check className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
                     {flashed === `${u.id}:friend` && (
                       <span className="absolute -top-8 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-[11px] text-white shadow">
-                        {t('search.requestSent')}
+                        {t('friends.requestSent')}
+                      </span>
+                    )}
+                    {flashed === `${u.id}:error` && (
+                      <span className="absolute -top-8 whitespace-nowrap rounded-md bg-destructive px-2 py-1 text-[11px] text-destructive-foreground shadow">
+                        {t('search.requestFailed')}
                       </span>
                     )}
                   </button>

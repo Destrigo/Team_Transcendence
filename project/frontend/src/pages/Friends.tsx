@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2, UserCheck, UserX } from 'lucide-react';
-import { resolveAvatarUrl } from '../api/avatar';
+import Avatar from '../components/Avatar';
 import FriendCard from '../components/FriendCard';
 import { useSocial } from '../social/SocialContext';
 import {
@@ -89,17 +89,11 @@ export default function FriendsPage() {
               <div className="flex flex-col gap-2">
                 {requests.map((r) => (
                   <div key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
-                    {resolveAvatarUrl(r.requester.avatarUrl) ? (
-                      <img
-                        src={resolveAvatarUrl(r.requester.avatarUrl)!}
-                        alt=""
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                        {(r.requester.displayName || r.requester.username).slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
+                    <Avatar
+                      url={r.requester.avatarUrl}
+                      label={r.requester.displayName || r.requester.username}
+                      size={10}
+                    />
                     <p className="flex-1 truncate text-sm font-medium">
                       {r.requester.displayName || r.requester.username}
                     </p>
@@ -139,7 +133,7 @@ export default function FriendsPage() {
                   <FriendCard
                     key={f.friendshipId}
                     friend={f}
-                    online={onlineUserIds.has(f.id) || f.isOnline}
+                    online={onlineUserIds.has(f.id)}
                     onRemove={handleRemove}
                   />
                 ))}

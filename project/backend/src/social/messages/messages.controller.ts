@@ -1,18 +1,28 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { MessagesService } from './messages.service';
-import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsService, CreateNotificationInput } from '../notifications/notifications.service';
 import { SocialGateway } from '../social.gateway';
 
 @Controller('messages')
 @UseGuards(JwtAuthGuard)
 export class MessagesController {
+  private readonly logger = new Logger(MessagesController.name);
+
   constructor(
     private readonly messagesService: MessagesService,
     private readonly notifications: NotificationsService,
     private readonly socialGateway: SocialGateway,
   ) {}
+
+  private async notifyBestEffort(userId: string, input: CreateNotificationInput) {
+    try {
+      await this.notifications.notify(userId, input);
+    } catch (err) {
+      this.logger.warn(`Failed to send notification to ${userId}: ${err}`);
+    }
+  }
 
   // REST fallback for sending a message (the primary path is the
   // `message:send` websocket event) — kept in sync so a message sent
@@ -28,7 +38,7 @@ export class MessagesController {
     this.socialGateway.emitToUser(otherUserId, 'message:new', message);
     this.socialGateway.emitToUser(senderId, 'message:new', message);
 
-    await this.notifications.notify(otherUserId, {
+    await this.notifyBestEffort(otherUserId, {
       type: 'message',
       title: 'New message',
       body: message.content.slice(0, 80),

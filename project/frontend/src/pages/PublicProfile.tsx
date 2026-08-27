@@ -17,6 +17,7 @@ export default function PublicProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
+  const [friendRequestError, setFriendRequestError] = useState(false);
 
   const isSelf = !!currentUser && currentUser.id === id;
 
@@ -51,8 +52,15 @@ export default function PublicProfile() {
     try {
       await sendFriendRequest(id);
       setRequestSent(true);
-    } catch {
-      // request already exists, or some other transient error — no need to block the UI
+    } catch (err: any) {
+      // A 400 here almost always means "a request already exists between
+      // you two" — functionally the same end state as just having sent one.
+      if (err?.response?.status === 400) {
+        setRequestSent(true);
+      } else {
+        setFriendRequestError(true);
+        setTimeout(() => setFriendRequestError(false), 1500);
+      }
     }
   };
 
@@ -160,7 +168,12 @@ export default function PublicProfile() {
               className="relative flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-600 transition hover:border-indigo-300 hover:text-indigo-600 disabled:cursor-default disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:border-indigo-700 dark:hover:text-indigo-400"
             >
               {requestSent ? <Check className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-              {requestSent ? t('search.requestSent') : t('search.addFriend')}
+              {requestSent ? t('friends.requestSent') : t('search.addFriend')}
+              {friendRequestError && (
+                <span className="absolute -top-9 whitespace-nowrap rounded-md bg-destructive px-2 py-1 text-[11px] text-destructive-foreground shadow">
+                  {t('search.requestFailed')}
+                </span>
+              )}
             </button>
             <button
               onClick={handleMessage}

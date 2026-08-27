@@ -2,11 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Send } from 'lucide-react';
-import { resolveAvatarUrl } from '../api/avatar';
+import Avatar from '../components/Avatar';
 import MessageBubble from '../components/MessageBubble';
 import { useAuth } from '../auth/useAuth';
 import { useSocial } from '../social/SocialContext';
-import { fetchConversation, fetchFriends, markConversationRead, sendMessageRest } from '../services/social.service';
+import { fetchConversation, fetchFriends, markConversationRead } from '../services/social.service';
 import type { ChatMessage, Friend } from '../types/social';
 
 export default function MessagesPage() {
@@ -14,7 +14,7 @@ export default function MessagesPage() {
   const navigate = useNavigate();
   const { userId: otherUserId } = useParams<{ userId?: string }>();
   const { user } = useAuth();
-  const { socket, onlineUserIds, onMessage } = useSocial();
+  const { onlineUserIds, onMessage, sendMessage } = useSocial();
 
   const [friends, setFriends] = useState<Friend[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -65,16 +65,16 @@ export default function MessagesPage() {
     setSendError('');
 
     try {
-      if (socket?.connected) {
-        socket.emit('message:send', { receiverId: otherUserId, content });
-      } else {
-        const message = await sendMessageRest(otherUserId, content);
-        setMessages((prev) => [...prev, message]);
-      }
+      const message = await sendMessage(otherUserId, content);
+      // The live `message:new` broadcast (see onMessage above) already
+      // appends this for a connected socket — de-duped by id, so appending
+      // here too is what actually delivers it for the REST fallback path.
+      setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
     } catch (err: any) {
-      setSendError(err?.response?.data?.message ?? t('chat.sendFailed'));
+      setDraft(content);
+      setSendError(err?.response?.data?.message ?? err?.message ?? t('chat.sendFailed'));
     }
-  }, [draft, otherUserId, socket, t]);
+  }, [draft, otherUserId, sendMessage, t]);
 
   return (
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-5xl gap-4 p-6">
@@ -98,16 +98,10 @@ export default function MessagesPage() {
               }`}
             >
               <span className="relative shrink-0">
-                {resolveAvatarUrl(f.avatarUrl) ? (
-                  <img src={resolveAvatarUrl(f.avatarUrl)!} alt="" className="h-8 w-8 rounded-full object-cover" />
-                ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                    {(f.displayName || f.username).slice(0, 2).toUpperCase()}
-                  </span>
-                )}
+                <Avatar url={f.avatarUrl} label={f.displayName || f.username} size={8} />
                 <span
                   className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card ${
-                    onlineUserIds.has(f.id) || f.isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+                    onlineUserIds.has(f.id) ? 'bg-emerald-500' : 'bg-muted-foreground/40'
                   }`}
                 />
               </span>
@@ -125,13 +119,7 @@ export default function MessagesPage() {
         ) : (
           <>
             <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-              {resolveAvatarUrl(activeFriend.avatarUrl) ? (
-                <img src={resolveAvatarUrl(activeFriend.avatarUrl)!} alt="" className="h-8 w-8 rounded-full object-cover" />
-              ) : (
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                  {(activeFriend.displayName || activeFriend.username).slice(0, 2).toUpperCase()}
-                </span>
-              )}
+              <Avatar url={activeFriend.avatarUrl} label={activeFriend.displayName || activeFriend.username} size={8} />
               <span className="text-sm font-semibold">{activeFriend.displayName || activeFriend.username}</span>
             </div>
 

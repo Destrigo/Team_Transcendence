@@ -6,6 +6,7 @@ import {
   fetchUnreadCount,
   markAllNotificationsRead,
   markNotificationRead,
+  sendMessageRest,
 } from '../services/social.service';
 import type { AppNotification, ChatMessage } from '../types/social';
 
@@ -20,6 +21,8 @@ interface SocialContextType {
   markAllAsRead: () => Promise<void>;
   /** Subscribe to live messages; returns an unsubscribe function. */
   onMessage: (handler: (message: ChatMessage) => void) => () => void;
+  /** Send over the live socket if connected, resolving/rejecting via its ack; falls back to REST otherwise. */
+  sendMessage: (receiverId: string, content: string) => Promise<ChatMessage>;
 }
 
 const SocialContext = createContext<SocialContextType>({
@@ -30,6 +33,9 @@ const SocialContext = createContext<SocialContextType>({
   markAsRead: async () => {},
   markAllAsRead: async () => {},
   onMessage: () => () => {},
+  sendMessage: async () => {
+    throw new Error('SocialProvider not mounted');
+  },
 });
 
 export function useSocial() {
@@ -44,6 +50,19 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const messageHandlers = useRef(new Set<(message: ChatMessage) => void>());
 
+  // Marks one notification read locally. Idempotent by design: it runs both
+  // from the REST call's own optimistic update and from the server's
+  // `notification:read` echo (sent to every tab, including the one that
+  // triggered it) — whichever arrives second must be a safe no-op.
+  const applyRead = (id: string) => {
+    setNotifications((prev) => {
+      const target = prev.find((n) => n.id === id);
+      if (!target || target.isRead) return prev;
+      setUnreadCount((count) => Math.max(0, count - 1));
+      return prev.map((n) => (n.id === id ? { ...n, isRead: true } : n));
+    });
+  };
+
   useEffect(() => {
     if (!user) {
       setSocket(null);
@@ -53,6 +72,12 @@ export function SocialProvider({ children }: { children: ReactNode }) {
 
     const s = io(SOCIAL_URL, { withCredentials: true });
     setSocket(s);
+
+    // Deltas alone only cover transitions after this socket connects — a
+    // friend who was already online needs an initial snapshot to seed from.
+    s.on('presence:snapshot', ({ onlineUserIds: ids }: { onlineUserIds: string[] }) => {
+      setOnlineUserIds(new Set(ids));
+    });
 
     s.on('presence:update', ({ userId, online }: { userId: string; online: boolean }) => {
       setOnlineUserIds((prev) => {
@@ -66,6 +91,16 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     s.on('notification:new', (notification: AppNotification) => {
       setNotifications((prev) => [notification, ...prev].slice(0, 50));
       setUnreadCount((prev) => prev + 1);
+    });
+
+    // Fired by the server whenever *this* user reads a notification from any
+    // tab/device — including this one, echoed back alongside the REST call's
+    // own optimistic update below, so this has to be idempotent either way.
+    s.on('notification:read', ({ id }: { id: string }) => applyRead(id));
+
+    s.on('notifications:allRead', () => {
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnreadCount(0);
     });
 
     s.on('message:new', (message: ChatMessage) => {
@@ -82,8 +117,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
 
   const markAsRead = async (id: string) => {
     await markNotificationRead(id);
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
-    setUnreadCount((prev) => Math.max(0, prev - 1));
+    applyRead(id);
   };
 
   const markAllAsRead = async () => {
@@ -97,9 +131,25 @@ export function SocialProvider({ children }: { children: ReactNode }) {
     return () => messageHandlers.current.delete(handler);
   };
 
+  const sendMessage = (receiverId: string, content: string): Promise<ChatMessage> => {
+    if (!socket?.connected) {
+      return sendMessageRest(receiverId, content);
+    }
+    return new Promise((resolve, reject) => {
+      socket.emit(
+        'message:send',
+        { receiverId, content },
+        (response: ChatMessage | { error: string }) => {
+          if (response && 'error' in response) reject(new Error(response.error));
+          else resolve(response as ChatMessage);
+        },
+      );
+    });
+  };
+
   return (
     <SocialContext.Provider
-      value={{ socket, onlineUserIds, notifications, unreadCount, markAsRead, markAllAsRead, onMessage }}
+      value={{ socket, onlineUserIds, notifications, unreadCount, markAsRead, markAllAsRead, onMessage, sendMessage }}
     >
       {children}
     </SocialContext.Provider>

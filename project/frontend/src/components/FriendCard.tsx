@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MessageCircle, UserMinus } from 'lucide-react';
-import { resolveAvatarUrl } from '../api/avatar';
+import Avatar from './Avatar';
 import type { Friend } from '../types/social';
 
 interface FriendCardProps {
@@ -13,7 +13,6 @@ interface FriendCardProps {
 export default function FriendCard({ friend, online, onRemove }: FriendCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const initials = (friend.displayName || friend.username).slice(0, 2).toUpperCase();
 
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
@@ -22,13 +21,7 @@ export default function FriendCard({ friend, online, onRemove }: FriendCardProps
         className="relative shrink-0"
         title={friend.username}
       >
-        {resolveAvatarUrl(friend.avatarUrl) ? (
-          <img src={resolveAvatarUrl(friend.avatarUrl)!} alt="" className="h-11 w-11 rounded-full object-cover" />
-        ) : (
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            {initials}
-          </div>
-        )}
+        <Avatar url={friend.avatarUrl} label={friend.displayName || friend.username} size={11} />
         <span
           className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-card ${
             online ? 'bg-emerald-500' : 'bg-muted-foreground/40'

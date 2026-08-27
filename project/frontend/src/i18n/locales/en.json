@@ -120,6 +120,7 @@
     "online": "Online",
     "offlineSince": "Last seen {{time}}",
     "addFriend": "Add friend",
+    "requestFailed": "Could not send request",
     "message": "Message",
     "comingSoon": "Coming soon",
     "resultsCount": "{{count}} trader found",

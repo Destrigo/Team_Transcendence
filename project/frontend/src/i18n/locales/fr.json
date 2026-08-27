@@ -120,6 +120,7 @@
     "online": "En ligne",
     "offlineSince": "Vu {{time}}",
     "addFriend": "Ajouter en ami",
+    "requestFailed": "Impossible d'envoyer la demande",
     "message": "Message",
     "comingSoon": "Bientôt disponible",
     "resultsCount": "{{count}} trader trouvé",
