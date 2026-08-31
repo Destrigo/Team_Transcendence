@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../auth/useAuth';
 import { api } from '../api/api';
 
@@ -34,6 +35,14 @@ export default function Settings() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  // --- 2FA (also independent from the other forms) ---
+  const [twoFAStep, setTwoFAStep] = useState<'idle' | 'setup' | 'disable'>('idle');
+  const [twoFASecret, setTwoFASecret] = useState('');
+  const [twoFAUri, setTwoFAUri] = useState('');
+  const [twoFACode, setTwoFACode] = useState('');
+  const [twoFALoading, setTwoFALoading] = useState(false);
+  const [twoFAError, setTwoFAError] = useState('');
 
   // --- GDPR ---
   const [gdprDownloading, setGdprDownloading] = useState(false);
@@ -166,6 +175,71 @@ export default function Settings() {
     } finally {
       setPasswordLoading(false);
     }
+  };
+
+  // --- 2FA handlers ---
+
+  const handleStart2FASetup = async () => {
+    setTwoFAError('');
+    try {
+      setTwoFALoading(true);
+      const res = await api.post('/auth/2fa/setup');
+      setTwoFASecret(res.data.secret);
+      setTwoFAUri(res.data.otpauthUrl);
+      setTwoFAStep('setup');
+    } catch (err: any) {
+      setTwoFAError(err?.response?.data?.message ?? t('settings.twoFactorSetupFailed'));
+    } finally {
+      setTwoFALoading(false);
+    }
+  };
+
+  const handleConfirm2FA = async () => {
+    setTwoFAError('');
+    if (twoFACode.length !== 6) {
+      setTwoFAError(t('settings.twoFactorCodeInvalid'));
+      return;
+    }
+    try {
+      setTwoFALoading(true);
+      await api.post('/auth/2fa/verify', { code: twoFACode });
+      await refreshUser();
+      setTwoFAStep('idle');
+      setTwoFACode('');
+      setTwoFASecret('');
+      setTwoFAUri('');
+    } catch (err: any) {
+      setTwoFAError(err?.response?.data?.message ?? t('settings.twoFactorVerifyFailed'));
+    } finally {
+      setTwoFALoading(false);
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    setTwoFAError('');
+    if (twoFACode.length !== 6) {
+      setTwoFAError(t('settings.twoFactorCodeInvalid'));
+      return;
+    }
+    try {
+      setTwoFALoading(true);
+      await api.post('/auth/2fa/disable', { code: twoFACode });
+      await refreshUser();
+      setTwoFAStep('idle');
+      setTwoFACode('');
+    } catch (err: any) {
+      setTwoFAError(err?.response?.data?.message ?? t('settings.twoFactorDisableFailed'));
+    } finally {
+      setTwoFALoading(false);
+    }
+  };
+
+  const handleCancel2FA = () => {
+    setTwoFAStep('idle');
+    setTwoFACode('');
+    setTwoFASecret('');
+    setTwoFAUri('');
+    setTwoFAError('');
   };
 
   const handleLogout = async () => {
@@ -386,7 +460,7 @@ export default function Settings() {
         </div>
       </section>
 
-      {/* Security section — password change is independent of the profile form */}
+      {/* Security section — password change and 2FA are independent of the profile form */}
       <section className="mb-6 rounded-lg border border-border bg-card p-4">
         <h2 className="mb-4 text-lg font-semibold">{t('settings.security')}</h2>
         <div className="space-y-4">
@@ -429,6 +503,119 @@ export default function Settings() {
           >
             {passwordLoading ? t('settings.changingPassword') : t('settings.changePassword')}
           </button>
+        </div>
+
+        {/* 2FA */}
+        <hr className="my-6 border-border" />
+
+        <div>
+          <h3 className="mb-1 text-sm font-semibold">{t('settings.twoFactorTitle')}</h3>
+          <p className="mb-3 text-xs text-muted-foreground">{t('settings.twoFactorDesc')}</p>
+
+          {twoFAStep === 'idle' && (
+            <div className="flex items-center gap-3">
+              <span
+                className={`inline-block h-2 w-2 rounded-full ${
+                  user.twoFactorEnabled ? 'bg-green-500' : 'bg-gray-400'
+                }`}
+              />
+              <span className="text-sm">
+                {user.twoFactorEnabled
+                  ? t('settings.twoFactorOn')
+                  : t('settings.twoFactorOff')}
+              </span>
+              {user.twoFactorEnabled ? (
+                <button
+                  onClick={() => setTwoFAStep('disable')}
+                  className="ml-auto rounded border border-destructive px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
+                >
+                  {t('settings.twoFactorDisableButton')}
+                </button>
+              ) : (
+                <button
+                  onClick={handleStart2FASetup}
+                  disabled={twoFALoading}
+                  className="ml-auto rounded bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {twoFALoading
+                    ? t('settings.twoFactorLoading')
+                    : t('settings.twoFactorEnableButton')}
+                </button>
+              )}
+            </div>
+          )}
+
+          {twoFAStep === 'setup' && (
+            <div className="space-y-3 rounded border border-input p-4">
+              <p className="text-sm">{t('settings.twoFactorScanPrompt')}</p>
+              <div className="flex justify-center rounded bg-white p-3">
+                <QRCodeSVG value={twoFAUri} size={180} />
+              </div>
+              <p className="break-all text-center text-xs text-muted-foreground">
+                {t('settings.twoFactorManualEntry')}: <code>{twoFASecret}</code>
+              </p>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={twoFACode}
+                onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ''))}
+                placeholder={t('settings.twoFactorCodePlaceholder')}
+                className="w-full rounded border border-input bg-background px-3 py-2 text-center text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              {twoFAError && <p className="text-sm text-destructive">{twoFAError}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleConfirm2FA}
+                  disabled={twoFALoading}
+                  className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {twoFALoading
+                    ? t('settings.twoFactorLoading')
+                    : t('settings.twoFactorConfirmButton')}
+                </button>
+                <button
+                  onClick={handleCancel2FA}
+                  className="rounded border border-input px-4 py-2 text-sm hover:bg-accent"
+                >
+                  {t('gdpr.cancel')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {twoFAStep === 'disable' && (
+            <div className="space-y-3 rounded border border-input p-4">
+              <p className="text-sm">{t('settings.twoFactorDisablePrompt')}</p>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={twoFACode}
+                onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ''))}
+                placeholder={t('settings.twoFactorCodePlaceholder')}
+                className="w-full rounded border border-input bg-background px-3 py-2 text-center text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              {twoFAError && <p className="text-sm text-destructive">{twoFAError}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDisable2FA}
+                  disabled={twoFALoading}
+                  className="rounded border border-destructive px-4 py-2 text-sm text-destructive hover:bg-destructive hover:text-destructive-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {twoFALoading
+                    ? t('settings.twoFactorLoading')
+                    : t('settings.twoFactorDisableConfirmButton')}
+                </button>
+                <button
+                  onClick={handleCancel2FA}
+                  className="rounded border border-input px-4 py-2 text-sm hover:bg-accent"
+                >
+                  {t('gdpr.cancel')}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

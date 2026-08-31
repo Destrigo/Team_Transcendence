@@ -10,6 +10,7 @@ export type User = {
   isOnline: boolean;
   lastSeen?: string | null;
   language: string;
+  twoFactorEnabled: boolean;
 };
 
 type AuthContextType = {

@@ -4,16 +4,22 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import {
   RegisterDto,
   LoginDto,
-  OAuthDto,
-  TwoFactorCodeDto,
 } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { OTP } from 'otplib';
+
+interface OAuthProfile {
+  provider: string;
+  providerId: string;
+  email: string;
+  displayName?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -24,7 +30,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // POST /auth/register
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findFirst({
       where: { OR: [{ email: dto.email }, { username: dto.username }] },
@@ -59,7 +64,6 @@ export class AuthService {
     return { ...tokens, language: user.language };
   }
 
-  // POST /auth/login
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -71,8 +75,11 @@ export class AuthService {
     if (!isMatch) throw new UnauthorizedException('auth.invalidCredentials');
 
     if (user.twoFactorEnabled) {
-      // if 2FA is active, restrict token drop until 2FA code is verified
-      return { requires2FA: true, userId: user.id };
+      const loginToken = await this.jwtService.signAsync(
+        { sub: user.id, purpose: '2fa-pending' },
+        { expiresIn: '5m', secret: process.env.JWT_ACCESS_SECRET },
+      );
+      return { requires2FA: true, loginToken };
     }
 
     const tokens = await this.generateTokens(user.id, user.email, false);
@@ -89,7 +96,6 @@ export class AuthService {
     return { ...tokens, language: user.language };
   }
 
-  // POST /auth/refresh
   async refreshTokens(refreshToken: string) {
     let payload;
 
@@ -128,37 +134,6 @@ export class AuthService {
     return tokens;
   }
 
-  // POST /auth/oauth/:provider
-  async validateOAuth(provider: string, token: string) {
-    // OAuth fetches token data from provider API (Google/42/Github)
-    const externalEmail = `oauth-${provider}-${token.substring(0, 5)}@example.com`;
-    const fallbackUsername = `${provider}_user_${Date.now().toString().slice(-4)}`;
-
-    let user = await this.prisma.user.findUnique({
-      where: { email: externalEmail },
-    });
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email: externalEmail,
-          username: fallbackUsername,
-          oauthProvider: provider,
-          oauthId: `id-${token.substring(0, 10)}`,
-        },
-      });
-    }
-
-    const tokens = await this.generateTokens(
-      user.id,
-      user.email,
-      user.twoFactorEnabled,
-    );
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
-
-    return tokens;
-  }
-
-  // POST /auth/2fa/setup
   async generate2FASecret(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('auth.errors.userNotFound');
@@ -178,7 +153,36 @@ export class AuthService {
     return { secret, otpauthUrl };
   }
 
-  // POST /auth/2fa/verify
+  async verifyLogin2FA(loginToken: string, code: string) {
+    let payload: any;
+    try {
+      payload = await this.jwtService.verifyAsync(loginToken, {
+        secret: process.env.JWT_LOGIN_SECRET,
+      });
+    } catch {
+      throw new UnauthorizedException('auth.errors.accessDenied');
+    }
+
+    if (payload.purpose !== '2fa-pending') {
+      throw new UnauthorizedException('auth.errors.accessDenied');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+    if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
+      throw new UnauthorizedException('auth.errors.accessDenied');
+    }
+
+    const result = await this.otp.verify({ token: code, secret: user.twoFactorSecret });
+    if (!result.valid) {
+      throw new UnauthorizedException('auth.errors.invalid2faCode');
+    }
+
+    const tokens = await this.generateTokens(user.id, user.email, true);
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
+
+    return { ...tokens, language: user.language };
+  }
+
   async enable2FA(userId: string, code: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.twoFactorSecret)
@@ -199,7 +203,6 @@ export class AuthService {
     return { success: true };
   }
 
-  // POST /auth/2fa/disable
   async disable2FA(userId: string, code: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
@@ -259,4 +262,81 @@ export class AuthService {
       },
     });
   }
+
+  async validateOAuthLogin(profile: OAuthProfile) {
+    const { provider, providerId, email, displayName } = profile;
+
+    if (!email) {
+      throw new BadRequestException(
+        `No email returned by ${provider}. Check the requested OAuth scopes.`,
+      );
+    }
+
+    let user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (user) {
+      if (!user.oauthProvider) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { oauthProvider: provider, oauthId: providerId },
+        });
+      }
+    } else {
+      const username = await this.generateUniqueUsername(
+        displayName || `${provider}_user`,
+      );
+
+      try {
+        user = await this.prisma.user.create({
+          data: {
+            email,
+            username,
+            oauthProvider: provider,
+            oauthId: providerId,
+          },
+        });
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2002' &&
+          (err.meta?.target as string[])?.includes('email')
+        ) {
+          const existingUser = await this.prisma.user.findUnique({
+            where: { email },
+          });
+
+          if (!existingUser) {
+            throw new ConflictException(
+              'Failed to resolve user after concurrent creation conflict',
+            );
+          }
+
+          user = existingUser;
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    const tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      user.twoFactorEnabled,
+    );
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    return tokens;
+  }
+
+  private async generateUniqueUsername(base: string): Promise<string> {
+    const slug = base.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20) || 'user';
+    let candidate = slug;
+    let suffix = 0;
+
+    while (await this.prisma.user.findUnique({ where: { username: candidate } })) {
+      suffix += 1;
+      candidate = `${slug}${suffix}`;
+    }
+    return candidate;
+  }
 }
+

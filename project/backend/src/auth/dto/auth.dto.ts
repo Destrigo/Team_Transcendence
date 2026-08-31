@@ -10,7 +10,6 @@ import {
   Length,
 } from 'class-validator';
 
-// validates POST /auth/register
 export class RegisterDto {
   @IsEmail({}, { message: 'auth.validation.invalidEmail' })
   @IsNotEmpty({ message: 'auth.validation.emailRequired' })
@@ -36,7 +35,6 @@ export class RegisterDto {
   language?: string;
 }
 
-// validates POST /auth/login
 export class LoginDto {
   @IsEmail({}, { message: 'auth.validation.invalidEmail' })
   @IsNotEmpty({ message: 'auth.validation.emailRequired' })
@@ -47,15 +45,19 @@ export class LoginDto {
   password: string;
 }
 
-// validates POST /auth/oauth/:provider
-export class OAuthDto {
+export class TwoFactorCodeDto {
   @IsString()
-  @IsNotEmpty({ message: 'auth.validation.oauthTokenRequired' })
-  token: string;
+  @IsNotEmpty({ message: 'auth.validation.codeRequired' })
+  @Length(6, 6, { message: 'auth.validation.codeLengthInvalid' })
+  @Matches(/^[0-9]+$/, { message: 'auth.validation.codeNumericOnly' })
+  code: string;
 }
 
-// validates 2FA verification codes
-export class TwoFactorCodeDto {
+export class LoginTwoFactorDto {
+  @IsString()
+  @IsNotEmpty({ message: 'auth.validation.loginTokenRequired' })
+  loginToken: string;
+
   @IsString()
   @IsNotEmpty({ message: 'auth.validation.codeRequired' })
   @Length(6, 6, { message: 'auth.validation.codeLengthInvalid' })

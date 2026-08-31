@@ -1,10 +1,10 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
   HttpCode,
   HttpStatus,
-  Param,
   Res,
   Req,
   UseGuards,
@@ -13,19 +13,20 @@ import { AuthService } from './auth.service';
 import {
   RegisterDto,
   LoginDto,
-  OAuthDto,
   TwoFactorCodeDto,
+  LoginTwoFactorDto,
 } from './dto/auth.dto';
 import type { Response, Request } from 'express';
+import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://localhost';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // create account
-  // POST /auth/register
   @Post('register')
   async register(
     @Body() dto: RegisterDto,
@@ -40,8 +41,6 @@ export class AuthController {
     };
   }
 
-  // email + password login
-  // POST /auth/login
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
@@ -61,7 +60,6 @@ export class AuthController {
     };
   }
 
-  // refresh JWT
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(
@@ -79,24 +77,23 @@ export class AuthController {
     };
   }
 
-  // OAuth callback
-  @Post('oauth/:provider')
-  @HttpCode(HttpStatus.OK)
-  async oauthCallback(
-    @Param('provider') provider: string,
-    @Body() dto: OAuthDto,
-  ) {
-    return this.authService.validateOAuth(provider, dto.token);
-  }
-
-  // generate TOTP secret + QR
   @UseGuards(JwtAuthGuard)
   @Post('2fa/setup')
   async setup2FA(@CurrentUser('userId') userId: string,) {
     return this.authService.generate2FASecret(userId);
   }
 
-  // verify TOTP code
+  @Post('login/2fa')
+  @HttpCode(HttpStatus.OK)
+  async loginWith2FA(
+    @Body() dto: LoginTwoFactorDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.verifyLogin2FA(dto.loginToken, dto.code);
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+    return { language: result.language };
+  }
+    
   @UseGuards(JwtAuthGuard)
   @Post('2fa/verify')
   @HttpCode(HttpStatus.OK)
@@ -107,7 +104,6 @@ export class AuthController {
     return this.authService.enable2FA(userId, dto.code);
   }
 
-  // disable 2FA
   @UseGuards(JwtAuthGuard)
   @Post('2fa/disable')
   @HttpCode(HttpStatus.OK)
@@ -134,13 +130,75 @@ export class AuthController {
       message: 'Logged out',
     };
   }
-  
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  googleAuth() { }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
+    const { email, providerId, provider, displayName } = req.user;
+
+    const tokens = await this.authService.validateOAuthLogin({
+      provider,
+      providerId,
+      email,
+      displayName,
+    });
+
+    this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+
+    return res.redirect(`${FRONTEND_URL}/settings`);
+  }
+
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  githubAuth() { }
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  async githubCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
+    const { email, providerId, provider, displayName } = req.user;
+
+    const tokens = await this.authService.validateOAuthLogin({
+      provider,
+      providerId,
+      email,
+      displayName,
+    });
+
+    this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+
+    return res.redirect(`${FRONTEND_URL}/settings`);
+  }
+
+  @Get('42')
+  @UseGuards(AuthGuard('42'))
+  fortyTwoAuth() { }
+
+  @Get('42/callback')
+  @UseGuards(AuthGuard('42'))
+  async fortyTwoCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
+    const { email, providerId, provider, displayName } = req.user;
+
+    const tokens = await this.authService.validateOAuthLogin({
+      provider,
+      providerId,
+      email,
+      displayName,
+    });
+
+    this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+
+    return res.redirect(`${FRONTEND_URL}/settings`);
+  }
+
   private setAuthCookies(
   res: Response,
   accessToken: string,
   refreshToken: string,
 ) {
-
   res.cookie('access_token', accessToken, {
     httpOnly: true,
     secure: true,
@@ -148,7 +206,6 @@ export class AuthController {
     maxAge: 15 * 60 * 1000,
     path: '/',
   });
-
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true,
     secure: true,
