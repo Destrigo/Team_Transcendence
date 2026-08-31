@@ -3,6 +3,9 @@
     "dashboard": "Tableau de bord",
     "search": "Recherche",
     "trade": "Transaction",
+    "friends": "Amis",
+    "messages": "Messages",
+    "leaderboard": "Classement",
     "analytics": "Analyses",
     "settings": "Paramètres"
   },
@@ -120,6 +123,7 @@
     "online": "En ligne",
     "offlineSince": "Vu {{time}}",
     "addFriend": "Ajouter en ami",
+    "requestFailed": "Impossible d'envoyer la demande",
     "message": "Message",
     "comingSoon": "Bientôt disponible",
     "resultsCount": "{{count}} trader trouvé",
@@ -249,12 +253,13 @@
     "startTrading": "Commencez à trader pour voir vos positions ici"
   },
   "analytics": {
-    "title": "Analytique",
+    "title": "Analyse",
     "performance": "Performance",
     "allocation": "Répartition",
     "tradeHistory": "Historique des transactions",
     "summary": "Résumé",
-    "totalTrades": "Total des transactions",
+    "portfolioValue": "Valeur du portefeuille",
+    "totalTrades": "Nombre total de transactions",
     "bestTrade": "Meilleure transaction",
     "worstTrade": "Pire transaction",
     "winRate": "Taux de réussite",
@@ -264,11 +269,24 @@
     "dateRange": "Période",
     "from": "Du",
     "to": "Au",
+    "apply": "Appliquer",
+    "loading": "Chargement...",
+    "loadError": "Impossible de charger les analyses. Connectez-vous et vérifiez le backend.",
+    "invalidDateRange": "La date de début doit être antérieure ou égale à la date de fin.",
+    "exportError": "Échec de l’exportation. Réessayez après vous être connecté.",
     "allTime": "Depuis toujours",
     "last7Days": "7 derniers jours",
     "last30Days": "30 derniers jours",
     "last90Days": "90 derniers jours",
-    "noTrades": "Aucune transaction sur cette période"
+    "noTrades": "Aucune transaction sur cette période",
+    "noSnapshots": "Aucune donnée de snapshot pour le moment. Elle apparaîtra après l’exécution du premier snapshot quotidien.",
+    "noHoldings": "Aucune position pour le moment. Effectuez des transactions pour voir la répartition.",
+    "colDate": "Date",
+    "colSymbol": "Symbole",
+    "colType": "Type",
+    "colQty": "Qté",
+    "colPrice": "Prix",
+    "colTotal": "Total"
   },
   "settings": {
     "title": "Paramètres",
@@ -306,6 +324,7 @@
   "friends": {
     "title": "Amis",
     "addFriend": "Ajouter un ami",
+    "message": "Message",
     "removeFriend": "Supprimer l'ami",
     "pending": "En attente",
     "accept": "Accepter",
@@ -313,17 +332,25 @@
     "online": "En ligne",
     "offline": "Hors ligne",
     "searchUsers": "Rechercher des utilisateurs...",
-    "noFriends": "Pas encore d'amis",
+    "noFriends": "Pas encore d'amis. Trouvez des gens dans Recherche et envoyez une demande.",
+    "yourFriends": "Vos amis",
     "requestSent": "Demande envoyée",
     "incomingRequests": "Demandes reçues",
-    "outgoingRequests": "Demandes envoyées"
+    "outgoingRequests": "Demandes envoyées",
+    "cancelRequest": "Annuler la demande",
+    "loadFailed": "Impossible de charger. Réessayez."
   },
   "chat": {
     "title": "Messages",
     "newMessage": "Nouveau message",
     "messagePlaceholder": "Tapez un message...",
     "send": "Envoyer",
+    "conversations": "Conversations",
     "noConversations": "Aucune conversation",
+    "noFriendsToMessage": "Ajoutez un ami pour démarrer une conversation.",
+    "selectConversation": "Sélectionnez une conversation pour discuter.",
+    "noMessagesYet": "Pas encore de messages. Dites bonjour !",
+    "sendFailed": "Échec de l'envoi. Réessayez.",
     "startChat": "Démarrer une conversation",
     "online": "En ligne",
     "lastSeen": "Vu {{time}}"
@@ -335,7 +362,9 @@
     "portfolioValue": "Valeur du portefeuille",
     "pnlPercent": "P&L %",
     "trades": "Transactions",
-    "you": "Vous"
+    "you": "Vous",
+    "empty": "Aucun trader pour le moment.",
+    "loadFailed": "Impossible de charger le classement. Réessayez."
   },
   "notifications": {
     "title": "Notifications",

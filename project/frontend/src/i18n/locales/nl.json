@@ -3,6 +3,9 @@
     "dashboard": "Dashboard",
     "search": "Zoeken",
     "trade": "Handel",
+    "friends": "Vrienden",
+    "messages": "Berichten",
+    "leaderboard": "Ranglijst",
     "analytics": "Analyses",
     "settings": "Instellingen"
   },
@@ -120,6 +123,7 @@
     "online": "Online",
     "offlineSince": "Laatst gezien {{time}}",
     "addFriend": "Vriend toevoegen",
+    "requestFailed": "Verzoek kon niet worden verzonden",
     "message": "Bericht",
     "comingSoon": "Binnenkort beschikbaar",
     "resultsCount": "{{count}} trader gevonden",
@@ -254,6 +258,7 @@
     "allocation": "Verdeling",
     "tradeHistory": "Transactiegeschiedenis",
     "summary": "Samenvatting",
+    "portfolioValue": "Portfoliowaarde",
     "totalTrades": "Totaal transacties",
     "bestTrade": "Beste transactie",
     "worstTrade": "Slechtste transactie",
@@ -264,11 +269,24 @@
     "dateRange": "Datumbereik",
     "from": "Van",
     "to": "Tot",
+    "apply": "Toepassen",
+    "loading": "Laden...",
+    "loadError": "Analyse laden mislukt. Log in en controleer de backend.",
+    "invalidDateRange": "De startdatum moet vóór of gelijk aan de einddatum liggen.",
+    "exportError": "Exporteren mislukt. Probeer opnieuw na inloggen.",
     "allTime": "Altijd",
     "last7Days": "Afgelopen 7 dagen",
     "last30Days": "Afgelopen 30 dagen",
     "last90Days": "Afgelopen 90 dagen",
-    "noTrades": "Geen transacties in deze periode"
+    "noTrades": "Geen transacties in deze periode",
+    "noSnapshots": "Nog geen snapshotdata. Verschijnt na de eerste dagelijkse snapshot.",
+    "noHoldings": "Nog geen posities. Plaats trades om de verdeling te zien.",
+    "colDate": "Datum",
+    "colSymbol": "Symbool",
+    "colType": "Type",
+    "colQty": "Aantal",
+    "colPrice": "Prijs",
+    "colTotal": "Totaal"
   },
   "settings": {
     "title": "Instellingen",
@@ -306,6 +324,7 @@
   "friends": {
     "title": "Vrienden",
     "addFriend": "Vriend toevoegen",
+    "message": "Bericht",
     "removeFriend": "Vriend verwijderen",
     "pending": "In behandeling",
     "accept": "Accepteren",
@@ -313,17 +332,25 @@
     "online": "Online",
     "offline": "Offline",
     "searchUsers": "Gebruikers zoeken...",
-    "noFriends": "Nog geen vrienden",
+    "noFriends": "Nog geen vrienden. Zoek mensen via Zoeken en stuur een verzoek.",
+    "yourFriends": "Jouw vrienden",
     "requestSent": "Verzoek verzonden",
     "incomingRequests": "Ontvangen verzoeken",
-    "outgoingRequests": "Verzonden verzoeken"
+    "outgoingRequests": "Verzonden verzoeken",
+    "cancelRequest": "Verzoek annuleren",
+    "loadFailed": "Kon niet laden. Probeer het opnieuw."
   },
   "chat": {
     "title": "Berichten",
     "newMessage": "Nieuw bericht",
     "messagePlaceholder": "Typ een bericht...",
     "send": "Verzenden",
+    "conversations": "Gesprekken",
     "noConversations": "Nog geen gesprekken",
+    "noFriendsToMessage": "Voeg een vriend toe om een gesprek te starten.",
+    "selectConversation": "Selecteer een gesprek om te chatten.",
+    "noMessagesYet": "Nog geen berichten. Zeg hallo!",
+    "sendFailed": "Bericht versturen mislukt. Probeer het opnieuw.",
     "startChat": "Begin een gesprek",
     "online": "Online",
     "lastSeen": "Laatst gezien {{time}}"
@@ -335,7 +362,9 @@
     "portfolioValue": "Portfoliowaarde",
     "pnlPercent": "W&V %",
     "trades": "Transacties",
-    "you": "Jij"
+    "you": "Jij",
+    "empty": "Nog geen traders.",
+    "loadFailed": "Kon de ranglijst niet laden. Probeer het opnieuw."
   },
   "notifications": {
     "title": "Meldingen",

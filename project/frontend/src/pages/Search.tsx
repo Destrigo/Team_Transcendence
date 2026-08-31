@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search as SearchIcon, UserPlus, MessageCircle, Loader2 } from 'lucide-react';
+import { Search as SearchIcon, UserPlus, MessageCircle, Loader2, Check } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchUsers, type PublicProfile } from '../services/user.service';
 import { resolveAvatarUrl } from '../api/avatar';
+import { sendFriendRequest } from '../services/social.service';
 
 const LIMIT = 20;
 
@@ -19,8 +20,9 @@ export default function SearchPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  // tracks which placeholder button was just clicked, per user id, to show a "coming soon" hint
+  // tracks a just-clicked action per user id, to flash a brief confirmation
   const [flashed, setFlashed] = useState<string | null>(null);
+  const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
 
   const debouncedQuery = useDebounce(query, 350);
 
@@ -62,12 +64,29 @@ export default function SearchPage() {
     };
   }, [debouncedQuery, page]);
 
-  const handlePlaceholderClick = (id: string, action: 'friend' | 'message') => (
-    e: React.MouseEvent,
-  ) => {
+  const handleAddFriend = (id: string) => async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setFlashed(`${id}:${action}`);
-    setTimeout(() => setFlashed(null), 1500);
+    try {
+      await sendFriendRequest(id);
+      setSentRequests((prev) => new Set(prev).add(id));
+      setFlashed(`${id}:friend`);
+    } catch (err: any) {
+      // A 400 here almost always means "a request already exists between
+      // you two" — functionally the same end state as just having sent one.
+      if (err?.response?.status === 400) {
+        setSentRequests((prev) => new Set(prev).add(id));
+        setFlashed(`${id}:friend`);
+      } else {
+        setFlashed(`${id}:error`);
+      }
+    } finally {
+      setTimeout(() => setFlashed(null), 1500);
+    }
+  };
+
+  const handleMessage = (id: string) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/messages/${id}`);
   };
 
   const formatLastSeen = (iso: string | null) => {
@@ -196,27 +215,28 @@ export default function SearchPage() {
                 <div className="flex shrink-0 items-center gap-1.5">
                   <button
                     title={t('search.addFriend')}
-                    onClick={handlePlaceholderClick(u.id, 'friend')}
-                    className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-indigo-700 dark:hover:text-indigo-400"
+                    disabled={sentRequests.has(u.id)}
+                    onClick={handleAddFriend(u.id)}
+                    className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-indigo-300 hover:text-indigo-600 disabled:cursor-default disabled:opacity-50 dark:border-slate-700 dark:text-slate-400 dark:hover:border-indigo-700 dark:hover:text-indigo-400"
                   >
-                    <UserPlus className="h-4 w-4" />
+                    {sentRequests.has(u.id) ? <Check className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
                     {flashed === `${u.id}:friend` && (
                       <span className="absolute -top-8 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-[11px] text-white shadow">
-                        {t('search.comingSoon')}
+                        {t('friends.requestSent')}
+                      </span>
+                    )}
+                    {flashed === `${u.id}:error` && (
+                      <span className="absolute -top-8 whitespace-nowrap rounded-md bg-destructive px-2 py-1 text-[11px] text-destructive-foreground shadow">
+                        {t('search.requestFailed')}
                       </span>
                     )}
                   </button>
                   <button
                     title={t('search.message')}
-                    onClick={handlePlaceholderClick(u.id, 'message')}
+                    onClick={handleMessage(u.id)}
                     className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-indigo-700 dark:hover:text-indigo-400"
                   >
                     <MessageCircle className="h-4 w-4" />
-                    {flashed === `${u.id}:message` && (
-                      <span className="absolute -top-8 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-[11px] text-white shadow">
-                        {t('search.comingSoon')}
-                      </span>
-                    )}
                   </button>
                 </div>
               </li>

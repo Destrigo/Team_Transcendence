@@ -47,9 +47,9 @@ export default function Login() {
       navigate('/settings');
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        setError(
-          err.response?.data?.message ?? t('auth.invalidCredentials')
-        );
+        const message = err.response?.data?.message;
+
+        setError(message ? t(message) : t('auth.invalidCredentials'));
       } else {
         setError(t('auth.invalidCredentials'));
       }
@@ -94,121 +94,121 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="w-full max-w-sm rounded-lg bg-card p-8 shadow-md">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t('auth.loginTitle')}</h1>
-          <LanguageSwitcher />
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-muted">
+        <div className="w-full max-w-sm rounded-lg bg-card p-8 shadow-md">
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-2xl font-bold">{t('auth.loginTitle')}</h1>
+            <LanguageSwitcher />
+          </div>
 
-        {!awaiting2FA ? (
-          <>
-            <p className="mb-6 text-sm text-muted-foreground">{t('auth.loginSubtitle')}</p>
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div>
-                <label className="mb-1 block text-sm font-medium">{t('auth.email')}</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t('auth.emailPlaceholder')}
-                  className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium">{t('auth.password')}</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t('auth.passwordPlaceholder')}
-                  className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-              >
-                {t('auth.loginButton')}
-              </button>
-            </form>
-
-            <div className="my-6 flex items-center gap-3">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-xs uppercase text-muted-foreground">
-                {t('auth.orContinueWith')}
-              </span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
-
-            <div className="space-y-2">
-              {OAUTH_PROVIDERS.map((provider) => (
-                <a
-                  key={provider.id}
-                  href={provider.href}
-                  className="flex w-full items-center justify-center gap-2 rounded border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
+          {!awaiting2FA ? (
+            <>
+              <p className="mb-6 text-sm text-muted-foreground">{t('auth.loginSubtitle')}</p>
+              <form className="space-y-4" onSubmit={handleSubmit}>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">{t('auth.email')}</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t('auth.emailPlaceholder')}
+                    className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">{t('auth.password')}</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={t('auth.passwordPlaceholder')}
+                    className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
                 >
-                  <ProviderIcon id={provider.id} />
-                  {t(provider.label)}
-                </a>
-              ))}
-            </div>
+                  {t('auth.loginButton')}
+                </button>
+              </form>
 
-            {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              {t('auth.noAccount')}{' '}
-              <Link to="/register" className="text-primary underline">
-                {t('auth.registerButton')}
-              </Link>
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="mb-6 text-sm text-muted-foreground">
-              {t('settings.twoFactorScanPrompt')}
-            </p>
-            <form className="space-y-4" onSubmit={handleVerify2FA}>
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  {t('settings.twoFactorCodePlaceholder')}
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={twoFACode}
-                  onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ''))}
-                  placeholder={t('settings.twoFactorCodePlaceholder')}
-                  className="w-full rounded border border-input bg-background px-3 py-2 text-center text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-ring"
-                  autoFocus
-                  required
-                />
+              <div className="my-6 flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs uppercase text-muted-foreground">
+                  {t('auth.orContinueWith')}
+                </span>
+                <div className="h-px flex-1 bg-border" />
               </div>
 
-              {twoFAError && <p className="text-sm text-destructive">{twoFAError}</p>}
+              <div className="space-y-2">
+                {OAUTH_PROVIDERS.map((provider) => (
+                  <a
+                    key={provider.id}
+                    href={provider.href}
+                    className="flex w-full items-center justify-center gap-2 rounded border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
+                  >
+                    <ProviderIcon id={provider.id} />
+                    {t(provider.label)}
+                  </a>
+                ))}
+              </div>
 
-              <button
-                type="submit"
-                disabled={twoFALoading}
-                className="w-full rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {twoFALoading ? t('settings.twoFactorLoading') : t('settings.twoFactorConfirmButton')}
-              </button>
+              {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+              <p className="mt-4 text-center text-sm text-muted-foreground">
+                {t('auth.noAccount')}{' '}
+                <Link to="/register" className="text-primary underline">
+                  {t('auth.registerButton')}
+                </Link>
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="mb-6 text-sm text-muted-foreground">
+                {t('settings.twoFactorScanPrompt')}
+              </p>
+              <form className="space-y-4" onSubmit={handleVerify2FA}>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">
+                    {t('settings.twoFactorCodePlaceholder')}
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={twoFACode}
+                    onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, ''))}
+                    placeholder={t('settings.twoFactorCodePlaceholder')}
+                    className="w-full rounded border border-input bg-background px-3 py-2 text-center text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-ring"
+                    autoFocus
+                    required
+                  />
+                </div>
 
-              <button
-                type="button"
-                onClick={handleBackToLogin}
-                className="w-full rounded border border-input px-4 py-2 text-sm hover:bg-accent"
-              >
-                {t('gdpr.cancel')}
-              </button>
-            </form>
-          </>
-        )}
+                {twoFAError && <p className="text-sm text-destructive">{twoFAError}</p>}
+
+                <button
+                  type="submit"
+                  disabled={twoFALoading}
+                  className="w-full rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {twoFALoading ? t('settings.twoFactorLoading') : t('settings.twoFactorConfirmButton')}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleBackToLogin}
+                  className="w-full rounded border border-input px-4 py-2 text-sm hover:bg-accent"
+                >
+                  {t('gdpr.cancel')}
+                </button>
+              </form>
+            </>
+          )}
+        </div>
       </div>
-    </div>
   );
 }
 
