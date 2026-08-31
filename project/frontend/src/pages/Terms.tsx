@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import Footer from '../components/Footer';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const LAST_UPDATED = '2026-07-29';

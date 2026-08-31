@@ -3,6 +3,9 @@
     "dashboard": "Dashboard",
     "search": "Search",
     "trade": "Trade",
+    "friends": "Friends",
+    "messages": "Messages",
+    "leaderboard": "Leaderboard",
     "analytics": "Analytics",
     "settings": "Settings"
   },
@@ -117,6 +120,7 @@
     "online": "Online",
     "offlineSince": "Last seen {{time}}",
     "addFriend": "Add friend",
+    "requestFailed": "Could not send request",
     "message": "Message",
     "comingSoon": "Coming soon",
     "resultsCount": "{{count}} trader found",
@@ -322,6 +326,7 @@
   "friends": {
     "title": "Friends",
     "addFriend": "Add friend",
+    "message": "Message",
     "removeFriend": "Remove friend",
     "pending": "Pending",
     "accept": "Accept",
@@ -329,17 +334,25 @@
     "online": "Online",
     "offline": "Offline",
     "searchUsers": "Search users...",
-    "noFriends": "No friends yet",
+    "noFriends": "No friends yet. Find people in Search and send a request.",
+    "yourFriends": "Your friends",
     "requestSent": "Request sent",
     "incomingRequests": "Incoming requests",
-    "outgoingRequests": "Outgoing requests"
+    "outgoingRequests": "Outgoing requests",
+    "cancelRequest": "Cancel request",
+    "loadFailed": "Could not load this. Try again."
   },
   "chat": {
     "title": "Messages",
     "newMessage": "New message",
     "messagePlaceholder": "Type a message...",
     "send": "Send",
+    "conversations": "Conversations",
     "noConversations": "No conversations yet",
+    "noFriendsToMessage": "Add a friend to start a conversation.",
+    "selectConversation": "Select a conversation to start chatting.",
+    "noMessagesYet": "No messages yet. Say hello!",
+    "sendFailed": "Message failed to send. Try again.",
     "startChat": "Start a conversation",
     "online": "Online",
     "lastSeen": "Last seen {{time}}"
@@ -351,7 +364,9 @@
     "portfolioValue": "Portfolio value",
     "pnlPercent": "P&L %",
     "trades": "Trades",
-    "you": "You"
+    "you": "You",
+    "empty": "No traders yet.",
+    "loadFailed": "Could not load the leaderboard. Try again."
   },
   "notifications": {
     "title": "Notifications",

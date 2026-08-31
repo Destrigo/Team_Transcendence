@@ -38,7 +38,7 @@ export class GdprService {
       throw new NotFoundException('User not found');
     }
 
-    const [orders, holdings, portfolioSnapshots] = await Promise.all([
+    const [orders, holdings, portfolioSnapshots, messages, friendships] = await Promise.all([
       this.prisma.order.findMany({
         where: { userId },
         include: {
@@ -56,6 +56,13 @@ export class GdprService {
         where: { userId },
         orderBy: { snapshotDate: 'desc' },
       }),
+      this.prisma.message.findMany({
+        where: { OR: [{ senderId: userId }, { receiverId: userId }] },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.friendship.findMany({
+        where: { OR: [{ requesterId: userId }, { addresseeId: userId }] },
+      }),
     ]);
 
     return {
@@ -64,9 +71,8 @@ export class GdprService {
       orders: orders.map((o) => this.serialize(o)),
       holdings: holdings.map((h) => this.serialize(h)),
       portfolioSnapshots: portfolioSnapshots.map((s) => this.serialize(s)),
-      // Messages / friends will be included when those tables exist on main.
-      messages: [],
-      friends: [],
+      messages: messages.map((m) => this.serialize(m)),
+      friends: friendships.map((f) => this.serialize(f)),
     };
   }
 
@@ -92,6 +98,21 @@ export class GdprService {
     }
 
     await this.prisma.$transaction(async (tx) => {
+      // Also scrubs notifications *other* users hold that reference this
+      // account (a friend-request or message notification stores the other
+      // party's id in `data`) — otherwise clicking one afterwards points at
+      // a user that no longer exists.
+      await tx.notification.deleteMany({
+        where: {
+          OR: [
+            { userId },
+            { data: { path: ['fromUserId'], equals: userId } },
+            { data: { path: ['byUserId'], equals: userId } },
+          ],
+        },
+      });
+      await tx.message.deleteMany({ where: { OR: [{ senderId: userId }, { receiverId: userId }] } });
+      await tx.friendship.deleteMany({ where: { OR: [{ requesterId: userId }, { addresseeId: userId }] } });
       await tx.portfolioSnapshot.deleteMany({ where: { userId } });
       await tx.order.deleteMany({ where: { userId } });
       await tx.holding.deleteMany({ where: { userId } });

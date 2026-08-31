@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, UserPlus, MessageCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, UserPlus, MessageCircle, Loader2, Check } from 'lucide-react';
 import { getPublicProfile, type PublicProfile as PublicProfileType } from '../services/user.service';
 import { useAuth } from '../auth/useAuth';
 import { resolveAvatarUrl } from '../api/avatar';
+import { sendFriendRequest } from '../services/social.service';
 
 export default function PublicProfile() {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +16,8 @@ export default function PublicProfile() {
   const [profile, setProfile] = useState<PublicProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [flashed, setFlashed] = useState<'friend' | 'message' | null>(null);
+  const [requestSent, setRequestSent] = useState(false);
+  const [friendRequestError, setFriendRequestError] = useState(false);
 
   const isSelf = !!currentUser && currentUser.id === id;
 
@@ -45,9 +47,25 @@ export default function PublicProfile() {
     return <Navigate to="/settings" replace />;
   }
 
-  const handlePlaceholderClick = (action: 'friend' | 'message') => () => {
-    setFlashed(action);
-    setTimeout(() => setFlashed(null), 1500);
+  const handleAddFriend = async () => {
+    if (!id || requestSent) return;
+    try {
+      await sendFriendRequest(id);
+      setRequestSent(true);
+    } catch (err: any) {
+      // A 400 here almost always means "a request already exists between
+      // you two" — functionally the same end state as just having sent one.
+      if (err?.response?.status === 400) {
+        setRequestSent(true);
+      } else {
+        setFriendRequestError(true);
+        setTimeout(() => setFriendRequestError(false), 1500);
+      }
+    }
+  };
+
+  const handleMessage = () => {
+    if (id) navigate(`/messages/${id}`);
   };
 
   const formatLastSeen = (iso: string | null) => {
@@ -145,28 +163,24 @@ export default function PublicProfile() {
 
           <div className="mt-6 flex gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
             <button
-              onClick={handlePlaceholderClick('friend')}
-              className="relative flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-600 transition hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700 dark:text-slate-300 dark:hover:border-indigo-700 dark:hover:text-indigo-400"
+              onClick={handleAddFriend}
+              disabled={requestSent}
+              className="relative flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-600 transition hover:border-indigo-300 hover:text-indigo-600 disabled:cursor-default disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:border-indigo-700 dark:hover:text-indigo-400"
             >
-              <UserPlus className="h-4 w-4" />
-              {t('search.addFriend')}
-              {flashed === 'friend' && (
-                <span className="absolute -top-9 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-[11px] text-white shadow">
-                  {t('search.comingSoon')}
+              {requestSent ? <Check className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+              {requestSent ? t('friends.requestSent') : t('search.addFriend')}
+              {friendRequestError && (
+                <span className="absolute -top-9 whitespace-nowrap rounded-md bg-destructive px-2 py-1 text-[11px] text-destructive-foreground shadow">
+                  {t('search.requestFailed')}
                 </span>
               )}
             </button>
             <button
-              onClick={handlePlaceholderClick('message')}
+              onClick={handleMessage}
               className="relative flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-600 transition hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700 dark:text-slate-300 dark:hover:border-indigo-700 dark:hover:text-indigo-400"
             >
               <MessageCircle className="h-4 w-4" />
               {t('search.message')}
-              {flashed === 'message' && (
-                <span className="absolute -top-9 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-[11px] text-white shadow">
-                  {t('search.comingSoon')}
-                </span>
-              )}
             </button>
           </div>
         </div>

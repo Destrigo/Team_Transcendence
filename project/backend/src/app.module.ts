@@ -13,6 +13,7 @@ import { GdprModule } from './gdpr/gdpr.module';
 import { OrdersModule } from './orders/orders.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PortfolioModule } from './portfolio/portfolio.module';
+import { SocialModule } from './social/social.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PortfolioModule } from './portfolio/portfolio.module';
     GdprModule,
     OrdersModule,
     PortfolioModule,
+    SocialModule,
     EventEmitterModule.forRoot(),
   ],
   controllers: [AppController],
