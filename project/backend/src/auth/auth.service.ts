@@ -77,7 +77,7 @@ export class AuthService {
     if (user.twoFactorEnabled) {
       const loginToken = await this.jwtService.signAsync(
         { sub: user.id, purpose: '2fa-pending' },
-        { expiresIn: '5m', secret: process.env.JWT_ACCESS_SECRET },
+        { expiresIn: '5m', secret: process.env.JWT_LOGIN_SECRET },
       );
       return { requires2FA: true, loginToken };
     }
