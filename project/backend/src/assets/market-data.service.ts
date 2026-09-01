@@ -175,6 +175,11 @@ export class MarketDataService {
       }
 
       this.logger.log(`Updated ${updatedCount} stock prices`);
+
+      if (updatedCount > 0 && this.priceFeed) {
+        const prices = await this.getAllPrices();
+        this.priceFeed.broadcastPrices(prices);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to fetch stock prices: ${message}`);

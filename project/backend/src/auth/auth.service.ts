@@ -13,6 +13,7 @@ import {
 } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { OTP } from 'otplib';
+import { encryptSecret, decryptSecret } from '../common/crypto/secret-cipher';
 
 interface OAuthProfile {
   provider: string;
@@ -147,7 +148,7 @@ export class AuthService {
 
     await this.prisma.user.update({
       where: { id: userId },
-      data: { twoFactorSecret: secret },
+      data: { twoFactorSecret: encryptSecret(secret) },
     });
 
     return { secret, otpauthUrl };
@@ -172,8 +173,8 @@ export class AuthService {
       throw new UnauthorizedException('auth.errors.accessDenied');
     }
 
-    const result = await this.otp.verify({ token: code, secret: user.twoFactorSecret });
-    if (!result.valid) {
+    const valid = await this.verifyTotp(user.twoFactorSecret, code);
+    if (!valid) {
       throw new UnauthorizedException('auth.errors.invalid2faCode');
     }
 
@@ -188,12 +189,8 @@ export class AuthService {
     if (!user || !user.twoFactorSecret)
       throw new BadRequestException('auth.errors.setupNotInitiated');
 
-    const result = await this.otp.verify({
-      token: code,
-      secret: user.twoFactorSecret,
-    });
-    if (!result.valid)
-      throw new UnauthorizedException('auth.errors.invalid2fationCode');
+    const valid = await this.verifyTotp(user.twoFactorSecret, code);
+    if (!valid) throw new UnauthorizedException('auth.errors.invalid2fationCode');
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -209,12 +206,8 @@ export class AuthService {
       throw new BadRequestException('auth.errors.twoFactorNotActive');
     }
 
-    const result = await this.otp.verify({
-      token: code,
-      secret: user.twoFactorSecret,
-    });
-    if (!result.valid)
-      throw new UnauthorizedException('auth.errors.invalid2fationCode');
+    const valid = await this.verifyTotp(user.twoFactorSecret, code);
+    if (!valid) throw new UnauthorizedException('auth.errors.invalid2fationCode');
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -222,6 +215,20 @@ export class AuthService {
     });
 
     return { success: true };
+  }
+
+  // Legacy rows created before secrets were encrypted at rest (or any
+  // corrupted ciphertext) would otherwise throw out of decryptSecret and
+  // surface as a 500 instead of a clean "wrong code" 401.
+  private async verifyTotp(encryptedSecret: string, code: string): Promise<boolean> {
+    let secret: string;
+    try {
+      secret = decryptSecret(encryptedSecret);
+    } catch {
+      return false;
+    }
+    const result = await this.otp.verify({ token: code, secret });
+    return result.valid;
   }
 
   private async updateRefreshToken(userId: string, rt: string) {
