@@ -404,5 +404,11 @@
     "title": "404",
     "message": "Oups ! Page introuvable",
     "returnHome": "Retour à l'accueil"
+  },
+  "assetDetails": {
+    "title": "Détails de l'actif",
+	"historyUnavailable": "L'historique des prix n'est pas disponible pour le moment. Réessayez dans un instant.",
+	"yourPosition": "Votre position",
+	"back": "Retour à la liste des marchés"
   }
 }

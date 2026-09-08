@@ -6,6 +6,7 @@ import type {
   Order,
   OrderStatus,
   Portfolio,
+  PricePoint,
 } from '../types/types';
 
 export interface AssetQueryParams {
@@ -46,6 +47,16 @@ function normalizeOrder(raw: Order): Order {
 export async function fetchAssets(params: AssetQueryParams): Promise<AssetListResponse> {
   const { data } = await api.get<AssetListResponse>('/assets', { params });
   return { ...data, data: data.data.map(normalizeAsset) };
+}
+
+export async function fetchAssetBySymbol(symbol: string): Promise<Asset> {
+  const { data } = await api.get<Asset>(`/assets/${symbol}`);
+  return normalizeAsset(data);
+}
+
+export async function fetchAssetHistory(symbol: string, days = 30): Promise<PricePoint[]> {
+  const { data } = await api.get<PricePoint[]>(`/assets/${symbol}/history`, { params: { days } });
+  return data;
 }
 
 export async function fetchPortfolio(): Promise<Portfolio> {

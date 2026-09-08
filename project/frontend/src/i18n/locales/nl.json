@@ -404,5 +404,11 @@
     "title": "404",
     "message": "Oeps! Pagina niet gevonden",
     "returnHome": "Terug naar home"
-  }
+  },
+  "assetDetails": {
+	"title": "Activumdetails",
+	"historyUnavailable": "Prijsgeschiedenis is momenteel niet beschikbaar. Probeer het straks opnieuw.",
+    "yourPosition": "Jouw positie",
+	"back": "Terug naar de marktenlijst"
+}
 }

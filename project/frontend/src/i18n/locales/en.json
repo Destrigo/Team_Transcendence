@@ -404,5 +404,11 @@
     "title": "404",
     "message": "Oops! Page not found",
     "returnHome": "Return to Home"
+  },
+  "assetDetails": {
+	"title": "Asset Details",
+	"historyUnavailable": "Price history isn't available right now. Try again in a moment.",
+	"yourPosition": "Your Position",
+	"back": "Go back to the markets list"
   }
 }
