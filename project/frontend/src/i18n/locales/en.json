@@ -3,6 +3,7 @@
     "dashboard": "Dashboard",
     "search": "Search",
     "trade": "Trade",
+	"assetDetails": "Asset Details",
     "friends": "Friends",
     "messages": "Messages",
     "leaderboard": "Leaderboard",
@@ -404,5 +405,11 @@
     "title": "404",
     "message": "Oops! Page not found",
     "returnHome": "Return to Home"
+  },
+  "assetDetails": {
+    "selectPrompt": "Select an asset to view its details.",
+	"historyUnavailable": "Price history isn't available right now. Try again in a moment.",
+	"yourPosition": "Your Position",
+	"noOrders": "No orders for this asset yet."
   }
 }

@@ -3,6 +3,7 @@
     "dashboard": "Tableau de bord",
     "search": "Recherche",
     "trade": "Transaction",
+	"assetDetails": "Détails de l'actif",
     "friends": "Amis",
     "messages": "Messages",
     "leaderboard": "Classement",
@@ -404,5 +405,11 @@
     "title": "404",
     "message": "Oups ! Page introuvable",
     "returnHome": "Retour à l'accueil"
+  },
+  "assetDetails": {
+    "selectPrompt": "Sélectionnez un actif pour voir ses détails.",
+	"historyUnavailable": "L'historique des prix n'est pas disponible pour le moment. Réessayez dans un instant.",
+	"yourPosition": "Votre position",
+	"noOrders": "Aucune commande pour cet actif pour le moment."
   }
 }

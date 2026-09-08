@@ -9,12 +9,14 @@ import {
   Users,
   MessageCircle,
   Trophy,
+  Info,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { to: '/dashboard', labelKey: 'sidebar.dashboard', icon: LayoutDashboard },
   { to: '/search', labelKey: 'sidebar.search', icon: Search },
   { to: '/trade', labelKey: 'sidebar.trade', icon: LineChart },
+  { to: '/asset-details', labelKey: 'sidebar.assetDetails', icon: Info },
   { to: '/friends', labelKey: 'sidebar.friends', icon: Users },
   { to: '/messages', labelKey: 'sidebar.messages', icon: MessageCircle },
   { to: '/leaderboard', labelKey: 'sidebar.leaderboard', icon: Trophy },

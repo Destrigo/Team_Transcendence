@@ -3,6 +3,7 @@
     "dashboard": "Dashboard",
     "search": "Zoeken",
     "trade": "Handel",
+    "assetDetails": "Activumdetails",
     "friends": "Vrienden",
     "messages": "Berichten",
     "leaderboard": "Ranglijst",
@@ -404,5 +405,11 @@
     "title": "404",
     "message": "Oeps! Pagina niet gevonden",
     "returnHome": "Terug naar home"
-  }
+  },
+  "assetDetails": {
+    "selectPrompt": "Selecteer een asset om de details te bekijken.",
+	"historyUnavailable": "Prijsgeschiedenis is momenteel niet beschikbaar. Probeer het straks opnieuw.",
+    "yourPosition": "Jouw positie",
+	"noOrders": "Nog geen orders voor deze asset."
+}
 }

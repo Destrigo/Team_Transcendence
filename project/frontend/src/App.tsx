@@ -20,6 +20,7 @@ import PublicProfile from './pages/PublicProfile';
 import FriendsPage from './pages/Friends';
 import MessagesPage from './pages/Messages';
 import LeaderboardPage from './pages/Leaderboard';
+import AssetDetailsPage from './pages/AssetDetails';
 
 const App = () => (
   <BrowserRouter>
@@ -38,6 +39,8 @@ const App = () => (
         <Route path="/search" element={<SearchPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/trading" element={<Trading />} />
+        <Route path="/asset-details" element={<AssetDetailsPage />} />
+        <Route path="/asset-details/:symbol" element={<AssetDetailsPage />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/friends" element={<FriendsPage />} />
         <Route path="/messages" element={<MessagesPage />} />
