@@ -31,6 +31,8 @@ function normalizeAsset(raw: Asset): Asset {
     change24h: Number(raw.change24h),
     volume24h: Number(raw.volume24h),
     marketCap: Number(raw.marketCap),
+    high24h: Number(raw.high24h),
+    low24h: Number(raw.low24h),
   };
 }
 

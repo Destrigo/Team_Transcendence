@@ -11,6 +11,8 @@ export interface Asset {
   change24h: number;
   volume24h: number;
   marketCap: number;
+  high24h: number;
+  low24h: number;
   logoUrl: string | null;
   isActive: boolean;
 }

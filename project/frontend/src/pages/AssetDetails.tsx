@@ -6,18 +6,8 @@ import type { Asset, Order, Portfolio, PricePoint } from '../types/types';
 import { fetchAssetBySymbol, fetchAssetHistory, fetchOrders, fetchPortfolio } from '../services/trading.service';
 import PriceChart from '../components/PriceChart';
 import OrderPanel from '../components/OrdersPanel';
-
-function formatCurrency(value: number) {
-  return value.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: value < 1 ? 6 : 2,
-  });
-}
-
-function formatCompact(value: number) {
-  return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
-}
+import { formatCurrency, formatCompact } from '../utils/format';
+import { useLivePrice } from '../prices/useLivePrice';
 
 export default function AssetDetailsPage() {
   const { t } = useTranslation();
@@ -75,6 +65,14 @@ export default function AssetDetailsPage() {
     return history.filter((point) => point.time >= cutoff);
   }, [history, days]);
 
+  // Called unconditionally (before the early returns below) with safe
+  // fallbacks so the hooks-per-render count never changes once `asset` loads.
+  const { price, change24h, flash } = useLivePrice(
+    asset?.symbol ?? '',
+    asset?.currentPrice ?? 0,
+    asset?.change24h ?? 0,
+  );
+
   if (!symbol) {
     return <Navigate to="/markets" replace />;
   }
@@ -96,12 +94,10 @@ export default function AssetDetailsPage() {
       </div>
     );
   }
-  
-console.log('90D check:', visibleHistory.length, visibleHistory[0]?.time, visibleHistory[visibleHistory.length - 1]?.time);
 
   if (error || !asset) return <div className="p-6 text-sm text-destructive">{t('trading.assetTable.errorLoad')}</div>;
 
-  const isUp = asset.change24h >= 0;
+  const isUp = change24h >= 0;
   const holding = portfolio?.holdings.find((h) => h.assetId === asset.id) ?? null
 
   return (
@@ -133,15 +129,19 @@ console.log('90D check:', visibleHistory.length, visibleHistory[0]?.time, visibl
               {asset.type === 'CRYPTO' ? t('trading.assetTable.crypto') : t('trading.assetTable.stock')}
             </span>
           </div>
-          <div className="flex items-baseline gap-2 font-mono">
-            <span className="text-2xl">{formatCurrency(asset.currentPrice)}</span>
+          <div
+            className={`flex items-baseline gap-2 rounded font-mono transition-colors duration-500 ${
+              flash === 'up' ? 'bg-emerald-500/15' : ''
+            } ${flash === 'down' ? 'bg-destructive/15' : ''}`}
+          >
+            <span className="text-2xl">{formatCurrency(price)}</span>
             <span className={`text-sm ${isUp ? 'text-emerald-600' : 'text-destructive'}`}>
-              {isUp ? '+' : ''}{asset.change24h.toFixed(2)}%
+              {isUp ? '+' : ''}{change24h.toFixed(2)}%
             </span>
           </div>
         </div>
       </div>
-     
+
     <div className="flex gap-6 text-sm">
         <div>
           <div className="text-xs uppercase tracking-wide text-muted-foreground">{t('markets.volume')}</div>
@@ -150,6 +150,14 @@ console.log('90D check:', visibleHistory.length, visibleHistory[0]?.time, visibl
         <div>
           <div className="text-xs uppercase tracking-wide text-muted-foreground">{t('markets.marketCap')}</div>
           <div className="font-mono">{formatCompact(asset.marketCap)}</div>
+        </div>
+        <div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">{t('assetDetails.high24h')}</div>
+          <div className="font-mono">{formatCurrency(asset.high24h)}</div>
+        </div>
+        <div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">{t('assetDetails.low24h')}</div>
+          <div className="font-mono">{formatCurrency(asset.low24h)}</div>
         </div>
       </div>
     </div>

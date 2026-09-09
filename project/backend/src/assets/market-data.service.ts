@@ -4,11 +4,14 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { PriceFeedGateway } from '../websocket/price-feed.gateway';
 
-type CoinGeckoPrice = {
-  usd?: number;
-  usd_24h_change?: number;
-  usd_24h_vol?: number;
-  usd_market_cap?: number;
+type CoinGeckoMarket = {
+  id?: string;
+  current_price?: number;
+  price_change_percentage_24h?: number;
+  total_volume?: number;
+  market_cap?: number;
+  high_24h?: number;
+  low_24h?: number;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -42,7 +45,7 @@ export class MarketDataService {
       const baseUrl =
         this.config.get<string>('COINGECKO_API_URL') ??
         'https://api.coingecko.com/api/v3';
-      const url = `${baseUrl}/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`;
+      const url = `${baseUrl}/coins/markets?vs_currency=usd&ids=${ids}`;
 
       const response = await fetch(url);
 
@@ -52,23 +55,26 @@ export class MarketDataService {
       }
 
       const raw: unknown = await response.json();
-      const data: Record<string, CoinGeckoPrice> = isRecord(raw)
-        ? (raw as Record<string, CoinGeckoPrice>)
-        : {};
+      const markets: CoinGeckoMarket[] = Array.isArray(raw)
+        ? (raw as CoinGeckoMarket[])
+        : [];
+      const dataById = new Map(markets.map((m) => [m.id, m]));
       let updatedCount = 0;
 
       for (const asset of cryptoAssets) {
-        if (!asset.coingeckoId || !data[asset.coingeckoId]) continue;
-
-        const p = data[asset.coingeckoId];
+        if (!asset.coingeckoId) continue;
+        const p = dataById.get(asset.coingeckoId);
+        if (!p) continue;
 
         await this.prisma.asset.update({
           where: { id: asset.id },
           data: {
-            currentPrice: p.usd ?? 0,
-            change24h: p.usd_24h_change ?? 0,
-            volume24h: p.usd_24h_vol ?? 0,
-            marketCap: p.usd_market_cap ?? 0,
+            currentPrice: p.current_price ?? 0,
+            change24h: p.price_change_percentage_24h ?? 0,
+            volume24h: p.total_volume ?? 0,
+            marketCap: p.market_cap ?? 0,
+            high24h: p.high_24h ?? 0,
+            low24h: p.low_24h ?? 0,
             priceUpdatedAt: new Date(),
           },
         });
@@ -150,10 +156,12 @@ export class MarketDataService {
 
           const raw: unknown = await response.json();
           const data = isRecord(raw)
-            ? (raw as { c?: unknown; dp?: unknown })
+            ? (raw as { c?: unknown; dp?: unknown; h?: unknown; l?: unknown })
             : {};
           const c = typeof data.c === 'number' ? data.c : undefined;
           const dp = typeof data.dp === 'number' ? data.dp : undefined;
+          const h = typeof data.h === 'number' ? data.h : undefined;
+          const l = typeof data.l === 'number' ? data.l : undefined;
 
           if (typeof c === 'number' && c > 0) {
             await this.prisma.asset.update({
@@ -161,6 +169,8 @@ export class MarketDataService {
               data: {
                 currentPrice: c,
                 change24h: dp ?? 0,
+                high24h: h ?? 0,
+                low24h: l ?? 0,
                 priceUpdatedAt: new Date(),
               },
             });

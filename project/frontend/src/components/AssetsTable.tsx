@@ -2,17 +2,38 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Asset, AssetListResponse, AssetType } from '../types/types';
 import { fetchAssets, type AssetQueryParams } from '../services/trading.service';
+import { formatCurrency, formatCompact } from '../utils/format';
+import { useLivePrice } from '../prices/useLivePrice';
 
-function formatCurrency(value: number) {
-  return value.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: value < 1 ? 6 : 2,
-  });
+interface AssetRowProps {
+  asset: Asset;
+  isSelected: boolean;
+  onSelect: () => void;
 }
 
-function formatCompact(value: number) {
-  return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+function AssetRow({ asset, isSelected, onSelect }: AssetRowProps) {
+  const { price, change24h, flash } = useLivePrice(asset.symbol, asset.currentPrice, asset.change24h);
+  const isUp = change24h >= 0;
+
+  return (
+    <button
+      onClick={onSelect}
+      className={`grid w-full grid-cols-[1fr_auto_auto_auto] items-center gap-2 border-b border-border px-3 py-2.5 text-left transition-colors duration-500 ${
+        isSelected ? 'bg-accent' : 'hover:bg-accent/60'
+      } ${flash === 'up' ? 'bg-emerald-500/15' : ''} ${flash === 'down' ? 'bg-destructive/15' : ''}`}
+    >
+      <span className="flex items-center gap-2 truncate">
+        <span className="font-mono text-sm font-semibold">{asset.symbol}</span>
+        <span className="truncate text-xs text-muted-foreground">{asset.name}</span>
+      </span>
+      <span className="font-mono text-sm">{formatCurrency(price)}</span>
+      <span className={`w-16 text-right font-mono text-xs ${isUp ? 'text-emerald-600' : 'text-destructive'}`}>
+        {isUp ? '+' : ''}
+        {change24h.toFixed(2)}%
+      </span>
+      <span className="w-20 text-right font-mono text-xs text-muted-foreground">{formatCompact(asset.marketCap)}</span>
+    </button>
+  );
 }
 
 interface AssetTableProps {
@@ -117,30 +138,14 @@ export default function AssetTable({ selectedAssetId, onSelectAsset }: AssetTabl
         {!loading && !error && response?.data.length === 0 && (
           <p className="p-4 text-sm text-muted-foreground">{t('trading.assetTable.noResults')}</p>
         )}
-        {response?.data.map((asset) => {
-          const isSelected = asset.id === selectedAssetId;
-          const isUp = asset.change24h >= 0;
-          return (
-            <button
-              key={asset.id}
-              onClick={() => onSelectAsset(asset)}
-              className={`grid w-full grid-cols-[1fr_auto_auto_auto] items-center gap-2 border-b border-border px-3 py-2.5 text-left transition-colors ${
-                isSelected ? 'bg-accent' : 'hover:bg-accent/60'
-              }`}
-            >
-              <span className="flex items-center gap-2 truncate">
-                <span className="font-mono text-sm font-semibold">{asset.symbol}</span>
-                <span className="truncate text-xs text-muted-foreground">{asset.name}</span>
-              </span>
-              <span className="font-mono text-sm">{formatCurrency(asset.currentPrice)}</span>
-              <span className={`w-16 text-right font-mono text-xs ${isUp ? 'text-emerald-600' : 'text-destructive'}`}>
-                {isUp ? '+' : ''}
-                {asset.change24h.toFixed(2)}%
-              </span>
-              <span className="w-20 text-right font-mono text-xs text-muted-foreground">{formatCompact(asset.marketCap)}</span>
-            </button>
-          );
-        })}
+        {response?.data.map((asset) => (
+          <AssetRow
+            key={asset.id}
+            asset={asset}
+            isSelected={asset.id === selectedAssetId}
+            onSelect={() => onSelectAsset(asset)}
+          />
+        ))}
       </div>
 
       {response && response.meta.totalPages > 1 && (

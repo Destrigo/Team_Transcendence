@@ -407,8 +407,10 @@
   },
   "assetDetails": {
 	"title": "Asset Details",
-	"historyUnavailable": "Price history isn't available right now. Try again in a moment.",
+	"historyUnavailable": "Price history isn't available for this asset.",
 	"yourPosition": "Your Position",
-	"back": "Go back to the markets list"
+	"back": "Go back to the markets list",
+	"high24h": "24h High",
+	"low24h": "24h Low"
   }
 }
