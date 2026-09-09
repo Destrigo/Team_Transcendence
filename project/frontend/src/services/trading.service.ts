@@ -6,6 +6,7 @@ import type {
   Order,
   OrderStatus,
   Portfolio,
+  PortfolioHistoryPoint,
   PricePoint,
 } from '../types/types';
 
@@ -63,6 +64,11 @@ export async function fetchAssetHistory(symbol: string, days = 30): Promise<Pric
 
 export async function fetchPortfolio(): Promise<Portfolio> {
   const { data } = await api.get<Portfolio>('/portfolio');
+  return data;
+}
+
+export async function fetchPortfolioHistory(): Promise<PortfolioHistoryPoint[]> {
+  const { data } = await api.get<PortfolioHistoryPoint[]>('/portfolio/history');
   return data;
 }
 

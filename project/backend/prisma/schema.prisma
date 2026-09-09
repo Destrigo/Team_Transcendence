@@ -15,6 +15,7 @@ model User {
   displayName        String?             @map("display_name")
   avatarUrl          String?             @map("avatar_url")
   balance            Decimal             @default(10000)
+  totalDeposited     Decimal             @default(0) @map("total_deposited")
   oauthProvider      String?             @map("oauth_provider") @db.VarChar(50)
   oauthId            String?             @map("oauth_id") @db.VarChar(255)
   twoFactorSecret    String?             @map("two_factor_secret") @db.VarChar(255)

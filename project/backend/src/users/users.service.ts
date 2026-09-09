@@ -158,7 +158,10 @@ export class UsersService {
     try {
       const user = await this.prisma.user.update({
         where: { id: userId },
-        data: { balance: { increment: amount } },
+        // totalDeposited is tracked separately from balance so P&L
+        // calculations (portfolio, leaderboard) can subtract it back out —
+        // otherwise a deposit would show up as fake trading profit.
+        data: { balance: { increment: amount }, totalDeposited: { increment: amount } },
         select: OWN_PROFILE_SELECT,
       });
       return user;

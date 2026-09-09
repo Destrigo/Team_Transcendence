@@ -250,7 +250,8 @@
     "pnlPercent": "W&V %",
     "allocation": "Verdeling",
     "emptyPortfolio": "Je portfolio is leeg",
-    "startTrading": "Begin met handelen om je posities hier te zien"
+    "startTrading": "Begin met handelen om je posities hier te zien",
+    "noHistoryYet": "Nog geen portfoliogeschiedenis — kom morgen terug"
   },
   "analytics": {
     "title": "Analyse",
