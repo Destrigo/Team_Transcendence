@@ -42,6 +42,8 @@ model Asset {
   type           AssetType
   currentPrice   Decimal   @default(0) @map("current_price") @db.Decimal(15, 6)
   change24h      Decimal   @default(0) @map("change_24h") @db.Decimal(10, 4)
+  high24h        Decimal   @default(0) @map("high_24h") @db.Decimal(15, 6)
+  low24h         Decimal   @default(0) @map("low_24h") @db.Decimal(15, 6)
   volume24h      Decimal   @default(0) @map("volume_24h") @db.Decimal(20, 2)
   marketCap      Decimal   @default(0) @map("market_cap") @db.Decimal(20, 2)
   logoUrl        String?   @map("logo_url")

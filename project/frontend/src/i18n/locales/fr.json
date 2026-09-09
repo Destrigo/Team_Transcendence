@@ -407,8 +407,10 @@
   },
   "assetDetails": {
     "title": "Détails de l'actif",
-	"historyUnavailable": "L'historique des prix n'est pas disponible pour le moment. Réessayez dans un instant.",
+	"historyUnavailable": "L'historique des prix n'est pas disponible pour cet actif.",
 	"yourPosition": "Votre position",
-	"back": "Retour à la liste des marchés"
+	"back": "Retour à la liste des marchés",
+	"high24h": "Haut 24h",
+	"low24h": "Bas 24h"
   }
 }

@@ -407,8 +407,10 @@
   },
   "assetDetails": {
 	"title": "Activumdetails",
-	"historyUnavailable": "Prijsgeschiedenis is momenteel niet beschikbaar. Probeer het straks opnieuw.",
+	"historyUnavailable": "Prijsgeschiedenis is niet beschikbaar voor dit activum.",
     "yourPosition": "Jouw positie",
-	"back": "Terug naar de marktenlijst"
+	"back": "Terug naar de marktenlijst",
+	"high24h": "24u hoog",
+	"low24h": "24u laag"
 }
 }

@@ -2,14 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Asset, CreateOrderPayload, Holding, OrderExecutionType, OrderSide } from '../types/types';
 import { placeOrder } from '../services/trading.service';
-
-function formatCurrency(value: number) {
-  return value.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: value < 1 ? 6 : 2,
-  });
-}
+import { formatCurrency } from '../utils/format';
 
 interface OrderPanelProps {
   asset: Asset | null;

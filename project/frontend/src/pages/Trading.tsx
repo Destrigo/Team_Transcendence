@@ -55,6 +55,8 @@ export default function TradingPage() {
       change24h: 0,
       volume24h: 0,
       marketCap: 0,
+      high24h: 0,
+      low24h: 0,
       logoUrl: holding.logoUrl,
       isActive: true,
     });
