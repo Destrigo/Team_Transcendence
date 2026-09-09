@@ -72,3 +72,8 @@ export interface Order {
   createdAt: string;
   asset: Asset;
 }
+
+export interface PricePoint {
+	time: number;
+	value: number;
+}
