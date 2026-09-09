@@ -250,7 +250,8 @@
     "pnlPercent": "P&L %",
     "allocation": "Répartition",
     "emptyPortfolio": "Votre portefeuille est vide",
-    "startTrading": "Commencez à trader pour voir vos positions ici"
+    "startTrading": "Commencez à trader pour voir vos positions ici",
+    "noHistoryYet": "Pas encore d'historique de portefeuille — revenez demain"
   },
   "analytics": {
     "title": "Analyse",

@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Trophy,
   Store,
+  Wallet,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { to: '/search', labelKey: 'sidebar.search', icon: Search },
   { to: '/trade', labelKey: 'sidebar.trade', icon: LineChart },
   { to: '/markets', labelKey: 'markets.title', icon: Store },
+  { to: '/portfolio', labelKey: 'nav.portfolio', icon: Wallet },
   { to: '/friends', labelKey: 'sidebar.friends', icon: Users },
   { to: '/messages', labelKey: 'sidebar.messages', icon: MessageCircle },
   { to: '/leaderboard', labelKey: 'sidebar.leaderboard', icon: Trophy },

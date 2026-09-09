@@ -9,9 +9,10 @@ function cssVar(name: string) {
 
 interface PriceChartProps {
   data: PricePoint[];
+  emptyMessage?: string;
 }
 
-export default function PriceChart({ data }: PriceChartProps) {
+export default function PriceChart({ data, emptyMessage }: PriceChartProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -53,7 +54,7 @@ export default function PriceChart({ data }: PriceChartProps) {
   if (data.length === 0) {
     return (
       <div className="flex h-64 w-full items-center justify-center text-sm text-muted-foreground">
-      {t('assetDetails.historyUnavailable')}
+      {emptyMessage ?? t('assetDetails.historyUnavailable')}
       </div>
     );
   }

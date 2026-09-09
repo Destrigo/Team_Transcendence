@@ -51,6 +51,13 @@ export interface Portfolio {
   holdings: Holding[];
 }
 
+export interface PortfolioHistoryPoint {
+  date: string;
+  totalValue: number;
+  balance: number;
+  holdingsValue: number;
+}
+
 export interface CreateOrderPayload {
   assetId: string;
   type: OrderSide;

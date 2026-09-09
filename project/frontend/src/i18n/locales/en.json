@@ -250,7 +250,8 @@
     "pnlPercent": "P&L %",
     "allocation": "Allocation",
     "emptyPortfolio": "Your portfolio is empty",
-    "startTrading": "Start trading to see your holdings here"
+    "startTrading": "Start trading to see your holdings here",
+    "noHistoryYet": "No portfolio history yet — check back tomorrow"
   },
   "analytics": {
     "title": "Analytics",
