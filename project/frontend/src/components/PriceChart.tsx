@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createChart, LineSeries, type IChartApi } from 'lightweight-charts';
+import { createChart, LineSeries, type IChartApi, type UTCTimestamp } from 'lightweight-charts';
 import type { PricePoint } from '../types/types';
 import { useTranslation } from 'react-i18next';
 
@@ -18,7 +18,7 @@ export default function PriceChart({ data }: PriceChartProps) {
 
   useEffect(() => {
     if (!containerRef.current || data.length === 0) return;
-
+  
     const chart = createChart(containerRef.current, {
       autoSize: true,
       layout: {
@@ -29,18 +29,26 @@ export default function PriceChart({ data }: PriceChartProps) {
         vertLines: { color: `hsl(${cssVar('--border')})` },
         horzLines: { color: `hsl(${cssVar('--border')})` },
       },
-      timeScale: { timeVisible: true },
+      timeScale: { timeVisible: true, minBarSpacing: 0.1 },
+      handleScroll: false,
+      handleScale: false,
     });
     chartRef.current = chart;
-
+  
     const series = chart.addSeries(LineSeries, { color: '#2563eb', lineWidth: 2 });
-    series.setData(data as any);
-
+    const chartData = data.map((point) => ({ time: point.time as UTCTimestamp, value: point.value }));
+    series.setData(chartData);
+  
+    requestAnimationFrame(() => {
+      chart.timeScale().fitContent();
+    });
+  
     return () => {
       chart.remove();
       chartRef.current = null;
     };
   }, [data]);
+
 
   if (data.length === 0) {
     return (

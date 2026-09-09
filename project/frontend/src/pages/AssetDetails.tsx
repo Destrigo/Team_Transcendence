@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -32,17 +32,27 @@ export default function AssetDetailsPage() {
 
   useEffect(() => {
     if (!symbol) return;
+    let cancelled = false;
     setLoading(true);
     setError(false);
-    Promise.all([fetchAssetBySymbol(symbol), fetchAssetHistory(symbol, days), fetchPortfolio()])
+    Promise.all([fetchAssetBySymbol(symbol), fetchAssetHistory(symbol, 90), fetchPortfolio()])
       .then(([assetData, historyData, portfolioData]) => {
+        if (cancelled) return;
         setAsset(assetData);
         setHistory(historyData);
         setPortfolio(portfolioData);
       })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [symbol, days]);
+      .catch(() => {
+        if (!cancelled) setError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [symbol]);
+
 
   useEffect(() => {
     if (!asset) return;
@@ -51,12 +61,19 @@ export default function AssetDetailsPage() {
       .catch(() => setAssetOrders([]));
   }, [asset?.id]);
 
+
   const refreshAfterOrderChange = useCallback(() => {
     fetchPortfolio().then(setPortfolio).catch(() => {});
     if (asset) {
       fetchOrders({ assetId: asset.id }).then(setAssetOrders).catch(() => {});
     }
   }, [asset]);
+
+  const visibleHistory = useMemo(() => {
+    if (history.length === 0) return history;
+    const cutoff = Math.floor(Date.now() / 1000) - days * 24 * 60 * 60;
+    return history.filter((point) => point.time >= cutoff);
+  }, [history, days]);
 
   if (!symbol) {
     return <Navigate to="/markets" replace />;
@@ -79,56 +96,66 @@ export default function AssetDetailsPage() {
       </div>
     );
   }
+  
+console.log('90D check:', visibleHistory.length, visibleHistory[0]?.time, visibleHistory[visibleHistory.length - 1]?.time);
 
   if (error || !asset) return <div className="p-6 text-sm text-destructive">{t('trading.assetTable.errorLoad')}</div>;
 
   const isUp = asset.change24h >= 0;
-  const holding = portfolio?.holdings.find((h) => h.assetId === asset.id) ?? null;
+  const holding = portfolio?.holdings.find((h) => h.assetId === asset.id) ?? null
 
   return (
-    <div className="p-6">
+	<div className="p-6">
+	  		
+	  <div className="grid grid-cols-[1fr_auto_1fr] items-center">
+	    <div />
+	    <h1 className="text-xl font-bold text-center">{t('assetDetails.title')}</h1>
 
-      <div className="flex items-stretch justify-between gap-4">
-        <div className="flex items-center gap-4">
-          {asset.logoUrl && <img src={asset.logoUrl} alt={asset.symbol} className="h-10 w-10 rounded-full" />}
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold">{asset.symbol}</span>
-              <span className="text-sm text-muted-foreground">{asset.name}</span>
-              <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
-                {asset.type === 'CRYPTO' ? t('trading.assetTable.crypto') : t('trading.assetTable.stock')}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2 font-mono">
-              <span className="text-2xl">{formatCurrency(asset.currentPrice)}</span>
-              <span className={`text-sm ${isUp ? 'text-emerald-600' : 'text-destructive'}`}>
-                {isUp ? '+' : ''}{asset.change24h.toFixed(2)}%
-              </span>
-            </div>
-            <div className="mt-2 flex gap-6 text-sm">
-              <div>
-                <div className="text-xs uppercase tracking-wide text-muted-foreground">{t('markets.volume')}</div>
-                <div className="font-mono">{formatCompact(asset.volume24h)}</div>
-              </div>
-              <div>
-                <div className="text-xs uppercase tracking-wide text-muted-foreground">{t('markets.marketCap')}</div>
-                <div className="font-mono">{formatCompact(asset.marketCap)}</div>
-              </div>
-            </div>
+	    <Link
+	      to="/markets"
+	      className="inline-flex items-center justify-self-end gap-1 text-sm text-muted-foreground hover:text-foreground">
+	      <ArrowLeft className="h-4 w-4" />
+	      {t('assetDetails.back')}
+	    </Link>
+	  </div>
+  
+      <div className="mt-6 rounded-lg border border-border bg-card shadow-sm lg:col-start-1 lg:row-start-1">
+
+      <div className="flex items-center justify-center gap-30">
+     
+      <div className="flex items-center gap-4">
+        {asset.logoUrl && <img src={asset.logoUrl} alt={asset.symbol} className="h-10 w-10 rounded-full" />}
+        <div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-bold">{asset.symbol}</span>
+            <span className="text-sm text-muted-foreground">{asset.name}</span>
+            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
+              {asset.type === 'CRYPTO' ? t('trading.assetTable.crypto') : t('trading.assetTable.stock')}
+            </span>
+          </div>
+          <div className="flex items-baseline gap-2 font-mono">
+            <span className="text-2xl">{formatCurrency(asset.currentPrice)}</span>
+            <span className={`text-sm ${isUp ? 'text-emerald-600' : 'text-destructive'}`}>
+              {isUp ? '+' : ''}{asset.change24h.toFixed(2)}%
+            </span>
           </div>
         </div>
-		
-        <div className="flex flex-col items-end justify-between">
-          <h1 className="text-xl font-bold">{t('assetDetails.title')}</h1>
-          <Link to="/markets" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" />
-            {t('assetDetails.back')}
-          </Link>
+      </div>
+     
+    <div className="flex gap-6 text-sm">
+        <div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">{t('markets.volume')}</div>
+          <div className="font-mono">{formatCompact(asset.volume24h)}</div>
         </div>
+        <div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">{t('markets.marketCap')}</div>
+          <div className="font-mono">{formatCompact(asset.marketCap)}</div>
+        </div>
+      </div>
     </div>
-
+    </div>
 	
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
         <div className="rounded-lg border border-border bg-card p-4 shadow-sm lg:col-start-1 lg:row-start-1">
           <div className="mb-3 flex gap-2">
             {[7, 30, 90].map((d) => (
@@ -143,7 +170,7 @@ export default function AssetDetailsPage() {
               </button>
             ))}
           </div>
-          <PriceChart data={history} />
+          <PriceChart data={visibleHistory} />
         </div>
 
         <div className="lg:col-start-2 lg:row-start-1">

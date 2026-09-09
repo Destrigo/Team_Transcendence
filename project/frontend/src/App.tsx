@@ -13,7 +13,6 @@ import RegisterPage from './pages/Register';
 import SearchPage from './pages/Search';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { PublicRoute } from './routes/PublicRoute';
-import TradingPage from './pages/Trading';
 import PageShell from './components/PageShell';
 import PublicLayout from './components/PublicLayout';
 import PublicProfile from './pages/PublicProfile';
@@ -36,10 +35,9 @@ const App = () => (
 
       <Route element={<ProtectedRoute><PageShell /></ProtectedRoute>}>
         <Route path="/profile/:id" element={<PublicProfile />} />
-        <Route path="/trade" element={<TradingPage />} />
+        <Route path="/trade" element={<Trading />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/trading" element={<Trading />} />
         <Route path="/markets" element={<MarketsPage />} />
         <Route path="/markets/:symbol" element={<AssetDetailsPage />} />
         <Route path="/analytics" element={<Analytics />} />
