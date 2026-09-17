@@ -24,7 +24,7 @@
 
 | Member | Login | Role(s) | Responsibilities |
 |--------|-------|---------|-------------------|
-| Marco Tarantino | mtaranti | Project Owner + Developer | Infrastructure (Docker, HTTPS/Caddy), market data integration, analytics, GDPR, legal pages, social feature rebuild (friends/chat/presence/notifications/leaderboard), OAuth/2FA fixes, trading UX, portfolio backend |
+| Marco Tarantino | mtaranti | Product Owner + Project Manager + Technical Lead + Developer | Defined feature priorities and reviewed/merged all PRs (PO); tracked deadlines, ran check-ins, coordinated the team through two membership changes (PM); owned architecture and stack decisions — Docker/Caddy infrastructure, module boundaries, security fixes (Tech Lead); implemented market data integration, analytics, GDPR, legal pages, the full social feature rebuild (friends/chat/presence/notifications/leaderboard), OAuth/2FA fixes, trading UX, and portfolio backend (Developer) |
 | Rogier Goossens | rgoossen | Developer | Database schema design, initial social module (friends backend/frontend, chat) |
 | Pavel Khvorov | pkhvorov | Developer | Auth/Users modules, orders/trading core, OAuth 2.0 + 2FA implementation, code review |
 | Liat Vliegers | livliege | Developer | QA pass across the whole app (detailed bug report), Markets page and Asset Detail page |
@@ -149,6 +149,8 @@ PostgreSQL, managed entirely through Prisma migrations (`project/backend/prisma/
 
 ## Modules
 
+The subject requires 14 points minimum. We implemented 17 (5 major + 7 minor), a 3-point buffer over the requirement.
+
 ### Module Summary
 
 | # | Module | Category | Type | Points | Implemented by |
@@ -210,7 +212,7 @@ English, French, and Dutch via `react-i18next`, with a language switcher and the
 ## Individual Contributions
 
 ### mtaranti — Marco Tarantino
-- **Role:** Project Owner + Developer
+- **Role:** Product Owner + Project Manager + Technical Lead + Developer
 - **Contributions:**
   - Docker Compose infrastructure and Caddy HTTPS reverse proxy
   - Market data integration (CoinGecko crypto, Finnhub stocks) and the live price WebSocket feed

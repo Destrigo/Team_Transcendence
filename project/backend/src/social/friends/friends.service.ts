@@ -197,6 +197,14 @@ export class FriendsService {
     }
 
     await this.prisma.friendship.delete({ where: { id: friendshipId } });
-    return { message: 'Friend removed' };
+
+    // This endpoint doubles as "cancel my own outgoing request" — only an
+    // ACCEPTED friendship being removed is a real unfriend the other side
+    // should be told about; cancelling a still-pending request never made
+    // them friends in the first place.
+    const wasAccepted = friendship.status === 'ACCEPTED';
+    const otherUserId = friendship.requesterId === userId ? friendship.addresseeId : friendship.requesterId;
+
+    return { message: 'Friend removed', wasAccepted, otherUserId };
   }
 }

@@ -138,6 +138,11 @@ export class TradingService {
     if (result.count === 0) {
       throw new BadRequestException('Order cannot be cancelled');
     }
+    this.eventEmitter.emit('order.cancelled', {
+      orderId,
+      userId,
+      reason: 'Cancelled by you.',
+    });
     return { cancelled: true };
   }
 
