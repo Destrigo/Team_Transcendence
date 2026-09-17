@@ -393,13 +393,116 @@
 
     "cancel": "Annuler"
   },
+  "index": {
+    "tagline": "Trading simulé avec des données de marché réelles, sans argent réel."
+  },
   "privacy": {
     "title": "Politique de confidentialité",
-    "lastUpdated": "Dernière mise à jour"
+    "lastUpdated": "Dernière mise à jour",
+    "section1": {
+      "heading": "1. Qui nous sommes",
+      "body": "PaperTrade est un projet académique d'équipe (ft_transcendence). Il propose une application web de trading simulé avec des données proches du marché réel. PaperTrade n'est ni un courtier agréé, ni une banque, ni un conseiller financier."
+    },
+    "section2": {
+      "heading": "2. Données que nous collectons",
+      "intro": "Selon votre utilisation du service, nous pouvons stocker :",
+      "items": [
+        "Données de compte : e-mail, nom d'utilisateur, nom affiché, avatar, préférence de langue",
+        "Données d'authentification : hachage du mot de passe (jamais en clair), identifiants OAuth optionnels, secrets 2FA optionnels",
+        "Données applicatives : solde/positions, ordres, instantanés du portefeuille, messages, relations d'amitié, notifications",
+        "Données techniques : statut en ligne / dernière connexion, et journaux serveur standards nécessaires au fonctionnement de l'application"
+      ],
+      "outro": "Nous ne collectons pas intentionnellement de numéros de carte bancaire ni de documents d'identité officiels. Il n'y a pas d'argent réel sur la plateforme."
+    },
+    "section3": {
+      "heading": "3. Comment nous utilisons les données",
+      "items": [
+        "Pour créer et sécuriser votre compte",
+        "Pour faire fonctionner les fonctionnalités de trading simulé, sociales et d'analyse",
+        "Pour afficher le statut en ligne à vos amis lorsque cette fonctionnalité est activée",
+        "Pour améliorer la fiabilité et corriger des bugs",
+        "Pour répondre aux exigences d'évaluation / académiques de ce projet"
+      ]
+    },
+    "section4": {
+      "heading": "4. Où les données sont stockées",
+      "body": "Les données applicatives sont stockées dans la base de données du projet (PostgreSQL), exploitée par l'équipe via Docker pour les environnements locaux et d'évaluation. Les secrets (par exemple les clés de signature JWT) sont conservés dans la configuration d'environnement, pas dans le dépôt public."
+    },
+    "section5": {
+      "heading": "5. Partage",
+      "body": "Nous ne vendons pas de données personnelles. Les données peuvent être traitées par les membres de l'équipe pour le développement et l'évaluation par les pairs. Des fournisseurs externes de données de marché peuvent être interrogés pour des informations de prix publiques ; ces requêtes ne doivent jamais inclure votre mot de passe ni vos messages privés."
+    },
+    "section6": {
+      "heading": "6. Vos droits (de type RGPD)",
+      "intro": "Selon ce que l'application implémente au moment de l'évaluation, vous pouvez :",
+      "items": [
+        "Accéder à et télécharger vos données personnelles (Paramètres → Télécharger mes données)",
+        "Mettre à jour les informations de votre profil",
+        "Supprimer votre compte et les données applicatives associées (Paramètres → Supprimer le compte)"
+      ],
+      "outro": "S'agissant d'un déploiement académique, la conservation des données est limitée à la durée de vie de l'environnement du projet, sauf réinitialisation anticipée de la base de données par l'équipe."
+    },
+    "section7": {
+      "heading": "7. Cookies et sessions",
+      "body": "L'authentification peut utiliser des cookies HTTP-only et/ou des jetons stockés par le navigateur pour vous maintenir connecté. Ils servent à la sécurité et à la continuité de session, pas à la publicité tierce."
+    },
+    "section8": {
+      "heading": "8. Contact",
+      "body": "Pour toute question de confidentialité concernant ce projet académique, contactez les membres de l'équipe PaperTrade listés dans le README du projet."
+    }
   },
   "terms": {
     "title": "Conditions d'utilisation",
-    "lastUpdated": "Dernière mise à jour"
+    "lastUpdated": "Dernière mise à jour",
+    "section1": {
+      "heading": "1. Acceptation",
+      "body": "En créant un compte ou en utilisant PaperTrade, vous acceptez ces conditions d'utilisation. Si vous n'êtes pas d'accord, n'utilisez pas l'application."
+    },
+    "section2": {
+      "heading": "2. Nature du service",
+      "body1": "PaperTrade est une plateforme de trading simulé conçue pour un projet académique de groupe. Les prix du marché peuvent être différés, incomplets ou approximatifs. Rien dans PaperTrade ne constitue une offre d'achat ou de vente de titres réels, de crypto-actifs ou d'autres instruments financiers.",
+      "body2": "Aucun argent réel n'est déposé, retiré ou réglé via cette application. Les soldes et positions virtuels n'ont aucune valeur monétaire."
+    },
+    "section3": {
+      "heading": "3. Éligibilité et comptes",
+      "items": [
+        "Vous devez fournir des informations d'inscription exactes",
+        "Vous êtes responsable de la confidentialité de vos identifiants",
+        "Une même personne ne doit pas abuser de plusieurs comptes pour perturber la plateforme",
+        "Nous pouvons désactiver les comptes qui enfreignent ces conditions ou nuisent à d'autres utilisateurs"
+      ]
+    },
+    "section4": {
+      "heading": "4. Utilisation acceptable",
+      "intro": "Vous vous engagez à ne pas :",
+      "items": [
+        "Tenter de contourner l'authentification, injecter du contenu malveillant, ou attaquer le service",
+        "Harceler d'autres utilisateurs via le chat, les profils ou d'autres fonctionnalités sociales",
+        "Aspirer ou surcharger le service d'une manière qui dégrade sa disponibilité",
+        "Présenter PaperTrade comme un véritable courtier ou produit d'investissement"
+      ]
+    },
+    "section5": {
+      "heading": "5. Absence de conseil financier",
+      "body": "Le contenu, les graphiques, le classement et les analyses sont fournis à des fins éducatives et de divertissement uniquement. Ils ne constituent pas un conseil en investissement, fiscal ou juridique. Ne prenez pas de décisions financières réelles sur la base de PaperTrade."
+    },
+    "section6": {
+      "heading": "6. Disponibilité",
+      "body": "Le service peut être indisponible pendant le développement, l'évaluation, ou lors de réinitialisations d'environnement par l'équipe. Les fonctionnalités peuvent évoluer sans préavis au fil du projet."
+    },
+    "section7": {
+      "heading": "7. Limitation de responsabilité",
+      "body": "Dans toute la mesure permise par la loi applicable, l'équipe PaperTrade fournit le service « en l'état », sans garantie d'aucune sorte, et n'est pas responsable des pertes résultant de l'utilisation de la plateforme simulée, y compris la perte de soldes virtuels, la perte de données après réinitialisation de l'environnement, ou la confiance accordée aux prix affichés."
+    },
+    "section8": {
+      "heading": "8. Confidentialité",
+      "before": "Le traitement des données personnelles est décrit dans notre",
+      "after": "."
+    },
+    "section9": {
+      "heading": "9. Modifications",
+      "body": "Nous pouvons mettre à jour ces conditions au fil de l'évolution du projet. La date de « dernière mise à jour » en haut de cette page reflète la dernière révision à des fins d'évaluation."
+    }
   },
   "notFound": {
     "title": "404",

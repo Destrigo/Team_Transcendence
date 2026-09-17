@@ -2,10 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Avatar from './Avatar';
 import type { LeaderboardEntry } from '../types/social';
-
-function formatCurrency(value: number) {
-  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
-}
+import { formatCurrency } from '../utils/format';
 
 interface LeaderboardRowProps {
   entry: LeaderboardEntry;

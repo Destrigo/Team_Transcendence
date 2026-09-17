@@ -1,13 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { Holding } from '../types/types';
-
-function formatCurrency(value: number) {
-  return value.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: value < 1 ? 6 : 2,
-  });
-}
+import { formatCurrency } from '../utils/format';
 
 interface HoldingsTableProps {
   holdings: Holding[];
