@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AnalyticsService, PortfolioDataPoint } from '../analytics/analytics.service';
 import { STARTING_BALANCE } from '../common/constants';
 
 export interface HoldingView {
@@ -29,10 +28,7 @@ export interface PortfolioView {
 
 @Injectable()
 export class PortfolioService {
-  constructor(
-    private prisma: PrismaService,
-    private analytics: AnalyticsService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async getPortfolio(userId: string): Promise<PortfolioView> {
     const [user, holdings] = await Promise.all([
@@ -96,9 +92,5 @@ export class PortfolioService {
       totalPnlPercent,
       holdings: holdingViews,
     };
-  }
-
-  async getHistory(userId: string, from?: Date, to?: Date): Promise<PortfolioDataPoint[]> {
-    return this.analytics.getPortfolioHistory(userId, from, to);
   }
 }

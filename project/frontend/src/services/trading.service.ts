@@ -68,7 +68,9 @@ export async function fetchPortfolio(): Promise<Portfolio> {
 }
 
 export async function fetchPortfolioHistory(): Promise<PortfolioHistoryPoint[]> {
-  const { data } = await api.get<PortfolioHistoryPoint[]>('/portfolio/history');
+  // Reuses the existing analytics endpoint (same underlying data/shape)
+  // instead of a second route, since this is the only caller.
+  const { data } = await api.get<PortfolioHistoryPoint[]>('/analytics/portfolio');
   return data;
 }
 
