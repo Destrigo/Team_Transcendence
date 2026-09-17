@@ -392,13 +392,116 @@
 
     "cancel": "Cancel"
   },
+  "index": {
+    "tagline": "Simulated trading with real market data and no real money."
+  },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated"
+    "lastUpdated": "Last updated",
+    "section1": {
+      "heading": "1. Who we are",
+      "body": "PaperTrade is a team academic project (ft_transcendence). It provides a web application for simulated trading with market-like data. PaperTrade is not a licensed broker, bank, or financial advisor."
+    },
+    "section2": {
+      "heading": "2. Data we collect",
+      "intro": "Depending on how you use the service, we may store:",
+      "items": [
+        "Account data: email, username, display name, avatar, language preference",
+        "Authentication data: password hash (never plaintext), optional OAuth identifiers, optional 2FA secrets",
+        "Application data: balance/holdings, orders, portfolio snapshots, messages, friend relationships, notifications",
+        "Technical data: online status / last seen, and standard server logs needed to operate the app"
+      ],
+      "outro": "We do not intentionally collect payment card numbers or government ID documents. There is no real money on the platform."
+    },
+    "section3": {
+      "heading": "3. How we use data",
+      "items": [
+        "To create and secure your account",
+        "To run simulated trading, social, and analytics features",
+        "To show online status to friends when that feature is enabled",
+        "To improve reliability and fix bugs",
+        "To comply with evaluation / academic requirements for this project"
+      ]
+    },
+    "section4": {
+      "heading": "4. Where data is stored",
+      "body": "Application data is stored in the project database (PostgreSQL) operated by the team via Docker for local and evaluation environments. Secrets (for example JWT signing keys) are kept in environment configuration, not in the public repository."
+    },
+    "section5": {
+      "heading": "5. Sharing",
+      "body": "We do not sell personal data. Data may be processed by team members for development and peer evaluation. External market-data providers may be queried for public price information; those requests should not include your password or private messages."
+    },
+    "section6": {
+      "heading": "6. Your rights (GDPR-style)",
+      "intro": "Subject to what the app implements at evaluation time, you may:",
+      "items": [
+        "Access and download your personal data (Settings → Download my data)",
+        "Update profile information",
+        "Delete your account and associated application data (Settings → Delete account)"
+      ],
+      "outro": "Because this is an academic deployment, retention is limited to the life of the project environment unless the team resets the database earlier."
+    },
+    "section7": {
+      "heading": "7. Cookies and sessions",
+      "body": "Authentication may use HTTP-only cookies and/or tokens stored by the browser to keep you signed in. These are used for security and session continuity, not for third-party advertising."
+    },
+    "section8": {
+      "heading": "8. Contact",
+      "body": "For privacy questions about this academic project, contact the PaperTrade team members listed in the project README."
+    }
   },
   "terms": {
     "title": "Terms of Service",
-    "lastUpdated": "Last updated"
+    "lastUpdated": "Last updated",
+    "section1": {
+      "heading": "1. Acceptance",
+      "body": "By creating an account or using PaperTrade, you agree to these Terms of Service. If you do not agree, do not use the application."
+    },
+    "section2": {
+      "heading": "2. Nature of the service",
+      "body1": "PaperTrade is a simulated trading platform built for an academic group project. Market prices may be delayed, incomplete, or approximated. Nothing in PaperTrade is an offer to buy or sell real securities, crypto-assets, or other financial instruments.",
+      "body2": "No real money is deposited, withdrawn, or settled through this application. Virtual balances and holdings have no cash value."
+    },
+    "section3": {
+      "heading": "3. Eligibility and accounts",
+      "items": [
+        "You must provide accurate registration information",
+        "You are responsible for keeping your credentials confidential",
+        "One person should not abuse multiple accounts to disrupt the platform",
+        "We may disable accounts that break these terms or harm other users"
+      ]
+    },
+    "section4": {
+      "heading": "4. Acceptable use",
+      "intro": "You agree not to:",
+      "items": [
+        "Attempt to break authentication, inject malicious input, or attack the service",
+        "Harass other users via chat, profiles, or other social features",
+        "Scrape or overload the service in a way that degrades availability",
+        "Present PaperTrade as a real brokerage or investment product"
+      ]
+    },
+    "section5": {
+      "heading": "5. No financial advice",
+      "body": "Content, charts, leaderboards, and analytics are for educational and entertainment purposes only. They are not investment, tax, or legal advice. Do not make real-world financial decisions based on PaperTrade."
+    },
+    "section6": {
+      "heading": "6. Availability",
+      "body": "The service may be unavailable during development, evaluation, or when the team resets environments. Features may change without notice as the project evolves."
+    },
+    "section7": {
+      "heading": "7. Limitation of liability",
+      "body": "To the maximum extent permitted by applicable law, the PaperTrade team provides the service \"as is\" without warranties of any kind, and is not liable for losses arising from use of the simulated platform, including loss of virtual balances, data loss after environment resets, or reliance on displayed prices."
+    },
+    "section8": {
+      "heading": "8. Privacy",
+      "before": "Personal data handling is described in our",
+      "after": "."
+    },
+    "section9": {
+      "heading": "9. Changes",
+      "body": "We may update these terms as the project develops. The \"Last updated\" date at the top of this page reflects the latest revision for evaluation purposes."
+    }
   },
   "notFound": {
     "title": "404",

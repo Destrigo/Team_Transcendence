@@ -392,13 +392,116 @@
 
     "cancel": "Annuleren"
   },
+  "index": {
+    "tagline": "Gesimuleerd handelen met echte marktdata, zonder echt geld."
+  },
   "privacy": {
     "title": "Privacybeleid",
-    "lastUpdated": "Laatst bijgewerkt"
+    "lastUpdated": "Laatst bijgewerkt",
+    "section1": {
+      "heading": "1. Wie wij zijn",
+      "body": "PaperTrade is een academisch teamproject (ft_transcendence). Het biedt een webapplicatie voor gesimuleerd handelen met marktachtige data. PaperTrade is geen erkende broker, bank of financieel adviseur."
+    },
+    "section2": {
+      "heading": "2. Gegevens die wij verzamelen",
+      "intro": "Afhankelijk van hoe je de dienst gebruikt, kunnen wij het volgende opslaan:",
+      "items": [
+        "Accountgegevens: e-mail, gebruikersnaam, weergavenaam, avatar, taalvoorkeur",
+        "Authenticatiegegevens: wachtwoordhash (nooit platte tekst), optionele OAuth-identifiers, optionele 2FA-geheimen",
+        "Applicatiegegevens: saldo/posities, orders, portfolio-momentopnamen, berichten, vriendschapsrelaties, meldingen",
+        "Technische gegevens: onlinestatus / laatst gezien, en standaard serverlogs die nodig zijn om de app te laten draaien"
+      ],
+      "outro": "Wij verzamelen niet bewust betaalkaartnummers of overheidsidentiteitsdocumenten. Er is geen echt geld op het platform."
+    },
+    "section3": {
+      "heading": "3. Hoe wij gegevens gebruiken",
+      "items": [
+        "Om je account aan te maken en te beveiligen",
+        "Om gesimuleerd handelen, sociale functies en analyses uit te voeren",
+        "Om onlinestatus aan vrienden te tonen wanneer die functie is ingeschakeld",
+        "Om betrouwbaarheid te verbeteren en bugs op te lossen",
+        "Om te voldoen aan evaluatie-/academische vereisten voor dit project"
+      ]
+    },
+    "section4": {
+      "heading": "4. Waar gegevens worden opgeslagen",
+      "body": "Applicatiegegevens worden opgeslagen in de projectdatabase (PostgreSQL), beheerd door het team via Docker voor lokale en evaluatieomgevingen. Geheimen (bijvoorbeeld JWT-ondertekeningssleutels) worden bewaard in de omgevingsconfiguratie, niet in de openbare repository."
+    },
+    "section5": {
+      "heading": "5. Delen van gegevens",
+      "body": "Wij verkopen geen persoonsgegevens. Gegevens kunnen door teamleden worden verwerkt voor ontwikkeling en peer-evaluatie. Externe marktdata-aanbieders kunnen worden geraadpleegd voor openbare prijsinformatie; die verzoeken mogen nooit je wachtwoord of privéberichten bevatten."
+    },
+    "section6": {
+      "heading": "6. Jouw rechten (AVG-achtig)",
+      "intro": "Afhankelijk van wat de app op het moment van evaluatie implementeert, kun je:",
+      "items": [
+        "Je persoonsgegevens inzien en downloaden (Instellingen → Mijn gegevens downloaden)",
+        "Profielinformatie bijwerken",
+        "Je account en bijbehorende applicatiegegevens verwijderen (Instellingen → Account verwijderen)"
+      ],
+      "outro": "Omdat dit een academische implementatie is, is de bewaartermijn beperkt tot de levensduur van de projectomgeving, tenzij het team de database eerder reset."
+    },
+    "section7": {
+      "heading": "7. Cookies en sessies",
+      "body": "Authenticatie kan gebruikmaken van HTTP-only cookies en/of tokens die door de browser worden opgeslagen om je ingelogd te houden. Deze worden gebruikt voor beveiliging en sessiecontinuïteit, niet voor advertenties van derden."
+    },
+    "section8": {
+      "heading": "8. Contact",
+      "body": "Voor privacyvragen over dit academische project, neem contact op met de PaperTrade-teamleden die in de project-README staan vermeld."
+    }
   },
   "terms": {
     "title": "Gebruiksvoorwaarden",
-    "lastUpdated": "Laatst bijgewerkt"
+    "lastUpdated": "Laatst bijgewerkt",
+    "section1": {
+      "heading": "1. Aanvaarding",
+      "body": "Door een account aan te maken of PaperTrade te gebruiken, ga je akkoord met deze gebruiksvoorwaarden. Als je niet akkoord gaat, gebruik de applicatie dan niet."
+    },
+    "section2": {
+      "heading": "2. Aard van de dienst",
+      "body1": "PaperTrade is een gesimuleerd handelsplatform gebouwd voor een academisch groepsproject. Marktprijzen kunnen vertraagd, onvolledig of benaderd zijn. Niets in PaperTrade is een aanbod om echte effecten, crypto-activa of andere financiële instrumenten te kopen of verkopen.",
+      "body2": "Er wordt geen echt geld gestort, opgenomen of verrekend via deze applicatie. Virtuele saldi en posities hebben geen geldwaarde."
+    },
+    "section3": {
+      "heading": "3. Geschiktheid en accounts",
+      "items": [
+        "Je moet correcte registratiegegevens verstrekken",
+        "Je bent verantwoordelijk voor het vertrouwelijk houden van je inloggegevens",
+        "Eén persoon mag niet meerdere accounts misbruiken om het platform te verstoren",
+        "Wij kunnen accounts uitschakelen die deze voorwaarden schenden of andere gebruikers schaden"
+      ]
+    },
+    "section4": {
+      "heading": "4. Aanvaardbaar gebruik",
+      "intro": "Je gaat ermee akkoord om niet:",
+      "items": [
+        "Te proberen authenticatie te omzeilen, schadelijke invoer te injecteren, of de dienst aan te vallen",
+        "Andere gebruikers lastig te vallen via chat, profielen of andere sociale functies",
+        "De dienst te scrapen of te overbelasten op een manier die de beschikbaarheid verslechtert",
+        "PaperTrade voor te stellen als een echte broker of beleggingsproduct"
+      ]
+    },
+    "section5": {
+      "heading": "5. Geen financieel advies",
+      "body": "Inhoud, grafieken, ranglijsten en analyses zijn uitsluitend bedoeld voor educatieve en amusementsdoeleinden. Het zijn geen beleggings-, belasting- of juridisch advies. Neem geen financiële beslissingen in de echte wereld op basis van PaperTrade."
+    },
+    "section6": {
+      "heading": "6. Beschikbaarheid",
+      "body": "De dienst kan onbeschikbaar zijn tijdens ontwikkeling, evaluatie, of wanneer het team omgevingen reset. Functies kunnen zonder kennisgeving veranderen naarmate het project vordert."
+    },
+    "section7": {
+      "heading": "7. Beperking van aansprakelijkheid",
+      "body": "Voor zover maximaal toegestaan door de toepasselijke wetgeving, levert het PaperTrade-team de dienst \"zoals deze is\" zonder enige vorm van garantie, en is niet aansprakelijk voor verliezen die voortvloeien uit het gebruik van het gesimuleerde platform, waaronder verlies van virtuele saldi, gegevensverlies na het resetten van de omgeving, of vertrouwen op weergegeven prijzen."
+    },
+    "section8": {
+      "heading": "8. Privacy",
+      "before": "De verwerking van persoonsgegevens wordt beschreven in ons",
+      "after": "."
+    },
+    "section9": {
+      "heading": "9. Wijzigingen",
+      "body": "Wij kunnen deze voorwaarden bijwerken naarmate het project vordert. De datum \"Laatst bijgewerkt\" bovenaan deze pagina weerspiegelt de meest recente herziening voor evaluatiedoeleinden."
+    }
   },
   "notFound": {
     "title": "404",

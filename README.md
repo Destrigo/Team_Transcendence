@@ -88,7 +88,15 @@ Ad-hoc in-person and video call check-ins roughly weekly, more frequent in the f
    docker compose up --build
    ```
 4. Open `https://localhost` and accept the browser's self-signed certificate warning (Caddy generates its own local CA on first run).
-5. Register a new account from the UI — there are no pre-seeded user accounts; the database seed only populates the 20 tradeable assets (10 crypto, 10 stocks) so the markets aren't empty on first launch.
+5. Log in with a seeded test account, or register your own from the UI.
+
+### Default Test Accounts
+The database seed populates the 20 tradeable assets (10 crypto, 10 stocks) and two test accounts, already friends with each other with a sample chat message and a filled BTC position on the first account, so Friends/Chat/Notifications/Portfolio/Trading aren't empty on first login:
+
+| Email | Password |
+|-------|----------|
+| evaluator1@papertrade.test | Evaluator123! |
+| evaluator2@papertrade.test | Evaluator123! |
 
 ---
 
