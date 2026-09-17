@@ -6,6 +6,7 @@ import AssetTable from '../components/AssetsTable';
 import OrderPanel from '../components/OrdersPanel';
 import HoldingsTable from '../components/HoldingsTable';
 import OpenOrdersTable from '../components/OpenOrdersTable';
+import OrderHistoryTable from '../components/OrderHistoryTable';
 
 function formatCurrency(value: number) {
   return value.toLocaleString('en-US', {
@@ -20,6 +21,7 @@ export default function TradingPage() {
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [openOrders, setOpenOrders] = useState<Order[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
 
   const loadPortfolio = useCallback(() => {
     fetchPortfolio()
@@ -36,6 +38,7 @@ export default function TradingPage() {
   const refreshAfterOrderChange = useCallback(() => {
     loadPortfolio();
     loadOpenOrders();
+    setHistoryRefreshKey((k) => k + 1);
   }, [loadPortfolio, loadOpenOrders]);
 
   useEffect(() => {
@@ -108,6 +111,7 @@ export default function TradingPage() {
           />
           <OpenOrdersTable orders={openOrders} onCancelled={refreshAfterOrderChange} />
           <HoldingsTable holdings={portfolio?.holdings ?? []} onSelectHolding={handleSelectHolding} />
+          <OrderHistoryTable refreshKey={historyRefreshKey} />
         </div>
       </div>
     </div>

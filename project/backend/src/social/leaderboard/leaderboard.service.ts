@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { STARTING_BALANCE } from '../../common/constants';
 
-const STARTING_BALANCE = 10000;
 const CACHE_TTL_MS = 60_000; // 1 minute
 
 export interface LeaderboardEntry {
@@ -55,6 +55,7 @@ export class LeaderboardService {
         displayName: true,
         avatarUrl: true,
         balance: true,
+        totalDeposited: true,
         holdings: {
           select: {
             quantity: true,
@@ -71,7 +72,10 @@ export class LeaderboardService {
           0,
         );
         const totalValue = Number(user.balance) + holdingsValue;
-        const pnlPercent = ((totalValue - STARTING_BALANCE) / STARTING_BALANCE) * 100;
+        // Subtract deposits (POST /users/deposit) out of the base so topping
+        // up cash doesn't masquerade as trading performance.
+        const investedBase = STARTING_BALANCE + Number(user.totalDeposited);
+        const pnlPercent = investedBase > 0 ? ((totalValue - investedBase) / investedBase) * 100 : 0;
 
         return {
           userId: user.id,
