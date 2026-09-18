@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { useAuth } from '../auth/useAuth';
 import { api } from '../api/api';
+import { formatCurrency } from '../utils/format';
 
 interface PortfolioPoint {
   date: string;
@@ -54,13 +55,7 @@ const PIE_COLORS = [
 ];
 
 function fmt(n: number) {
-  return (
-    '$' +
-    n.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
-  );
+  return formatCurrency(n);
 }
 
 function formatTooltipValue(value: unknown) {
