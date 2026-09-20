@@ -28,5 +28,6 @@ import { SocialGateway } from './social.gateway';
     OrderNotificationsListener,
     SocialGateway,
   ],
+  exports: [NotificationsService],
 })
 export class SocialModule {}

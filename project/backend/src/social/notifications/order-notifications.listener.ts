@@ -26,6 +26,20 @@ export class OrderNotificationsListener {
     }
   }
 
+  @OnEvent('order.placed')
+  async onOrderPlaced(payload: { orderId: string; userId: string }) {
+    try {
+      await this.notifications.notify(payload.userId, {
+        type: 'order_placed',
+        title: 'Limit order placed',
+        body: 'Your limit order is pending until the target price is reached.',
+        data: { orderId: payload.orderId },
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to notify ${payload.userId} of order placement: ${err}`);
+    }
+  }
+
   @OnEvent('order.cancelled')
   async onOrderCancelled(payload: { orderId: string; userId: string; reason?: string }) {
     try {

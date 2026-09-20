@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,14 @@ const OAUTH_PROVIDERS = [
   { id: 'fortytwo', label: 'auth.continueWithFortyTwo', href: '/api/auth/42' },
 ] as const;
 
+type OAuthProviderId = (typeof OAUTH_PROVIDERS)[number]['id'];
+
+interface OAuthProvidersResponse {
+  google: boolean;
+  github: boolean;
+  fortytwo: boolean;
+}
+
 export default function Login() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
@@ -20,6 +28,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
+  const [enabledProviders, setEnabledProviders] = useState<OAuthProviderId[]>([]);
 
   // --- 2FA step (shown after a valid email/password when 2FA is enabled) ---
   const [awaiting2FA, setAwaiting2FA] = useState(false);
@@ -27,6 +36,23 @@ export default function Login() {
   const [twoFACode, setTwoFACode] = useState('');
   const [twoFALoading, setTwoFALoading] = useState(false);
   const [twoFAError, setTwoFAError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get<OAuthProvidersResponse>('/auth/providers')
+      .then((res) => {
+        if (cancelled) return;
+        const enabled = OAUTH_PROVIDERS.map((p) => p.id).filter((id) => res.data[id]);
+        setEnabledProviders(enabled);
+      })
+      .catch(() => {
+        if (!cancelled) setEnabledProviders([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -93,6 +119,10 @@ export default function Login() {
     setTwoFAError('');
   };
 
+  const visibleProviders = OAUTH_PROVIDERS.filter((p) =>
+    enabledProviders.includes(p.id),
+  );
+
   return (
       <div className="flex min-h-screen items-center justify-center bg-muted">
         <div className="w-full max-w-sm rounded-lg bg-card p-8 shadow-md">
@@ -135,26 +165,30 @@ export default function Login() {
                 </button>
               </form>
 
-              <div className="my-6 flex items-center gap-3">
-                <div className="h-px flex-1 bg-border" />
-                <span className="text-xs uppercase text-muted-foreground">
-                  {t('auth.orContinueWith')}
-                </span>
-                <div className="h-px flex-1 bg-border" />
-              </div>
+              {visibleProviders.length > 0 && (
+                <>
+                  <div className="my-6 flex items-center gap-3">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs uppercase text-muted-foreground">
+                      {t('auth.orContinueWith')}
+                    </span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
 
-              <div className="space-y-2">
-                {OAUTH_PROVIDERS.map((provider) => (
-                  <a
-                    key={provider.id}
-                    href={provider.href}
-                    className="flex w-full items-center justify-center gap-2 rounded border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
-                  >
-                    <ProviderIcon id={provider.id} />
-                    {t(provider.label)}
-                  </a>
-                ))}
-              </div>
+                  <div className="space-y-2">
+                    {visibleProviders.map((provider) => (
+                      <a
+                        key={provider.id}
+                        href={provider.href}
+                        className="flex w-full items-center justify-center gap-2 rounded border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
+                      >
+                        <ProviderIcon id={provider.id} />
+                        {t(provider.label)}
+                      </a>
+                    ))}
+                  </div>
+                </>
+              )}
 
               {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
               <p className="mt-4 text-center text-sm text-muted-foreground">

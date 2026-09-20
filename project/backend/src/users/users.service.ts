@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -10,6 +11,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { SearchUsersDto } from './dto/search-users.dto';
 import * as fs from 'fs';
 import * as path from 'path';
+import { NotificationsService } from '../social/notifications/notifications.service';
 
 const PUBLIC_PROFILE_SELECT = {
   id: true,
@@ -32,7 +34,22 @@ const OWN_PROFILE_SELECT = {
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(UsersService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsService,
+  ) {}
+
+  // A notification failure here is a secondary side-effect of an already
+  // successful profile/balance change and shouldn't turn that into a 500.
+  private async notifyBestEffort(userId: string, input: Parameters<NotificationsService['notify']>[1]) {
+    try {
+      await this.notifications.notify(userId, input);
+    } catch (err) {
+      this.logger.warn(`Failed to notify ${userId}: ${err}`);
+    }
+  }
 
   async createUser(data: {
     email: string;
@@ -66,11 +83,24 @@ export class UsersService {
     }
 
     try {
-      return await this.prisma.user.update({
+      const updated = await this.prisma.user.update({
         where: { id: userId },
         data: dto,
         select: OWN_PROFILE_SELECT,
       });
+
+      // Only a real profile change is worth a notification — this endpoint
+      // is also how the language switcher persists its choice, and nobody
+      // needs to be told they changed their own language.
+      if (dto.username !== undefined || dto.displayName !== undefined) {
+        await this.notifyBestEffort(userId, {
+          type: 'profile_updated',
+          title: 'Profile updated',
+          body: 'Your profile information was updated.',
+        });
+      }
+
+      return updated;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
         throw new NotFoundException('User not found');
@@ -106,6 +136,12 @@ export class UsersService {
       fs.unlink(oldPath, () => {
       });
     }
+
+    await this.notifyBestEffort(userId, {
+      type: 'profile_updated',
+      title: 'Profile updated',
+      body: 'Your avatar was updated.',
+    });
 
     return updated;
   }
@@ -164,6 +200,13 @@ export class UsersService {
         data: { balance: { increment: amount }, totalDeposited: { increment: amount } },
         select: OWN_PROFILE_SELECT,
       });
+
+      await this.notifyBestEffort(userId, {
+        type: 'deposit',
+        title: 'Deposit successful',
+        body: `Your account was credited $${amount.toFixed(2)}.`,
+      });
+
       return user;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {

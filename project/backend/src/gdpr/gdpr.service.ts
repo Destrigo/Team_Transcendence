@@ -6,6 +6,7 @@ import {
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../common/mail/mail.service';
 
 const EXPORT_USER_SELECT = {
   id: true,
@@ -26,7 +27,10 @@ const EXPORT_USER_SELECT = {
 
 @Injectable()
 export class GdprService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mail: MailService,
+  ) {}
 
   async exportUserData(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -38,7 +42,8 @@ export class GdprService {
       throw new NotFoundException('User not found');
     }
 
-    const [orders, holdings, portfolioSnapshots, messages, friendships] = await Promise.all([
+    const [orders, holdings, portfolioSnapshots, messages, friendships, notifications] =
+      await Promise.all([
       this.prisma.order.findMany({
         where: { userId },
         include: {
@@ -63,9 +68,13 @@ export class GdprService {
       this.prisma.friendship.findMany({
         where: { OR: [{ requesterId: userId }, { addresseeId: userId }] },
       }),
+      this.prisma.notification.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+      }),
     ]);
 
-    return {
+    const result = {
       exportedAt: new Date().toISOString(),
       profile: this.serialize(user),
       orders: orders.map((o) => this.serialize(o)),
@@ -73,13 +82,24 @@ export class GdprService {
       portfolioSnapshots: portfolioSnapshots.map((s) => this.serialize(s)),
       messages: messages.map((m) => this.serialize(m)),
       friends: friendships.map((f) => this.serialize(f)),
+      notifications: notifications.map((n) => this.serialize(n)),
     };
+
+    // Best-effort: the export already succeeded and is on its way to the
+    // user regardless of whether this confirmation email goes out.
+    await this.mail.send(
+      user.email,
+      'Your PaperTrade data export is ready',
+      `Hi ${user.username},\n\nYour personal data export was generated on ${result.exportedAt}. If you did not request this, please contact the team immediately.\n\n— PaperTrade`,
+    );
+
+    return result;
   }
 
   async deleteAccount(userId: string, password: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, passwordHash: true },
+      select: { id: true, passwordHash: true, email: true, username: true },
     });
 
     if (!user) {
@@ -118,6 +138,14 @@ export class GdprService {
       await tx.holding.deleteMany({ where: { userId } });
       await tx.user.delete({ where: { id: userId } });
     });
+
+    // Sent after the account is gone — using the email/username captured
+    // before deletion, since the row no longer exists to read them from.
+    await this.mail.send(
+      user.email,
+      'Your PaperTrade account has been deleted',
+      `Hi ${user.username},\n\nYour PaperTrade account and all associated data have been permanently deleted, as requested. If you did not request this, please contact the team immediately.\n\n— PaperTrade`,
+    );
 
     return { success: true, message: 'Account deleted' };
   }

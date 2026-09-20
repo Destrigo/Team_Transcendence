@@ -1,11 +1,18 @@
-import { PrismaClient, AssetType } from "@prisma/client";
+import { PrismaClient, AssetType, OrderType, OrderExecutionType, OrderStatus, FriendshipStatus, type User } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import * as bcrypt from "bcrypt";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
 });
 
 const prisma = new PrismaClient({ adapter });
+
+// Seeded for evaluators so the app isn't empty on first login — see README.
+const TEST_ACCOUNTS = [
+  { email: 'evaluator1@papertrade.test', username: 'evaluator1', password: 'Evaluator123!' },
+  { email: 'evaluator2@papertrade.test', username: 'evaluator2', password: 'Evaluator123!' },
+];
 
 const assets = [
   {
@@ -163,6 +170,92 @@ async function main() {
   }
 
   console.log(`Seeded ${assets.length} assets`);
+
+  console.log('Seeding test accounts...');
+
+  const users: User[] = [];
+  for (const account of TEST_ACCOUNTS) {
+    const passwordHash = await bcrypt.hash(account.password, 10);
+    const user = await prisma.user.upsert({
+      where: { email: account.email },
+      update: {},
+      create: {
+        email: account.email,
+        username: account.username,
+        passwordHash,
+        displayName: account.username,
+      },
+    });
+    users.push(user);
+  }
+
+  const [evaluator1, evaluator2] = users;
+
+  // Make the two test accounts friends so Friends/Chat/Presence/Notifications
+  // have something to show immediately instead of starting from empty.
+  await prisma.friendship.upsert({
+    where: { requesterId_addresseeId: { requesterId: evaluator1.id, addresseeId: evaluator2.id } },
+    update: { status: FriendshipStatus.ACCEPTED },
+    create: {
+      requesterId: evaluator1.id,
+      addresseeId: evaluator2.id,
+      status: FriendshipStatus.ACCEPTED,
+    },
+  });
+
+  const existingMessages = await prisma.message.count({
+    where: { senderId: evaluator1.id, receiverId: evaluator2.id },
+  });
+  if (existingMessages === 0) {
+    await prisma.message.create({
+      data: { senderId: evaluator1.id, receiverId: evaluator2.id, content: 'Welcome to PaperTrade!' },
+    });
+    await prisma.message.create({
+      data: { senderId: evaluator2.id, receiverId: evaluator1.id, content: 'Thanks, looking forward to trading.' },
+    });
+  }
+
+  // Give evaluator1 a starting position + a filled order so Portfolio,
+  // Trading order history, and Analytics aren't empty on first look either.
+  const btc = await prisma.asset.findUnique({ where: { symbol: 'BTC' } });
+  if (btc) {
+    const quantity = 0.01;
+    const price = Number(btc.currentPrice) || 30000;
+
+    await prisma.holding.upsert({
+      where: { userId_assetId: { userId: evaluator1.id, assetId: btc.id } },
+      update: {},
+      create: {
+        userId: evaluator1.id,
+        assetId: btc.id,
+        quantity,
+        avgBuyPrice: price,
+      },
+    });
+
+    const existingOrder = await prisma.order.count({ where: { userId: evaluator1.id, assetId: btc.id } });
+    if (existingOrder === 0) {
+      await prisma.order.create({
+        data: {
+          userId: evaluator1.id,
+          assetId: btc.id,
+          type: OrderType.BUY,
+          orderType: OrderExecutionType.MARKET,
+          quantity,
+          price,
+          total: quantity * price,
+          status: OrderStatus.FILLED,
+          filledAt: new Date(),
+        },
+      });
+      await prisma.user.update({
+        where: { id: evaluator1.id },
+        data: { balance: { decrement: quantity * price } },
+      });
+    }
+  }
+
+  console.log(`Seeded ${users.length} test accounts (${TEST_ACCOUNTS.map((a) => a.email).join(', ')}, password: Evaluator123!)`);
 }
 
 main()

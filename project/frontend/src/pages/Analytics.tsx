@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -16,6 +16,9 @@ import {
 } from 'recharts';
 import { useAuth } from '../auth/useAuth';
 import { api } from '../api/api';
+import { formatCurrency } from '../utils/format';
+import { fetchPortfolio } from '../services/trading.service';
+import type { Portfolio } from '../types/types';
 
 interface PortfolioPoint {
   date: string;
@@ -54,13 +57,7 @@ const PIE_COLORS = [
 ];
 
 function fmt(n: number) {
-  return (
-    '$' +
-    n.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
-  );
+  return formatCurrency(n);
 }
 
 function formatTooltipValue(value: unknown) {
@@ -80,6 +77,10 @@ function daysAgoIso(days: number) {
   return d.toISOString().slice(0, 10);
 }
 
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 async function downloadViaApi(path: string, params: Record<string, string>, filename: string) {
   const res = await api.get(path, { params, responseType: 'blob' });
   const url = URL.createObjectURL(res.data as Blob);
@@ -94,6 +95,7 @@ export default function Analytics() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const [portfolioData, setPortfolioData] = useState<PortfolioPoint[]>([]);
+  const [livePortfolio, setLivePortfolio] = useState<Portfolio | null>(null);
   const [allocation, setAllocation] = useState<AllocationItem[]>([]);
   const [stats, setStats] = useState<TradeStats | null>(null);
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -113,17 +115,19 @@ export default function Analytics() {
 
       try {
         const params = rangeParams(nextFrom, nextTo);
-        const [portfolio, alloc, tradeStats, tradeList] = await Promise.all([
+        const [portfolio, alloc, tradeStats, tradeList, live] = await Promise.all([
           api.get<PortfolioPoint[]>('/analytics/portfolio', { params }),
           api.get<AllocationItem[]>('/analytics/allocation'),
           api.get<TradeStats>('/analytics/stats', { params }),
           api.get<Trade[]>('/analytics/trades', { params }),
+          fetchPortfolio().catch(() => null),
         ]);
 
         setPortfolioData(portfolio.data);
         setAllocation(alloc.data);
         setStats(tradeStats.data);
         setTrades(tradeList.data);
+        setLivePortfolio(live);
       } catch {
         setError('analytics.loadError');
       } finally {
@@ -168,12 +172,23 @@ export default function Analytics() {
     }
   }
 
-  const startingBalance = 10000;
-  const currentValue =
-    portfolioData.length > 0
-      ? portfolioData[portfolioData.length - 1].totalValue
-      : startingBalance;
-  const totalPnl = currentValue - startingBalance;
+  const lastSnapshot =
+    portfolioData.length > 0 ? portfolioData[portfolioData.length - 1] : null;
+  const liveValue = livePortfolio?.totalValue ?? null;
+  const livePnl = livePortfolio?.totalPnl ?? null;
+
+  const chartData = useMemo(() => {
+    if (!livePortfolio) return portfolioData;
+    const today = todayIso();
+    const livePoint: PortfolioPoint = {
+      date: today,
+      totalValue: livePortfolio.totalValue,
+      balance: livePortfolio.balance,
+      holdingsValue: livePortfolio.holdingsValue,
+    };
+    const withoutToday = portfolioData.filter((p) => p.date !== today);
+    return [...withoutToday, livePoint];
+  }, [portfolioData, livePortfolio]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -242,15 +257,19 @@ export default function Analytics() {
 
       {!loading && !error && (
         <>
-          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <StatCard
-              label={t('analytics.portfolioValue')}
-              value={fmt(currentValue)}
+              label={t('analytics.livePortfolioValue')}
+              value={liveValue !== null ? fmt(liveValue) : '—'}
             />
             <StatCard
-              label={t('analytics.totalPnl')}
-              value={fmt(totalPnl)}
-              tone={totalPnl >= 0 ? 'up' : 'down'}
+              label={t('analytics.liveTotalPnl')}
+              value={livePnl !== null ? fmt(livePnl) : '—'}
+              tone={livePnl !== null && livePnl >= 0 ? 'up' : 'down'}
+            />
+            <StatCard
+              label={t('analytics.snapshotPortfolioValue')}
+              value={lastSnapshot ? fmt(lastSnapshot.totalValue) : '—'}
             />
             <StatCard
               label={t('analytics.totalTrades')}
@@ -277,12 +296,12 @@ export default function Analytics() {
           </div>
 
           <Section title={t('analytics.performance')}>
-            {portfolioData.length === 0 ? (
+            {chartData.length === 0 ? (
               <EmptyState msg={t('analytics.noSnapshots')} />
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart
-                  data={portfolioData}
+                  data={chartData}
                   margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -296,7 +315,7 @@ export default function Analytics() {
                   <Line
                     type="monotone"
                     dataKey="totalValue"
-                    name="Total Value"
+                    name={t('analytics.seriesTotalValue')}
                     stroke="#6366f1"
                     strokeWidth={2}
                     dot={false}
@@ -304,7 +323,7 @@ export default function Analytics() {
                   <Line
                     type="monotone"
                     dataKey="holdingsValue"
-                    name="Holdings Value"
+                    name={t('analytics.seriesHoldingsValue')}
                     stroke="#22c55e"
                     strokeWidth={1.5}
                     dot={false}
@@ -313,7 +332,7 @@ export default function Analytics() {
                   <Line
                     type="monotone"
                     dataKey="balance"
-                    name="Cash Balance"
+                    name={t('analytics.seriesCashBalance')}
                     stroke="#f59e0b"
                     strokeWidth={1.5}
                     dot={false}

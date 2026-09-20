@@ -7,6 +7,10 @@ const LAST_UPDATED = '2026-07-29';
 export default function Privacy() {
   const { t } = useTranslation();
 
+  const dataWeCollectItems = t('privacy.section2.items', { returnObjects: true }) as string[];
+  const howWeUseItems = t('privacy.section3.items', { returnObjects: true }) as string[];
+  const rightsItems = t('privacy.section6.items', { returnObjects: true }) as string[];
+
   return (
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
         <div className="mb-6 flex items-start justify-between gap-4">
@@ -21,89 +25,59 @@ export default function Privacy() {
 
         <div className="space-y-6 text-sm leading-relaxed text-foreground">
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold">1. Who we are</h2>
-            <p>
-              PaperTrade is a team academic project (ft_transcendence). It provides a
-              web application for <strong>simulated</strong> trading with market-like
-              data. PaperTrade is not a licensed broker, bank, or financial advisor.
-            </p>
+            <h2 className="text-lg font-semibold">{t('privacy.section1.heading')}</h2>
+            <p>{t('privacy.section1.body')}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold">2. Data we collect</h2>
-            <p>Depending on how you use the service, we may store:</p>
+            <h2 className="text-lg font-semibold">{t('privacy.section2.heading')}</h2>
+            <p>{t('privacy.section2.intro')}</p>
             <ul className="list-disc space-y-1 pl-5">
-              <li>Account data: email, username, display name, avatar, language preference</li>
-              <li>Authentication data: password hash (never plaintext), optional OAuth identifiers, optional 2FA secrets</li>
-              <li>Application data: balance/holdings, orders, portfolio snapshots, messages, friend relationships, notifications</li>
-              <li>Technical data: online status / last seen, and standard server logs needed to operate the app</li>
+              {dataWeCollectItems.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
             </ul>
-            <p>
-              We do not intentionally collect payment card numbers or government ID
-              documents. There is <strong>no real money</strong> on the platform.
-            </p>
+            <p>{t('privacy.section2.outro')}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold">3. How we use data</h2>
+            <h2 className="text-lg font-semibold">{t('privacy.section3.heading')}</h2>
             <ul className="list-disc space-y-1 pl-5">
-              <li>To create and secure your account</li>
-              <li>To run simulated trading, social, and analytics features</li>
-              <li>To show online status to friends when that feature is enabled</li>
-              <li>To improve reliability and fix bugs</li>
-              <li>To comply with evaluation / academic requirements for this project</li>
+              {howWeUseItems.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
             </ul>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold">4. Where data is stored</h2>
-            <p>
-              Application data is stored in the project database (PostgreSQL) operated
-              by the team via Docker for local and evaluation environments. Secrets
-              (for example JWT signing keys) are kept in environment configuration,
-              not in the public repository.
-            </p>
+            <h2 className="text-lg font-semibold">{t('privacy.section4.heading')}</h2>
+            <p>{t('privacy.section4.body')}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold">5. Sharing</h2>
-            <p>
-              We do not sell personal data. Data may be processed by team members for
-              development and peer evaluation. External market-data providers may be
-              queried for public price information; those requests should not include
-              your password or private messages.
-            </p>
+            <h2 className="text-lg font-semibold">{t('privacy.section5.heading')}</h2>
+            <p>{t('privacy.section5.body')}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold">6. Your rights (GDPR-style)</h2>
-            <p>Subject to what the app implements at evaluation time, you may:</p>
+            <h2 className="text-lg font-semibold">{t('privacy.section6.heading')}</h2>
+            <p>{t('privacy.section6.intro')}</p>
             <ul className="list-disc space-y-1 pl-5">
-              <li>Access and download your personal data (Settings → Download my data)</li>
-              <li>Update profile information</li>
-              <li>Delete your account and associated application data (Settings → Delete account)</li>
+              {rightsItems.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
             </ul>
-            <p>
-              Because this is an academic deployment, retention is limited to the life
-              of the project environment unless the team resets the database earlier.
-            </p>
+            <p>{t('privacy.section6.outro')}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold">7. Cookies and sessions</h2>
-            <p>
-              Authentication may use HTTP-only cookies and/or tokens stored by the
-              browser to keep you signed in. These are used for security and session
-              continuity, not for third-party advertising.
-            </p>
+            <h2 className="text-lg font-semibold">{t('privacy.section7.heading')}</h2>
+            <p>{t('privacy.section7.body')}</p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-semibold">8. Contact</h2>
-            <p>
-              For privacy questions about this academic project, contact the PaperTrade
-              team members listed in the project README.
-            </p>
+            <h2 className="text-lg font-semibold">{t('privacy.section8.heading')}</h2>
+            <p>{t('privacy.section8.body')}</p>
           </section>
         </div>
 

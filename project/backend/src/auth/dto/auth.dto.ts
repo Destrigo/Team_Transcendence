@@ -64,3 +64,14 @@ export class LoginTwoFactorDto {
   @Matches(/^[0-9]+$/, { message: 'auth.validation.codeNumericOnly' })
   code: string;
 }
+
+export class ChangePasswordDto {
+  @IsString()
+  @IsNotEmpty({ message: 'auth.validation.passwordRequired' })
+  currentPassword: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'auth.validation.passwordRequired' })
+  @MinLength(8, { message: 'auth.weakPassword' })
+  newPassword: string;
+}

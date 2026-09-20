@@ -7,14 +7,7 @@ import OrderPanel from '../components/OrdersPanel';
 import HoldingsTable from '../components/HoldingsTable';
 import OpenOrdersTable from '../components/OpenOrdersTable';
 import OrderHistoryTable from '../components/OrderHistoryTable';
-
-function formatCurrency(value: number) {
-  return value.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 2,
-  });
-}
+import { formatCurrency } from '../utils/format';
 
 export default function TradingPage() {
   const { t } = useTranslation();

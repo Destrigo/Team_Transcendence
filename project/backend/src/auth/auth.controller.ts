@@ -15,17 +15,25 @@ import {
   LoginDto,
   TwoFactorCodeDto,
   LoginTwoFactorDto,
+  ChangePasswordDto,
 } from './dto/auth.dto';
 import type { Response, Request } from 'express';
-import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { OAuthAuthGuard } from './oauth-auth.guard';
+import { getConfiguredOAuthProviders } from './oauth-config';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://localhost';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  /** Public: which OAuth buttons the login page should render. */
+  @Get('providers')
+  getOAuthProviders() {
+    return getConfiguredOAuthProviders();
+  }
 
   @Post('register')
   async register(
@@ -115,6 +123,20 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @CurrentUser('userId') userId: string,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(
+      userId,
+      dto.currentPassword,
+      dto.newPassword,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(
@@ -132,11 +154,11 @@ export class AuthController {
   }
 
   @Get('google')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(OAuthAuthGuard('google'))
   googleAuth() { }
 
   @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(OAuthAuthGuard('google'))
   async googleCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
     const { email, providerId, provider, displayName } = req.user;
 
@@ -153,11 +175,11 @@ export class AuthController {
   }
 
   @Get('github')
-  @UseGuards(AuthGuard('github'))
+  @UseGuards(OAuthAuthGuard('github'))
   githubAuth() { }
 
   @Get('github/callback')
-  @UseGuards(AuthGuard('github'))
+  @UseGuards(OAuthAuthGuard('github'))
   async githubCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
     const { email, providerId, provider, displayName } = req.user;
 
@@ -174,11 +196,11 @@ export class AuthController {
   }
 
   @Get('42')
-  @UseGuards(AuthGuard('42'))
+  @UseGuards(OAuthAuthGuard('42'))
   fortyTwoAuth() { }
 
   @Get('42/callback')
-  @UseGuards(AuthGuard('42'))
+  @UseGuards(OAuthAuthGuard('42'))
   async fortyTwoCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
     const { email, providerId, provider, displayName } = req.user;
 
