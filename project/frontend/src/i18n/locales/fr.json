@@ -30,7 +30,8 @@
     "noData": "Aucune donnée disponible",
     "seeAll": "Tout voir",
     "download": "Télécharger",
-    "export": "Exporter"
+    "export": "Exporter",
+    "selectLanguage": "Choisir la langue"
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -78,7 +79,17 @@
     "weakPassword": "Le mot de passe doit comporter au moins 8 caractères",
     "continueWithGoogle": "Continuer avec Google",
     "continueWithGithub": "Continuer avec GitHub",
-    "continueWithFortyTwo": "Continuer avec 42"
+    "continueWithFortyTwo": "Continuer avec 42",
+    "oauthNotConfigured": "Ce fournisseur de connexion n'est pas configuré",
+    "errors": {
+      "noPasswordToChange": "Ce compte n'a pas de mot de passe à modifier (OAuth uniquement)",
+      "wrongCurrentPassword": "Le mot de passe actuel est incorrect",
+      "passwordSameAsOld": "Le nouveau mot de passe doit être différent de l'actuel",
+      "setupNotInitiated": "La configuration 2FA n'a pas été démarrée",
+      "invalid2faCode": "Code 2FA invalide",
+      "invalid2fationCode": "Code 2FA invalide",
+      "twoFactorNotActive": "L'authentification à deux facteurs n'est pas active"
+    }
   },
     "profile": {
     "loading": "Chargement de votre profil…",
@@ -260,6 +271,12 @@
     "tradeHistory": "Historique des transactions",
     "summary": "Résumé",
     "portfolioValue": "Valeur du portefeuille",
+    "livePortfolioValue": "Valeur live du portefeuille",
+    "liveTotalPnl": "P&L total live",
+    "snapshotPortfolioValue": "Dernier snapshot quotidien",
+    "seriesTotalValue": "Valeur totale",
+    "seriesHoldingsValue": "Valeur des positions",
+    "seriesCashBalance": "Solde cash",
     "totalTrades": "Nombre total de transactions",
     "bestTrade": "Meilleure transaction",
     "worstTrade": "Pire transaction",

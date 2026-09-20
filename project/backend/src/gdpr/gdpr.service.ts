@@ -42,7 +42,8 @@ export class GdprService {
       throw new NotFoundException('User not found');
     }
 
-    const [orders, holdings, portfolioSnapshots, messages, friendships] = await Promise.all([
+    const [orders, holdings, portfolioSnapshots, messages, friendships, notifications] =
+      await Promise.all([
       this.prisma.order.findMany({
         where: { userId },
         include: {
@@ -67,6 +68,10 @@ export class GdprService {
       this.prisma.friendship.findMany({
         where: { OR: [{ requesterId: userId }, { addresseeId: userId }] },
       }),
+      this.prisma.notification.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+      }),
     ]);
 
     const result = {
@@ -77,6 +82,7 @@ export class GdprService {
       portfolioSnapshots: portfolioSnapshots.map((s) => this.serialize(s)),
       messages: messages.map((m) => this.serialize(m)),
       friends: friendships.map((f) => this.serialize(f)),
+      notifications: notifications.map((n) => this.serialize(n)),
     };
 
     // Best-effort: the export already succeeded and is on its way to the

@@ -44,7 +44,7 @@
 - [ ] **Analytics Dashboard**: Charts render, date filters work, CSV and PDF export work
 
 ### Minor Modules (1 pt each)
-- [ ] **ORM**: Prisma is used for all database access, no raw SQL
+- [ ] **ORM**: Prisma is used for all database access (including parameterized `$queryRaw` / `$executeRaw` where needed for locks/upserts)
 - [ ] **Notifications**: Bell icon shows notifications, new events trigger them, mark-as-read works
 - [ ] **Advanced Search**: Search assets by name, filter by type, sort by columns, pagination works
 - [ ] **OAuth 2.0**: Can sign in with Google/GitHub/42

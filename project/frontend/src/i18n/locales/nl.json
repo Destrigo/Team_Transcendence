@@ -30,7 +30,8 @@
     "noData": "Geen gegevens beschikbaar",
     "seeAll": "Alles zien",
     "download": "Downloaden",
-    "export": "Exporteren"
+    "export": "Exporteren",
+    "selectLanguage": "Taal selecteren"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -78,7 +79,17 @@
     "weakPassword": "Wachtwoord moet minimaal 8 tekens bevatten",
     "continueWithGoogle": "Doorgaan met Google",
     "continueWithGithub": "Doorgaan met GitHub",
-    "continueWithFortyTwo": "Doorgaan met 42"
+    "continueWithFortyTwo": "Doorgaan met 42",
+    "oauthNotConfigured": "Deze aanmeldprovider is niet geconfigureerd",
+    "errors": {
+      "noPasswordToChange": "Dit account heeft geen wachtwoord om te wijzigen (alleen OAuth)",
+      "wrongCurrentPassword": "Huidig wachtwoord is onjuist",
+      "passwordSameAsOld": "Nieuw wachtwoord moet anders zijn dan het huidige",
+      "setupNotInitiated": "2FA-setup is niet gestart",
+      "invalid2faCode": "Ongeldige 2FA-code",
+      "invalid2fationCode": "Ongeldige 2FA-code",
+      "twoFactorNotActive": "Tweefactorauthenticatie is niet actief"
+    }
   },
     "profile": {
     "loading": "Profiel laden…",
@@ -260,6 +271,12 @@
     "tradeHistory": "Transactiegeschiedenis",
     "summary": "Samenvatting",
     "portfolioValue": "Portfoliowaarde",
+    "livePortfolioValue": "Live portfoliowaarde",
+    "liveTotalPnl": "Live totale W&V",
+    "snapshotPortfolioValue": "Laatste dagelijkse snapshot",
+    "seriesTotalValue": "Totale waarde",
+    "seriesHoldingsValue": "Waarde van posities",
+    "seriesCashBalance": "Cashsaldo",
     "totalTrades": "Totaal transacties",
     "bestTrade": "Beste transactie",
     "worstTrade": "Slechtste transactie",

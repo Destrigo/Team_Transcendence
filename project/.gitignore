@@ -3,3 +3,5 @@ certs/
 *.pem
 *.key
 client_secret*.json
+
+cookies.txt

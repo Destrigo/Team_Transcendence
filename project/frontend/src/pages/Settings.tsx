@@ -170,7 +170,10 @@ export default function Settings() {
       setTimeout(() => setPasswordSuccess(false), 2500);
     } catch (err: any) {
       setPasswordError(
-        err?.response?.data?.message ?? t('settings.passwordChangeFailed'),
+        (() => {
+          const message = err?.response?.data?.message;
+          return typeof message === 'string' ? t(message) : t('settings.passwordChangeFailed');
+        })(),
       );
     } finally {
       setPasswordLoading(false);

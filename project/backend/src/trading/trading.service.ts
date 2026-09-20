@@ -40,7 +40,7 @@ export class TradingService {
       throw new NotFoundException('Asset not found');
     }
 
-    return this.prisma.order.create({
+    const order = await this.prisma.order.create({
       data: {
         userId,
         assetId: dto.assetId,
@@ -52,6 +52,13 @@ export class TradingService {
         status: OrderStatus.PENDING,
       },
     });
+
+    this.eventEmitter.emit('order.placed', {
+      orderId: order.id,
+      userId,
+    });
+
+    return order;
   }
 
   async fillPendingOrder(orderId: string) {

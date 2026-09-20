@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -14,6 +15,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { OTP } from 'otplib';
 import { encryptSecret, decryptSecret } from '../common/crypto/secret-cipher';
+import { NotificationsService } from '../social/notifications/notifications.service';
 
 interface OAuthProfile {
   provider: string;
@@ -25,11 +27,24 @@ interface OAuthProfile {
 @Injectable()
 export class AuthService {
   private readonly otp = new OTP();
+  private readonly logger = new Logger(AuthService.name);
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly notifications: NotificationsService,
   ) {}
+
+  private async notifyBestEffort(
+    userId: string,
+    input: Parameters<NotificationsService['notify']>[1],
+  ) {
+    try {
+      await this.notifications.notify(userId, input);
+    } catch (err) {
+      this.logger.warn(`Failed to notify ${userId}: ${err}`);
+    }
+  }
 
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findFirst({
@@ -184,6 +199,44 @@ export class AuthService {
     return { ...tokens, language: user.language };
   }
 
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, passwordHash: true },
+    });
+
+    if (!user?.passwordHash) {
+      throw new BadRequestException('auth.errors.noPasswordToChange');
+    }
+
+    const matches = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!matches) {
+      throw new UnauthorizedException('auth.errors.wrongCurrentPassword');
+    }
+
+    if (currentPassword === newPassword) {
+      throw new BadRequestException('auth.errors.passwordSameAsOld');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+
+    await this.notifyBestEffort(userId, {
+      type: 'password_changed',
+      title: 'Password updated',
+      body: 'Your account password was changed.',
+    });
+
+    return { success: true };
+  }
+
   async enable2FA(userId: string, code: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.twoFactorSecret)
@@ -195,6 +248,12 @@ export class AuthService {
     await this.prisma.user.update({
       where: { id: userId },
       data: { twoFactorEnabled: true },
+    });
+
+    await this.notifyBestEffort(userId, {
+      type: 'two_factor_enabled',
+      title: 'Two-factor authentication enabled',
+      body: '2FA is now required when you sign in.',
     });
 
     return { success: true };
@@ -212,6 +271,12 @@ export class AuthService {
     await this.prisma.user.update({
       where: { id: userId },
       data: { twoFactorEnabled: false, twoFactorSecret: null },
+    });
+
+    await this.notifyBestEffort(userId, {
+      type: 'two_factor_disabled',
+      title: 'Two-factor authentication disabled',
+      body: '2FA was turned off for your account.',
     });
 
     return { success: true };

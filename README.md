@@ -187,22 +187,22 @@ Profile editing, avatar upload with type/size validation, and friends list with 
 Portfolio performance chart, asset allocation breakdown, trade statistics (best/worst trade), and CSV/PDF export, each filterable by date range.
 
 #### 6. ORM (Minor — 1 pt)
-All database access across every module goes through Prisma; no raw SQL queries.
+All database access goes through Prisma. A couple of trading paths use Prisma's parameterized `$queryRaw` / `$executeRaw` (row locks and atomic holding upserts) rather than the query builder — still Prisma-mediated, no ad-hoc SQL strings outside that layer.
 
 #### 7. Notification System (Minor — 1 pt)
-Bell icon with unread badge, dropdown panel, mark-one/mark-all-read, pushed live over the `/social` WebSocket and hooked into friend requests, accepted requests, chat messages, and order fills/cancellations.
+Bell icon with unread badge, dropdown panel, mark-one/mark-all-read, pushed live over the `/social` WebSocket and hooked into friend requests/accept/decline/remove, chat messages, order place/fill/cancel, profile/avatar updates, deposits, password changes, and 2FA enable/disable.
 
 #### 8. Advanced Search (Minor — 1 pt)
 Search assets by name/symbol, filter by type (crypto/stock), sort by any column, with pagination.
 
 #### 9. OAuth 2.0 (Minor — 1 pt)
-Sign in with Google, GitHub, or 42 via Passport strategies; existing users are matched by email, new users are created automatically. Each provider is only registered if its credentials are configured, so a missing provider degrades to "that button doesn't work" instead of crashing the whole backend on startup.
+Sign in with Google, GitHub, or 42 via Passport strategies; existing users are matched by email, new users are created automatically. Each provider is only registered if its credentials are configured. The login page only shows configured providers (`GET /auth/providers`); hitting an unconfigured provider returns `503` instead of crashing or a `500`.
 
 #### 10. 2FA (Minor — 1 pt)
 TOTP setup with QR code (via `qrcode.react`), required 6-digit code on login when enabled, and the stored secret is encrypted at rest (AES-256-GCM) rather than kept in plaintext.
 
 #### 11. GDPR Compliance (Minor — 1 pt)
-Users can export all their personal data (profile, orders, holdings, friendships, messages, notifications) as JSON, and delete their account, which cascades cleanly across every feature that references them.
+Users can export all their personal data (profile, orders, holdings, friendships, messages, notifications, portfolio snapshots) as JSON, and delete their account, which cascades cleanly across every feature that references them. Confirmation emails are sent after export/delete when SMTP is configured.
 
 #### 12. Multiple Languages (Minor — 1 pt)
 English, French, and Dutch via `react-i18next`, with a language switcher and the choice persisted to the user's profile.

@@ -30,7 +30,8 @@
     "noData": "No data available",
     "seeAll": "See all",
     "download": "Download",
-    "export": "Export"
+    "export": "Export",
+    "selectLanguage": "Select language"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -78,7 +79,17 @@
     "weakPassword": "Password must be at least 8 characters",
     "continueWithGoogle": "Continue with Google",
     "continueWithGithub": "Continue with GitHub",
-    "continueWithFortyTwo": "Continue with 42"
+    "continueWithFortyTwo": "Continue with 42",
+    "oauthNotConfigured": "This sign-in provider is not configured",
+    "errors": {
+      "noPasswordToChange": "This account has no password to change (OAuth-only)",
+      "wrongCurrentPassword": "Current password is incorrect",
+      "passwordSameAsOld": "New password must be different from the current one",
+      "setupNotInitiated": "2FA setup has not been started",
+      "invalid2faCode": "Invalid 2FA code",
+      "invalid2fationCode": "Invalid 2FA code",
+      "twoFactorNotActive": "Two-factor authentication is not active"
+    }
   },
     "profile": {
     "loading": "Loading your profile…",
@@ -260,6 +271,12 @@
     "tradeHistory": "Trade history",
     "summary": "Summary",
     "portfolioValue": "Portfolio value",
+    "livePortfolioValue": "Live portfolio value",
+    "liveTotalPnl": "Live total P&L",
+    "snapshotPortfolioValue": "Last daily snapshot",
+    "seriesTotalValue": "Total value",
+    "seriesHoldingsValue": "Holdings value",
+    "seriesCashBalance": "Cash balance",
     "totalTrades": "Total trades",
     "bestTrade": "Best trade",
     "worstTrade": "Worst trade",

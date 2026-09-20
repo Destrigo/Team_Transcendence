@@ -65,8 +65,15 @@ export class FriendsController {
   }
 
   @Put(':id/decline')
-  declineRequest(@CurrentUser('userId') userId: string, @Param('id') friendshipId: string) {
-    return this.friendsService.declineRequest(friendshipId, userId);
+  async declineRequest(@CurrentUser('userId') userId: string, @Param('id') friendshipId: string) {
+    const friendship = await this.friendsService.declineRequest(friendshipId, userId);
+    await this.notifyBestEffort(friendship.requesterId, {
+      type: 'friend_request_declined',
+      title: 'Friend request declined',
+      body: 'Your friend request was declined.',
+      data: { friendshipId: friendship.id, byUserId: userId },
+    });
+    return friendship;
   }
 
   @Delete(':id')
