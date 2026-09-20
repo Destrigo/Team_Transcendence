@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { Asset, CreateOrderPayload, Holding, OrderExecutionType, OrderSide } from '../types/types';
 import { placeOrder } from '../services/trading.service';
 import { formatCurrency } from '../utils/format';
+import { useToast } from '../toast/ToastContext';
 
 interface OrderPanelProps {
   asset: Asset | null;
@@ -13,19 +14,18 @@ interface OrderPanelProps {
 
 export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: OrderPanelProps) {
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const [side, setSide] = useState<OrderSide>('BUY');
   const [execType, setExecType] = useState<OrderExecutionType>('MARKET');
   const [quantity, setQuantity] = useState('');
   const [limitPrice, setLimitPrice] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     setQuantity('');
     setLimitPrice('');
-    setError(null);
-    setSuccess(null);
+    setShowConfirm(false);
     setSide('BUY');
     setExecType('MARKET');
   }, [asset?.id]);
@@ -60,8 +60,7 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
   };
 
   const handleSubmit = async () => {
-    setError(null);
-    setSuccess(null);
+    setShowConfirm(false);
     setSubmitting(true);
     try {
       const payload: CreateOrderPayload = {
@@ -75,16 +74,16 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
 
       if (execType === 'MARKET') {
         const actionKey = side === 'BUY' ? 'successBought' : 'successSold';
-        setSuccess(t(`trading.orderPanel.${actionKey}`, { quantity: qtyNum, symbol: asset.symbol }));
+        showToast(t(`trading.orderPanel.${actionKey}`, { quantity: qtyNum, symbol: asset.symbol }), 'success');
       } else {
-        setSuccess(t('trading.orderPanel.successLimitPlaced', { quantity: qtyNum, symbol: asset.symbol }));
+        showToast(t('trading.orderPanel.successLimitPlaced', { quantity: qtyNum, symbol: asset.symbol }), 'success');
       }
 
       setQuantity('');
       setLimitPrice('');
       onOrderPlaced();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? t('trading.orderPanel.errorFailed'));
+      showToast(err?.response?.data?.message ?? t('trading.orderPanel.errorFailed'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -216,17 +215,9 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
         </p>
       )}
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
-
-      {success && (
-        <p className="text-xs text-emerald-600">
-          {success}
-        </p>
-      )}
-
       <button
         disabled={!canSubmit}
-        onClick={handleSubmit}
+        onClick={() => setShowConfirm(true)}
         className="mt-auto rounded-md bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {submitting
@@ -235,6 +226,68 @@ export default function OrderPanel({ asset, holding, balance, onOrderPlaced }: O
               execType === 'LIMIT' ? ` (${t('trading.limitOrder').toLowerCase()})` : ''
             }`}
       </button>
+
+      {showConfirm && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-lg border border-border bg-card p-5 shadow-lg">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              {t('trading.confirmOrder')}
+            </h2>
+
+            <div className="mt-3 space-y-1.5 font-mono text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">{t('trading.side')}</span>
+                <span className={side === 'BUY' ? 'text-primary' : 'text-destructive'}>
+                  {side === 'BUY' ? t('trading.buy') : t('trading.sell')}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">{t('trading.orderType')}</span>
+                <span>{execType === 'MARKET' ? t('trading.marketOrder') : t('trading.limitOrder')}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">{t('trading.quantity')}</span>
+                <span>{qtyNum} {asset.symbol}</span>
+              </div>
+              {execType === 'LIMIT' && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">{t('trading.limitPrice')}</span>
+                  <span>{formatCurrency(refPrice)}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between border-t border-border pt-1.5">
+                <span className="text-muted-foreground">{t('trading.estimatedTotal')}</span>
+                <span className="text-foreground">{formatCurrency(estimatedTotal)}</span>
+              </div>
+            </div>
+
+            {insufficientFunds && (
+              <p className="mt-3 text-xs text-destructive">{t('trading.insufficientBalance')}</p>
+            )}
+            {insufficientHoldings && (
+              <p className="mt-3 text-xs text-destructive">
+                {t('trading.orderPanel.insufficientHoldingsError', { max: maxSellQty, symbol: asset.symbol })}
+              </p>
+            )}
+
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 rounded-md border border-input py-2 text-sm font-medium hover:bg-accent"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!canSubmit}
+                className="flex-1 rounded-md bg-primary py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {submitting ? t('trading.orderPanel.placingOrder') : t('trading.confirmOrder')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

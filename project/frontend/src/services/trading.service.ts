@@ -6,6 +6,7 @@ import type {
   Order,
   OrderStatus,
   Portfolio,
+  PortfolioHistoryPoint,
   PricePoint,
 } from '../types/types';
 
@@ -63,6 +64,13 @@ export async function fetchAssetHistory(symbol: string, days = 30): Promise<Pric
 
 export async function fetchPortfolio(): Promise<Portfolio> {
   const { data } = await api.get<Portfolio>('/portfolio');
+  return data;
+}
+
+export async function fetchPortfolioHistory(): Promise<PortfolioHistoryPoint[]> {
+  // Reuses the existing analytics endpoint (same underlying data/shape)
+  // instead of a second route, since this is the only caller.
+  const { data } = await api.get<PortfolioHistoryPoint[]>('/analytics/portfolio');
   return data;
 }
 
