@@ -21,63 +21,82 @@ mermaid.initialize({
   },
 });
 const { svg } = await mermaid.render('arch-svg', `flowchart LR
-    subgraph External
-        CoinGecko["CoinGecko API"]
-        OAuthProv["OAuth provider"]
+    subgraph External["External services (all optional / feature-flagged)"]
+        CoinGecko["CoinGecko API\n(crypto, no key needed)"]
+        Finnhub["Finnhub API\n(stocks, needs API key)"]
+        OAuthProv["Google / GitHub / 42\n(OAuth, needs credentials)"]
+        SMTP["SMTP\n(GDPR confirmation emails)"]
     end
 
-    subgraph Backend["NestJS backend"]
+    subgraph Backend["NestJS backend (src/)"]
         direction TB
-        Auth["Auth module\nJWT + OAuth + 2FA"]
-        MarketSvc["Market data service\nCron: fetch prices"]
-        TradeSvc["Trading engine\nOrders + portfolio"]
-        SocialSvc["Social service\nFriends + chat"]
-        NotifSvc["Notification service"]
-        AnalSvc["Analytics service\nSnapshots + export"]
-        WSGateway["WebSocket gateway\nPrices + chat + presence"]
+        Auth["auth/\nJWT + OAuth + 2FA\n(one module)"]
+        Users["users/\nprofile, avatar, deposit"]
+        AssetsMod["assets/\nAssetsService +\nMarketDataService"]
+        Orders["orders/\n(the only HTTP surface\nfor placing orders)"]
+        Trading["trading/\nTradingService +\nprice-checker.scheduler\n(fills limit orders)"]
+        Portfolio["portfolio/"]
+        Analytics["analytics/\n+ snapshot.scheduler"]
+        Social["social/\nfriends + messages +\nnotifications + leaderboard"]
+        Gdpr["gdpr/"]
+        PriceGW["websocket/\nPriceFeedGateway\n(/prices)"]
+        SocialGW["social/social.gateway.ts\nSocialGateway (/social)"]
+        Mail["common/mail/\nMailService"]
     end
 
     subgraph Data["PostgreSQL"]
-        DB[("Database\nPrisma ORM")]
+        DB[("9 tables\nvia Prisma ORM")]
     end
 
-    subgraph Clients["Connected clients"]
+    subgraph Clients["Connected browsers"]
         Browser1["Browser 1"]
         Browser2["Browser 2"]
         BrowserN["Browser N"]
     end
 
-    CoinGecko -->|Prices every 30s| MarketSvc
-    OAuthProv -->|Token| Auth
+    CoinGecko -->|every 30s| AssetsMod
+    Finnhub -.->|every 60s, no-op if\nAPI key unset| AssetsMod
+    OAuthProv -.->|only registered if\ncredentials configured| Auth
 
     Auth --> DB
-    MarketSvc --> DB
-    TradeSvc --> DB
-    SocialSvc --> DB
-    NotifSvc --> DB
-    AnalSvc --> DB
+    Users --> DB
+    AssetsMod --> DB
+    Orders --> Trading
+    Trading --> DB
+    Portfolio --> DB
+    Analytics --> DB
+    Social --> DB
+    Gdpr --> DB
+    Gdpr -.->|only sent if\nSMTP configured| Mail
+    Mail -.-> SMTP
 
-    MarketSvc -->|Price changed| WSGateway
-    TradeSvc -->|Order filled| NotifSvc
-    SocialSvc -->|New message| WSGateway
-    NotifSvc -->|Push| WSGateway
+    AssetsMod -->|price changed| PriceGW
+    Trading -->|order filled/cancelled| Social
+    Social -->|new message,\nfriend request| SocialGW
 
-    WSGateway -->|Live prices| Browser1
-    WSGateway -->|Chat + notifications| Browser2
-    WSGateway -->|Presence updates| BrowserN
+    PriceGW -->|price:update, price:batch| Browser1
+    SocialGW -->|message:new,\npresence:update| Browser2
+    SocialGW -->|notifications| BrowserN
 
-    Browser1 -->|REST API + WS| Auth
-    Browser1 -->|Place order| TradeSvc
+    Browser1 -->|REST /api/*\n+ WS handshake\n(JWT cookie)| Auth
+    Browser1 -->|POST /api/orders| Orders
 
     style CoinGecko fill:${dark?'#085041':'#E1F5EE'},stroke:${dark?'#5DCAA5':'#0F6E56'}
+    style Finnhub fill:${dark?'#085041':'#E1F5EE'},stroke:${dark?'#5DCAA5':'#0F6E56'}
     style OAuthProv fill:${dark?'#085041':'#E1F5EE'},stroke:${dark?'#5DCAA5':'#0F6E56'}
+    style SMTP fill:${dark?'#085041':'#E1F5EE'},stroke:${dark?'#5DCAA5':'#0F6E56'}
     style Auth fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
-    style MarketSvc fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
-    style TradeSvc fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
-    style SocialSvc fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
-    style NotifSvc fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
-    style AnalSvc fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
-    style WSGateway fill:${dark?'#633806':'#FAEEDA'},stroke:${dark?'#EF9F27':'#854F0B'}
+    style Users fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style AssetsMod fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style Orders fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style Trading fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style Portfolio fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style Analytics fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style Social fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style Gdpr fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style Mail fill:${dark?'#3C3489':'#EEEDFE'},stroke:${dark?'#AFA9EC':'#534AB7'}
+    style PriceGW fill:${dark?'#633806':'#FAEEDA'},stroke:${dark?'#EF9F27':'#854F0B'}
+    style SocialGW fill:${dark?'#633806':'#FAEEDA'},stroke:${dark?'#EF9F27':'#854F0B'}
     style DB fill:${dark?'#0C447C':'#E6F1FB'},stroke:${dark?'#85B7EB':'#185FA5'}
     style Browser1 fill:${dark?'#444441':'#F1EFE8'},stroke:${dark?'#B4B2A9':'#5F5E5A'}
     style Browser2 fill:${dark?'#444441':'#F1EFE8'},stroke:${dark?'#B4B2A9':'#5F5E5A'}

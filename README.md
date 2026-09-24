@@ -102,7 +102,7 @@ The database seed populates the 20 tradeable assets (10 crypto, 10 stocks) and t
 
 ## Database Schema
 
-PostgreSQL, managed entirely through Prisma migrations (`project/backend/prisma/migrations`).
+PostgreSQL, managed entirely through Prisma migrations (`project/backend/prisma/migrations`). For the full table-by-table breakdown (every column, index, and enum) see [`starting_documentation/architecture/DATABASE.md`](starting_documentation/architecture/DATABASE.md).
 
 ### Tables
 - **users** — accounts, balance, OAuth/2FA fields, online presence
@@ -244,6 +244,18 @@ English, French, and Dutch via `react-i18next`, with a language switcher and the
   - Joined the team partway through and ran a full manual QA pass across the app, filing a detailed, prioritized bug report (untranslated i18n keys leaking into the UI, a multi-session login bug, missing input validation, styling issues)
   - Built the Markets and Asset Detail pages
 - **Challenges:** Joining an existing, already-large codebase and getting comfortable with Git branching/PR workflow in a team setting.
+
+---
+
+## Additional Documentation
+
+For a deeper dive than this README covers — full backend module breakdown, every REST endpoint and WebSocket event, market-data fetch strategy, and how the optional integrations (OAuth/SMTP/Finnhub) degrade when unconfigured — see:
+
+- [`starting_documentation/architecture/SYSTEM.md`](starting_documentation/architecture/SYSTEM.md) — system architecture, backend/frontend structure, API & WebSocket reference
+- [`starting_documentation/architecture/DATABASE.md`](starting_documentation/architecture/DATABASE.md) — full database schema
+- [`starting_documentation/backend_architecture.html`](starting_documentation/backend_architecture.html) — architecture diagram (open in a browser)
+
+These describe the system as actually built and verified on `main`, not the pre-development plan.
 
 ---
 
