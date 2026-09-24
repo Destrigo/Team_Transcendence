@@ -78,7 +78,7 @@ const { svg } = await mermaid.render('arch-svg', `flowchart LR
     SocialGW -->|message:new,\npresence:update| Browser2
     SocialGW -->|notifications| BrowserN
 
-    Browser1 -->|REST /api/*\n+ WS handshake\n(JWT cookie)| Auth
+    Browser1 -->|REST + WS handshake\nJWT cookie| Auth
     Browser1 -->|POST /api/orders| Orders
 
     style CoinGecko fill:${dark?'#085041':'#E1F5EE'},stroke:${dark?'#5DCAA5':'#0F6E56'}
