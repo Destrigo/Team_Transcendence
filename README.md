@@ -255,8 +255,6 @@ For a deeper dive than this README covers — full backend module breakdown, eve
 - [`starting_documentation/architecture/DATABASE.md`](starting_documentation/architecture/DATABASE.md) — full database schema
 - [`starting_documentation/backend_architecture.html`](starting_documentation/backend_architecture.html) — architecture diagram (open in a browser)
 
-These describe the system as actually built and verified on `main`, not the pre-development plan.
-
 ---
 
 ## Resources
