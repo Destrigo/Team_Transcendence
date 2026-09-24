@@ -4,28 +4,14 @@
 
 ## High-Level Overview
 
-```
-                              Browser (Chrome)
-                                    │
-                                    │ HTTPS (self-signed local TLS)
-                                    ▼
-                        ┌───────────────────────┐
-                        │   Caddy reverse proxy │  :443 / :80
-                        └───────────┬───────────┘
-                    ┌───────────────┼────────────────┐
-                    ▼                                ▼
-        ┌───────────────────┐              ┌───────────────────────┐
-        │  Frontend (React)  │              │   Backend (NestJS)    │
-        │  Vite dev server    │              │   :4000, prefix /api  │
-        │  :3000 (internal)   │              └───────────┬───────────┘
-        └───────────────────┘                            │
-                                       ┌───────────────────┼───────────────────┐
-                                       ▼                   ▼                   ▼
-                              REST API (/api/*)   WS /prices           WS /social
-                                       │                   │                   │
-                                       └─────────┬─────────┴─────────┬─────────┘
-                                                 ▼                   ▼
-                                        PostgreSQL (via Prisma)   CoinGecko / Finnhub
+```mermaid
+flowchart TD
+    Browser["Browser (Chrome)"] -->|"HTTPS, self-signed local TLS"| Caddy["Caddy reverse proxy<br/>:443 / :80"]
+    Caddy --> Frontend["Frontend (React + Vite)<br/>:3000 internal"]
+    Caddy --> Backend["Backend (NestJS)<br/>:4000, prefix /api"]
+    Frontend -->|"REST /api/*<br/>WS /prices, WS /social"| Backend
+    Backend --> DB[("PostgreSQL<br/>via Prisma")]
+    Backend -->|"price fetch"| Market["CoinGecko / Finnhub"]
 ```
 
 All three services (frontend, backend, db) plus the Caddy proxy run under one `docker compose up`. The browser only ever talks to Caddy over HTTPS — it never hits the frontend dev server or the backend directly, and the backend never calls out to the frontend.
