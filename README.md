@@ -2,6 +2,23 @@
 
 # PaperTrade
 
+## Table of Contents
+
+- [Description](#description)
+- [Team Information](#team-information)
+- [Project Management](#project-management)
+- [Technical Stack](#technical-stack)
+- [Instructions](#instructions)
+- [Database Schema](#database-schema)
+- [Features List](#features-list)
+- [Modules](#modules)
+- [Individual Contributions](#individual-contributions)
+- [Resources](#resources)
+- [Known Limitations](#known-limitations)
+- [License](#license)
+
+---
+
 ## Description
 
 **PaperTrade** is a simulated cryptocurrency and stock trading platform where users trade with fake money against real, live market data. Every new account starts with a $10,000 virtual balance and can buy/sell assets at market or limit prices, track portfolio performance over time, compete on a leaderboard, and interact with other traders through a friends system and real-time chat.
@@ -69,6 +86,7 @@ Ad-hoc in-person and video call check-ins roughly weekly, more frequent in the f
 
 ### Prerequisites
 - Docker and Docker Compose
+- `make` (GNU Make)
 - Git
 - A modern web browser (Chrome latest)
 
@@ -82,13 +100,30 @@ Ad-hoc in-person and video call check-ins roughly weekly, more frequent in the f
    ```bash
    cp .env.example .env
    ```
-   At minimum, set the `JWT_*` secrets and `TOTP_ENCRYPTION_KEY` to any random strings for local use. OAuth (Google/GitHub/42) and Finnhub stock prices are optional — leaving those blank disables just that provider/feature; the app still starts and everything else works.
+   At minimum, set `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_LOGIN_SECRET`, and `TOTP_ENCRYPTION_KEY` to any random strings for local use. OAuth (Google/GitHub/42) and Finnhub stock prices are optional — leaving those blank disables just that provider/feature; the app still starts and everything else works. See [Environment Variables](#environment-variables) below for the full list.
 3. Start the application:
    ```bash
-   docker compose up --build
+   make up
    ```
+   This builds the images on first run and starts every service in the background. If you change a `Dockerfile` or a dependency later, rebuild with `make rebuild`.
 4. Open `https://localhost` and accept the browser's self-signed certificate warning (Caddy generates its own local CA on first run).
 5. Log in with a seeded test account, or register your own from the UI.
+
+### Useful Commands (Makefile)
+
+| Command | Description |
+|---------|-------------|
+| `make up` | Build (if needed) and start all services in the background |
+| `make down` | Stop and remove all containers |
+| `make restart` | Restart running containers without rebuilding |
+| `make rebuild` | Rebuild images and restart — use after pulling changes or editing a `Dockerfile` |
+| `make status` | Show the status of all containers (`docker compose ps`) |
+| `make logs` | Tail logs from every service |
+| `make logs-back` / `logs-front` / `logs-db` / `logs-proxy` | Tail logs from one service only |
+| `make bash-back` / `bash-front` / `bash-db` | Open a shell inside a running container |
+| `make psql` | Open a `psql` shell into the database |
+| `make clean` | Stop everything and **delete database volumes** — full reset, all data is lost |
+| `make prune` | `docker system prune -a --volumes -f` — reclaims disk space; ⚠️ removes unused Docker data for *all* projects on the machine, not just this one |
 
 ### Default Test Accounts
 The database seed populates the 20 tradeable assets (10 crypto, 10 stocks) and two test accounts, already friends with each other with a sample chat message and a filled BTC position on the first account, so Friends/Chat/Notifications/Portfolio/Trading aren't empty on first login:
@@ -97,6 +132,43 @@ The database seed populates the 20 tradeable assets (10 crypto, 10 stocks) and t
 |-------|----------|
 | evaluator1@papertrade.test | Evaluator123! |
 | evaluator2@papertrade.test | Evaluator123! |
+
+### Environment Variables
+
+All variables live in `.env` (copied from `.env.example`, never committed). Everything under **Database**, **JWT**, and **App** is required; everything else is optional and safely defaults to "feature disabled" when left blank.
+
+| Variable | Required | Description |
+|----------|----------|--------------|
+| `DB_USER` | ✅ | PostgreSQL username |
+| `DB_PASSWORD` | ✅ | PostgreSQL password |
+| `DB_NAME` | ✅ | PostgreSQL database name |
+| `DATABASE_URL` | ✅ | Prisma connection string — must be kept in sync with `DB_USER`/`DB_PASSWORD`/`DB_NAME` above (it is not derived automatically) |
+| `JWT_ACCESS_SECRET` | ✅ | Signs short-lived access tokens |
+| `JWT_REFRESH_SECRET` | ✅ | Signs refresh tokens |
+| `JWT_LOGIN_SECRET` | ✅ | Signs the short-lived token issued between password check and 2FA verification |
+| `TOTP_ENCRYPTION_KEY` | ✅ | Encrypts each user's stored TOTP secret at rest |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional | Enables "Sign in with Google"; blank = provider hidden |
+| `GOOGLE_CALLBACK_URL` | Optional | Defaults to `https://localhost/api/auth/google/callback`, only used if the two values above are set |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` / `GITHUB_CALLBACK_URL` | Optional | Same, for GitHub OAuth |
+| `FORTYTWO_CLIENT_ID` / `FORTYTWO_CLIENT_SECRET` / `FORTYTWO_CALLBACK_URL` | Optional | Same, for 42 OAuth |
+| `COINGECKO_API_URL` | Has default | Crypto price source; free tier, no key needed |
+| `FINNHUB_API_KEY` | Optional | Enables stock prices; blank = only crypto assets get live prices |
+| `FINNHUB_API_URL` | Has default | Finnhub base URL |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | Optional | Sends GDPR export/delete confirmation emails; blank = confirmation is logged server-side instead of emailed |
+| `PORT` | Has default | Backend listen port (`4000`) inside the Docker network |
+| `PUBLIC_URL` / `FRONTEND_URL` | ✅ | Public HTTPS origin behind Caddy; also used as the CORS / Socket.IO allowed origin. Keep as `https://localhost` for local evaluation |
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| Backend can't connect to the database | `DATABASE_URL` must point at host `db` (the Docker service name), not `localhost` — and must match `DB_USER`/`DB_PASSWORD`/`DB_NAME` |
+| Browser refuses to connect / certificate warning | Expected — Caddy's TLS cert is self-signed for local dev. Accept the warning and make sure you're on `https://`, not `http://` |
+| Changed `.env` but nothing changed | `make restart` does not re-read environment changes; use `make rebuild` (or `make down` then `make up`) |
+| OAuth button missing for a provider | That provider's `CLIENT_ID`/`CLIENT_SECRET` are blank — the login page only shows configured providers by design |
+| Stock assets show no live price | `FINNHUB_API_KEY` is unset — crypto assets still update normally via CoinGecko |
+| Port already in use / `docker compose up` fails to bind | Another process is using port 80/443/5432 locally; stop it or change the exposed port in `docker-compose.yml` |
+| `make clean` and now I have no data | Expected — it drops the DB volume for a full reset. Restart with `make up` and the seed will repopulate assets and test accounts |
 
 ---
 
@@ -261,5 +333,14 @@ English, French, and Dutch via `react-i18next`, with a language switcher and the
 ### AI Usage
 Claude (Anthropic) was used as a documentation assistant, in particular to help put together this README (structuring it against the subject's requirements, and cross-referencing the codebase and the team's git/Slack history to keep the feature list, module table, and individual contributions accurate).
 
+## Known Limitations
+- CoinGecko and Finnhub free tiers are rate-limited; under heavy load the price cron falls back to the last cached price with a "stale" indicator rather than failing.
+- Stock prices (Finnhub) are disabled entirely if `FINNHUB_API_KEY` is left unset — only crypto assets get live data in that case.
+- GDPR export/delete confirmation is only emailed if SMTP is configured; otherwise it's logged server-side instead.
+- No automated test suite yet — verification was manual (see QA pass under Individual Contributions).
+
 ## License
+
 This project was built for educational purposes as part of the 42 curriculum and has no commercial license.
+
+PaperTrade displays real, live market data and third-party branding (cryptocurrency and stock names, tickers, and logos, sourced via the CoinGecko and Finnhub APIs) purely for educational simulation purposes. No real money is ever transacted, as stated in the app's own Terms of Service, and this project is not affiliated with, endorsed by, or a substitute for any real exchange, broker, or financial data provider. All asset names, tickers, and logos remain the property of their respective owners.
