@@ -23,7 +23,8 @@
 | language | VARCHAR(5) | default `'en'` — one of `en`/`fr`/`nl` |
 | is_online | BOOLEAN | default false |
 | last_seen | TIMESTAMP | nullable |
-| created_at / updated_at | TIMESTAMP | |
+| created_at | TIMESTAMP | |
+| updated_at | TIMESTAMP | |
 
 ### assets
 | Column | Type | Notes |
@@ -34,7 +35,8 @@
 | type | ENUM `AssetType` | `CRYPTO`, `STOCK`, `FOREX`, `COMMODITY` (only CRYPTO and STOCK are seeded/used today) |
 | current_price | DECIMAL(15,6) | last price written by the market-data fetch cycle — doubles as the de-facto price cache |
 | change_24h | DECIMAL(10,4) | |
-| high_24h / low_24h | DECIMAL(15,6) | |
+| high_24h | DECIMAL(15,6) | |
+| low_24h | DECIMAL(15,6) | |
 | volume_24h | DECIMAL(20,2) | |
 | market_cap | DECIMAL(20,2) | |
 | logo_url | text | nullable |
@@ -93,7 +95,8 @@ Unique on `(user_id, snapshot_date)` — one snapshot per user per day, written 
 | requester_id | UUID | FK → users |
 | addressee_id | UUID | FK → users |
 | status | ENUM `FriendshipStatus` | `PENDING` / `ACCEPTED` / `DECLINED` |
-| created_at / updated_at | TIMESTAMP | |
+| created_at | TIMESTAMP | |
+| updated_at | TIMESTAMP | |
 
 Unique on `(requester_id, addressee_id)` — directional, so who sent the request survives independently of who's asking. A declined request can be retried (updated back to `PENDING` rather than duplicated). Accepting/declining/removing has a `Serializable`-isolation retry path to stay correct if two people act on the same or a mirrored request simultaneously.
 
@@ -101,7 +104,8 @@ Unique on `(requester_id, addressee_id)` — directional, so who sent the reques
 | Column | Type | Notes |
 |--------|------|-------|
 | id | UUID | PK |
-| sender_id / receiver_id | UUID | FK → users |
+| sender_id | UUID | FK → users |
+| receiver_id | UUID | FK → users |
 | content | VARCHAR(2000) | |
 | is_read | BOOLEAN | default false |
 | created_at | TIMESTAMP | |
@@ -114,7 +118,8 @@ Indexed both directions — `(sender_id, receiver_id, created_at)` and `(receive
 | id | UUID | PK |
 | user_id | UUID | FK → users |
 | type | VARCHAR(50) | e.g. `friend_request`, `friend_removed`, `deposit`, `order_filled`, `profile_updated` |
-| title / body | text | |
+| title | text | |
+| body | text | |
 | data | JSONB | nullable — flexible per-type payload (e.g. the other user's id) so one table serves every notification type without a schema-per-type |
 | is_read | BOOLEAN | default false |
 | created_at | TIMESTAMP | |
@@ -124,11 +129,11 @@ Indexed on `(user_id, is_read, created_at)` for the notification feed / unread b
 ## Enums
 
 ```
-FriendshipStatus:     PENDING | ACCEPTED | DECLINED
-AssetType:             STOCK | CRYPTO | FOREX | COMMODITY
-OrderType:             BUY | SELL
-OrderExecutionType:    MARKET | LIMIT
-OrderStatus:           PENDING | PROCESSING | FILLED | CANCELLED
+FriendshipStatus: PENDING | ACCEPTED | DECLINED
+AssetType: STOCK | CRYPTO | FOREX | COMMODITY
+OrderType: BUY | SELL
+OrderExecutionType: MARKET | LIMIT
+OrderStatus: PENDING | PROCESSING | FILLED | CANCELLED
 ```
 
 ## Key Relationships
