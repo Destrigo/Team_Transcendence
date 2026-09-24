@@ -338,7 +338,6 @@ Claude (Anthropic) was used as a documentation assistant, in particular to help 
 - Stock prices (Finnhub) are disabled entirely if `FINNHUB_API_KEY` is left unset — only crypto assets get live data in that case.
 - GDPR export/delete confirmation is only emailed if SMTP is configured; otherwise it's logged server-side instead.
 - No automated test suite yet — verification was manual (see QA pass under Individual Contributions).
-- <!-- TODO: add any remaining known bugs/edge cases from Liat's QA report that weren't fixed before submission -->
 
 ## License
 
