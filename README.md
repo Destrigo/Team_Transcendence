@@ -44,9 +44,9 @@
 | Marco Tarantino | mtaranti | Product Owner + Project Manager + Technical Lead + Developer | Defined feature priorities and reviewed/merged all PRs (PO); tracked deadlines, ran check-ins, coordinated the team through two membership changes (PM); owned architecture and stack decisions — Docker/Caddy infrastructure, module boundaries, security fixes (Tech Lead); implemented market data integration, analytics, GDPR, legal pages, the full social feature rebuild (friends/chat/presence/notifications/leaderboard), OAuth/2FA fixes, trading UX, and portfolio backend (Developer) |
 | Rogier Goossens | rgoossen | Developer | Database schema design, initial social module (friends backend/frontend, chat) |
 | Pavel Khvorov | pkhvorov | Developer | Auth/Users modules, orders/trading core, OAuth 2.0 + 2FA implementation, code review |
-| Liat Vliegers | livliege | Developer | QA pass across the whole app (detailed bug report), Markets page and Asset Detail page |
+| Liath Vliegers | livliege | Developer | QA pass across the whole app (detailed bug report), Markets page and Asset Detail page |
 
-Two earlier teammates (Roger Torrent, Yasaman Karimi) contributed to the project before leaving the team for personal/scheduling reasons in its first months — an early backend exploration and the original EN/FR/NL i18n scaffolding, respectively. Liat Vliegers joined later to bring the team back to four.
+Two earlier teammates (Roger Torrent, Yasaman Karimi) contributed to the project before leaving the team for personal/scheduling reasons in its first months — an early backend exploration and the original EN/FR/NL i18n scaffolding, respectively. Liath Vliegers joined later to bring the team back to four.
 
 ---
 
@@ -310,7 +310,7 @@ English, French, and Dutch via `react-i18next`, with a language switcher and the
   - Caught and helped fix a P&L-inflation bug (deposits counting as trading profit) and a duplicated backend route during code review
 - **Challenges:** Coming from a C/C++ background, the NestJS module/controller/provider/DI model took real time to get comfortable with.
 
-### livliege — Liat Vliegers
+### livliege — Liath Vliegers
 - **Role:** Developer
 - **Contributions:**
   - Joined the team partway through and ran a full manual QA pass across the app, filing a detailed, prioritized bug report (untranslated i18n keys leaking into the UI, a multi-session login bug, missing input validation, styling issues)
