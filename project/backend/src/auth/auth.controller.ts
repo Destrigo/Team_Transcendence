@@ -35,6 +35,20 @@ export class AuthController {
     return getConfiguredOAuthProviders();
   }
 
+  /**
+   * Public: "am I logged in?" check used on every app load. Always resolves
+   * 200 with `{ user: null }` when there's no valid session — unlike the
+   * guarded /users/me, which correctly 401s and would otherwise show up as
+   * a console error on every anonymous page load (login, landing, etc.).
+   */
+  @Get('session')
+  async getSession(@Req() req: Request) {
+    const user = await this.authService.getSessionUser(
+      (req.cookies as Record<string, string> | undefined)?.access_token,
+    );
+    return { user };
+  }
+
   @Post('register')
   async register(
     @Body() dto: RegisterDto,

@@ -47,11 +47,10 @@ export default function LeaderboardPage() {
 
       {!loading && !error && (
         <div className="rounded-lg border border-border bg-card shadow-sm">
-          <div className="grid grid-cols-[3rem_1fr_auto_auto] gap-3 border-b border-border bg-muted px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="grid grid-cols-[2.5rem_1fr_auto] gap-3 border-b border-border bg-muted px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             <span>{t('leaderboard.rank')}</span>
             <span>{t('leaderboard.player')}</span>
-            <span>{t('leaderboard.portfolioValue')}</span>
-            <span className="text-right">{t('leaderboard.pnlPercent')}</span>
+            <span className="text-right">{t('leaderboard.portfolioValue')}</span>
           </div>
           {entries.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">{t('leaderboard.empty')}</p>

@@ -17,7 +17,7 @@ export default function LeaderboardRow({ entry, isCurrentUser }: LeaderboardRowP
   return (
     <button
       onClick={() => navigate(`/profile/${entry.userId}`)}
-      className={`grid w-full grid-cols-[3rem_1fr_auto_auto] items-center gap-3 border-b border-border px-3 py-2.5 text-left transition-colors last:border-b-0 hover:bg-accent/60 ${
+      className={`grid w-full grid-cols-[2.5rem_1fr_auto] items-center gap-3 border-b border-border px-3 py-2.5 text-left transition-colors last:border-b-0 hover:bg-accent/60 ${
         isCurrentUser ? 'bg-primary/5' : ''
       }`}
     >
@@ -31,11 +31,12 @@ export default function LeaderboardRow({ entry, isCurrentUser }: LeaderboardRowP
         </span>
       </span>
 
-      <span className="font-mono text-sm">{formatCurrency(entry.totalValue)}</span>
-
-      <span className={`w-20 text-right font-mono text-xs ${isUp ? 'text-emerald-600' : 'text-destructive'}`}>
-        {isUp ? '+' : ''}
-        {entry.pnlPercent.toFixed(2)}%
+      <span className="flex flex-col items-end">
+        <span className="font-mono text-sm">{formatCurrency(entry.totalValue)}</span>
+        <span className={`font-mono text-xs ${isUp ? 'text-emerald-600' : 'text-destructive'}`}>
+          {isUp ? '+' : ''}
+          {entry.pnlPercent.toFixed(2)}%
+        </span>
       </span>
     </button>
   );

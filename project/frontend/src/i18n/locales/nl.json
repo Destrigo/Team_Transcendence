@@ -7,7 +7,9 @@
     "messages": "Berichten",
     "leaderboard": "Ranglijst",
     "analytics": "Analyses",
-    "settings": "Instellingen"
+    "settings": "Instellingen",
+    "open": "Menu openen",
+    "close": "Menu sluiten"
   },
   "common": {
     "save": "Opslaan",

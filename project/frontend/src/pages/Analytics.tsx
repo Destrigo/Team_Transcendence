@@ -105,13 +105,16 @@ export default function Analytics() {
   const [error, setError] = useState('');
 
   const load = useCallback(
-    async (nextFrom: string, nextTo: string) => {
+    async (nextFrom: string, nextTo: string, opts?: { silent?: boolean }) => {
       if (new Date(nextFrom) > new Date(nextTo)) {
         setError('analytics.invalidDateRange');
         return;
       }
-      setError('');
-      setLoading(true);
+      const silent = opts?.silent ?? false;
+      if (!silent) {
+        setError('');
+        setLoading(true);
+      }
 
       try {
         const params = rangeParams(nextFrom, nextTo);
@@ -129,9 +132,12 @@ export default function Analytics() {
         setTrades(tradeList.data);
         setLivePortfolio(live);
       } catch {
-        setError('analytics.loadError');
+        // A silent background refresh failing shouldn't blank out an
+        // already-loaded dashboard with an error message — just keep
+        // showing the last good data and try again on the next tick.
+        if (!silent) setError('analytics.loadError');
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
     },
     [],
@@ -141,6 +147,18 @@ export default function Analytics() {
     if (authLoading || !user) return;
     void load('', '');
   }, [authLoading, user, load]);
+
+  // Keep the dashboard current without a manual reload: live portfolio
+  // value/P&L and trade stats depend on `assets.current_price`, which the
+  // backend's market-data cron updates every 30-60s — a 15s poll comfortably
+  // catches those changes.
+  useEffect(() => {
+    if (authLoading || !user) return;
+    const id = setInterval(() => {
+      void load(from, to, { silent: true });
+    }, 15_000);
+    return () => clearInterval(id);
+  }, [authLoading, user, from, to, load]);
 
   function applyPreset(days: number | null) {
     if (days === null) {

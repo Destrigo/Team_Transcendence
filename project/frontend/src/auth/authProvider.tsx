@@ -10,8 +10,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      const { data } = await api.get<User>('/users/me');
-      setUser(data);
+      // /auth/session always resolves 200 (even logged out), unlike the
+      // guarded /users/me — avoids a 401 hitting the console on every
+      // anonymous page load (landing, login, register).
+      const { data } = await api.get<{ user: User | null }>('/auth/session');
+      setUser(data.user);
     } catch {
       setUser(null);
     }

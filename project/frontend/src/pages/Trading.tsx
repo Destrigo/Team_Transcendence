@@ -62,7 +62,7 @@ export default function TradingPage() {
     <div className="p-6">
       <header className="mb-6">
         <h1 className="mb-4 text-2xl font-bold">{t('trading.title')}</h1>
-        <div className="grid grid-cols-3 divide-x divide-border rounded-lg bg-card font-mono text-sm shadow-sm">
+        <div className="grid grid-cols-1 divide-y divide-border rounded-lg bg-card font-mono text-sm shadow-sm sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           <div className="px-4 py-3">
             <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {t('trading.cash')}

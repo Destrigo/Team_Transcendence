@@ -7,7 +7,9 @@
     "messages": "Messages",
     "leaderboard": "Leaderboard",
     "analytics": "Analytics",
-    "settings": "Settings"
+    "settings": "Settings",
+    "open": "Open menu",
+    "close": "Close menu"
   },
   "common": {
     "save": "Save",

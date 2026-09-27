@@ -7,7 +7,9 @@
     "messages": "Messages",
     "leaderboard": "Classement",
     "analytics": "Analyses",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "open": "Ouvrir le menu",
+    "close": "Fermer le menu"
   },
   "common": {
     "save": "Enregistrer",
