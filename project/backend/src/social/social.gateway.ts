@@ -38,6 +38,9 @@ export class SocialGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private readonly logger = new Logger(SocialGateway.name);
   private readonly connections = new Map<string, Set<string>>(); // userId -> socket ids
+  private readonly offlineTimers = new Map<string, NodeJS.Timeout>();
+  private static readonly OFFLINE_GRACE_MS = 5000;
+
 
   constructor(
     private readonly jwtService: JwtService,
@@ -55,6 +58,12 @@ export class SocialGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
     (client as AuthedSocket).data.userId = userId;
+
+    const pendingOffline = this.offlineTimers.get(userId);
+    if (pendingOffline) {
+      clearTimeout(pendingOffline);
+      this.offlineTimers.delete(userId);
+    }
 
     const wasOffline = !this.connections.has(userId);
     if (wasOffline) this.connections.set(userId, new Set());
@@ -81,7 +90,7 @@ export class SocialGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  async handleDisconnect(client: Socket) {
+  handleDisconnect(client: Socket) {
     const userId = (client as AuthedSocket).data?.userId;
     if (!userId) return;
 
@@ -90,11 +99,24 @@ export class SocialGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     if (sockets && sockets.size === 0) {
       this.connections.delete(userId);
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: { isOnline: false, lastSeen: new Date() },
-      });
-      await this.broadcastPresence(userId, false);
+
+      // Don't mark offline immediately — give the browser a moment to
+      // reconnect (page reload, brief network blip). If a new connection
+      // arrives within the grace period, handleConnection cancels this.
+      const timer = setTimeout(async () => {
+        this.offlineTimers.delete(userId);
+        // Re-check: a reconnect could have re-populated `connections`
+        // between the timeout firing and now.
+        if (this.connections.has(userId)) return;
+
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { isOnline: false, lastSeen: new Date() },
+        });
+        await this.broadcastPresence(userId, false);
+      }, SocialGateway.OFFLINE_GRACE_MS);
+
+      this.offlineTimers.set(userId, timer);
     }
   }
 
