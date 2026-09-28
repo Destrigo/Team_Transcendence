@@ -47,7 +47,6 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    res.setHeader('Cache-Control', 'no-store');
     const cookies = (req.cookies ?? {}) as Record<string, string | undefined>;
 
     let user = await this.authService.getSessionUser(cookies.access_token);
