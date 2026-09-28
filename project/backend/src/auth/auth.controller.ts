@@ -8,6 +8,7 @@ import {
   Res,
   Req,
   UseGuards,
+  UnauthorizedException
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
@@ -42,10 +43,26 @@ export class AuthController {
    * a console error on every anonymous page load (login, landing, etc.).
    */
   @Get('session')
-  async getSession(@Req() req: Request) {
-    const user = await this.authService.getSessionUser(
-      (req.cookies as Record<string, string> | undefined)?.access_token,
-    );
+  async getSession(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    res.setHeader('Cache-Control', 'no-store');
+    const cookies = (req.cookies ?? {}) as Record<string, string | undefined>;
+
+    let user = await this.authService.getSessionUser(cookies.access_token);
+
+    if (!user && cookies.refresh_token) {
+      try {
+        const tokens = await this.authService.refreshTokens(cookies.refresh_token);
+        this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+        user = await this.authService.getSessionUser(tokens.accessToken);
+      } catch (e) {
+        if (!(e instanceof UnauthorizedException)) throw e;
+        user = null;
+      }
+    }
+
     return { user };
   }
 

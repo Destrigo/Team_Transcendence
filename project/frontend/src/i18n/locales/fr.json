@@ -91,6 +91,20 @@
       "invalid2faCode": "Code 2FA invalide",
       "invalid2fationCode": "Code 2FA invalide",
       "twoFactorNotActive": "L'authentification à deux facteurs n'est pas active"
+    },
+    "validation": {
+      "invalidEmail": "Adresse e-mail invalide",
+      "emailRequired": "L’adresse e-mail est requise",
+      "usernameRequired": "Le nom d’utilisateur est requis",
+      "usernameTooShort": "Le nom d’utilisateur doit comporter au moins 3 caractères",
+      "usernameTooLong": "Le nom d’utilisateur doit comporter au maximum 50 caractères",
+      "usernameInvalidChars": "Le nom d’utilisateur ne peut contenir que des lettres, des chiffres, des underscores et des tirets",
+      "passwordRequired": "Le mot de passe est requis",
+      "invalidLanguage": "Langue invalide",
+      "codeRequired": "Le code est requis",
+      "codeLengthInvalid": "Le code doit comporter 6 caractères",
+      "codeNumericOnly": "Le code doit contenir uniquement des chiffres",
+      "loginTokenRequired": "Le jeton de connexion est requis"
     }
   },
     "profile": {

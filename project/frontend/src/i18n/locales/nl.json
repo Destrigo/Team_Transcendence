@@ -91,6 +91,20 @@
       "invalid2faCode": "Ongeldige 2FA-code",
       "invalid2fationCode": "Ongeldige 2FA-code",
       "twoFactorNotActive": "Tweefactorauthenticatie is niet actief"
+    },
+    "validation": {
+      "invalidEmail": "Ongeldig e-mailadres",
+      "emailRequired": "E-mailadres is verplicht",
+      "usernameRequired": "Gebruikersnaam is verplicht",
+      "usernameTooShort": "Gebruikersnaam moet minimaal 3 tekens bevatten",
+      "usernameTooLong": "Gebruikersnaam mag maximaal 50 tekens bevatten",
+      "usernameInvalidChars": "Gebruikersnaam mag alleen letters, cijfers, underscores en streepjes bevatten",
+      "passwordRequired": "Wachtwoord is verplicht",
+      "invalidLanguage": "Ongeldige taal",
+      "codeRequired": "Code is verplicht",
+      "codeLengthInvalid": "Code moet uit 6 tekens bestaan",
+      "codeNumericOnly": "Code mag alleen cijfers bevatten",
+      "loginTokenRequired": "Inlogtoken is verplicht"
     }
   },
     "profile": {
