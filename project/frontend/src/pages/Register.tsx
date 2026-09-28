@@ -38,7 +38,9 @@ export default function Register() {
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(
-          err.response?.data?.message ?? t('auth.registerFailed')
+          err.response?.data?.message
+            ? t(err.response.data.message)
+            : t('auth.registerFailed')
         );
       } else {
         setError(t('auth.registerFailed'));
@@ -86,7 +88,7 @@ export default function Register() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t('auth.passwordPlaceholder')}
               className="w-full rounded border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              minLength={6}
+              minLength={8}
               required
             />
           </div>

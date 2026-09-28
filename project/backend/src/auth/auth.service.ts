@@ -16,6 +16,7 @@ import * as bcrypt from 'bcrypt';
 import { OTP } from 'otplib';
 import { encryptSecret, decryptSecret } from '../common/crypto/secret-cipher';
 import { NotificationsService } from '../social/notifications/notifications.service';
+import { UsersService } from '../users/users.service';
 
 interface OAuthProfile {
   provider: string;
@@ -33,7 +34,22 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly notifications: NotificationsService,
+    private readonly usersService: UsersService,
   ) {}
+
+  /** Never throws — returns null for a missing/expired/invalid token instead. */
+  async getSessionUser(accessToken: string | undefined) {
+    if (!accessToken) return null;
+    try {
+      const payload = await this.jwtService.verifyAsync<{ sub: string }>(
+        accessToken,
+        { secret: process.env.JWT_ACCESS_SECRET },
+      );
+      return await this.usersService.getMe(payload.sub);
+    } catch {
+      return null;
+    }
+  }
 
   private async notifyBestEffort(
     userId: string,

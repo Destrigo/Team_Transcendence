@@ -11,6 +11,7 @@ import {
   Trophy,
   Store,
   Wallet,
+  X,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -33,23 +34,51 @@ const linkClasses = ({ isActive }: { isActive: boolean }) =>
       : 'text-muted-foreground hover:bg-accent hover:text-foreground'
   }`;
 
-export default function Sidebar() {
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ open, onClose }: SidebarProps) {
   const { t } = useTranslation();
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-card">
-      <div className="px-5 py-5">
-        <span className="text-lg font-bold tracking-tight">PaperTrade</span>
-      </div>
+    <>
+      {/* Backdrop — mobile only, shown while the drawer is open */}
+      {open && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
-      <nav className="flex-1 space-y-1 px-3">
-        {NAV_ITEMS.map(({ to, labelKey, icon: Icon }) => (
-          <NavLink key={to} to={to} className={linkClasses}>
-            <Icon className="h-4 w-4" />
-            {t(labelKey)}
-          </NavLink>
-        ))}
-      </nav>
-    </aside>
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-60 shrink-0 flex-col border-r border-border bg-card transition-transform duration-200 ease-in-out md:static md:z-auto md:translate-x-0 ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex items-center justify-between px-5 py-5">
+          <span className="text-lg font-bold tracking-tight">PaperTrade</span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t('sidebar.close')}
+            className="rounded p-1 text-muted-foreground hover:bg-accent md:hidden"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav className="flex-1 space-y-1 px-3">
+          {NAV_ITEMS.map(({ to, labelKey, icon: Icon }) => (
+            <NavLink key={to} to={to} className={linkClasses} onClick={onClose}>
+              <Icon className="h-4 w-4" />
+              {t(labelKey)}
+            </NavLink>
+          ))}
+        </nav>
+      </aside>
+    </>
   );
 }

@@ -8,6 +8,7 @@ import {
   Res,
   Req,
   UseGuards,
+  UnauthorizedException
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
@@ -33,6 +34,35 @@ export class AuthController {
   @Get('providers')
   getOAuthProviders() {
     return getConfiguredOAuthProviders();
+  }
+
+  /**
+   * Public: "am I logged in?" check used on every app load. Always resolves
+   * 200 with `{ user: null }` when there's no valid session — unlike the
+   * guarded /users/me, which correctly 401s and would otherwise show up as
+   * a console error on every anonymous page load (login, landing, etc.).
+   */
+  @Get('session')
+  async getSession(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const cookies = (req.cookies ?? {}) as Record<string, string | undefined>;
+
+    let user = await this.authService.getSessionUser(cookies.access_token);
+
+    if (!user && cookies.refresh_token) {
+      try {
+        const tokens = await this.authService.refreshTokens(cookies.refresh_token);
+        this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+        user = await this.authService.getSessionUser(tokens.accessToken);
+      } catch (e) {
+        if (!(e instanceof UnauthorizedException)) throw e;
+        user = null;
+      }
+    }
+
+    return { user };
   }
 
   @Post('register')
